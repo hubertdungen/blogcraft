@@ -1,0 +1,223 @@
+/* Estilos para a página de Configurações */
+.settings-container {
+    display: flex;
+    min-height: 100vh;
+  }
+  
+  .settings-content {
+    flex: 1;
+    padding: 30px;
+    margin-left: var(--sidebar-width);
+  }
+  
+  .settings-content h1 {
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid;
+  }
+  
+  .light .settings-content h1 {
+    border-color: var(--border-light);
+  }
+  
+  .dark .settings-content h1 {
+    border-color: var(--border-dark);
+  }
+  
+  .settings-form {
+    max-width: 800px;
+  }
+  
+  .setting-group {
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid;
+  }
+  
+  .light .setting-group {
+    border-color: var(--border-light);
+  }
+  
+  .dark .setting-group {
+    border-color: var(--border-dark);
+  }
+  
+  .setting-group:last-child {
+    border-bottom: none;
+  }
+  
+  .setting-group h2 {
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+    color: var(--primary-color);
+  }
+  
+  .setting-item {
+    margin-bottom: 20px;
+  }
+  
+  .setting-item label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  
+  .setting-item select,
+  .setting-item input[type="number"],
+  .setting-item input[type="text"] {
+    width: 100%;
+    max-width: 400px;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid;
+  }
+  
+  .light .setting-item select,
+  .light .setting-item input[type="number"],
+  .light .setting-item input[type="text"] {
+    border-color: var(--border-light);
+    background-color: white;
+  }
+  
+  .dark .setting-item select,
+  .dark .setting-item input[type="number"],
+  .dark .setting-item input[type="text"] {
+    border-color: var(--border-dark);
+    background-color: #333;
+    color: white;
+  }
+  
+  .setting-description {
+    margin-top: 5px;
+    font-size: 0.85rem;
+    opacity: 0.7;
+    max-width: 400px;
+  }
+  
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: normal !important;
+  }
+  
+  .checkbox-label input {
+    margin-right: 10px;
+  }
+  
+  .theme-toggle {
+    display: flex;
+    gap: 10px;
+    max-width: 400px;
+  }
+  
+  .theme-button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 4px;
+    background-color: transparent;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .light .theme-button {
+    border-color: var(--border-light);
+  }
+  
+  .dark .theme-button {
+    border-color: var(--border-dark);
+  }
+  
+  .theme-button.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+  }
+  
+  .data-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .reset-settings-button,
+  .clear-data-button {
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    background-color: transparent;
+    border: 1px solid;
+  }
+  
+  .reset-settings-button {
+    color: #fd7e14;
+    border-color: #fd7e14;
+  }
+  
+  .reset-settings-button:hover {
+    background-color: rgba(253, 126, 20, 0.1);
+  }
+  
+  .clear-data-button {
+    color: #e74c3c;
+    border-color: #e74c3c;
+  }
+  
+  .clear-data-button:hover {
+    background-color: rgba(231, 76, 60, 0.1);
+  }
+  
+  .setting-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 40px;
+  }
+  
+  .save-settings-button {
+    padding: 12px 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+  }
+  
+  .save-settings-button:hover {
+    background-color: var(--primary-hover);
+  }
+  
+  .logout-button {
+    padding: 12px 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    background-color: transparent;
+    color: #e74c3c;
+    border: 1px solid #e74c3c;
+  }
+  
+  .logout-button:hover {
+    background-color: rgba(231, 76, 60, 0.1);
+  }
+  
+  /* Responsividade */
+  @media (max-width: 768px) {
+    .settings-content {
+      margin-left: 0;
+      padding: 15px;
+    }
+    
+    .data-actions,
+    .setting-actions {
+      flex-direction: column;
+    }
+    
+    .data-actions button,
+    .setting-actions button {
+      width: 100%;
+    }
+  }

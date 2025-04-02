@@ -1,24 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import './App.css';
 
-
-
+// Importar componentes
+import Sidebar from './components/Sidebar';
+import Dashboard from './components/Dashboard';
+import PostEditor from './components/PostEditor';
+import TemplatesManager from './components/TemplatesManager';
+import Settings from './components/Settings';
+import BloggerService from './services/BloggerService';
 
 // Componente de Login
 function Login() {
   const navigate = useNavigate();
   const [error, setError] = useState(null);
-  
-  const handleLoginSuccess = (credentialResponse) => {
-    console.log('Login success:', credentialResponse);
-    
-    // Armazenar o token
-    localStorage.setItem('blogcraft_token', credentialResponse.credential);
-    
-    // Redirecionar para o dashboard
-    navigate('/dashboard');
+  const [loading, setLoading] = useState(false);
+
+  const handleLoginSuccess = async (credentialResponse) => {
+    try {
+      setLoading(true);
+      // Armazenar o token
+      localStorage.setItem('blogcraft_token', credentialResponse.credential);
+      
+      // Verificar se o token é válido para a API do Blogger
+      const isValid = await BloggerService.validateToken();
+      
+      if (!isValid) {
+        throw new Error('Token inválido para a API do Blogger');
+      }
+      
+      // Redirecionar para o dashboard
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Erro na autenticação:', error);
+      setError(`Falha na autenticação: ${error.message}`);
+      localStorage.removeItem('blogcraft_token');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -28,13 +48,21 @@ function Login() {
         <p>Editor Avançado para Blogger</p>
         
         <div className="login-form">
-          <GoogleLogin
-            onSuccess={handleLoginSuccess}
-            onError={() => setError('Falha na autenticação')}
-            useOneTap={false}
-            text="continue_with"
-            theme="filled_blue"
-          />
+          {loading ? (
+            <div className="loading">Autenticando...</div>
+          ) : (
+            <GoogleLogin
+              onSuccess={handleLoginSuccess}
+              onError={() => setError('Falha na autenticação com o Google')}
+              useOneTap={false}
+              text="continue_with"
+              theme="filled_blue"
+              width="280"
+              logo_alignment="center"
+              shape="pill"
+              context="signin"
+            />
+          )}
           
           {error && <p className="error-message">{error}</p>}
         </div>
@@ -43,164 +71,140 @@ function Login() {
   );
 }
 
-// Componente do Dashboard
-function Dashboard() {
+// Componente para verificação de autenticação
+function RequireAuth({ children }) {
   const navigate = useNavigate();
-  const [theme, setTheme] = useState('dark');
+  const location = useLocation();
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   useEffect(() => {
-    document.body.className = theme;
-  }, [theme]);
-  
-  const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
-  };
-  
-  const handleLogout = () => {
-    if (window.confirm('Tem certeza que deseja sair?')) {
-      localStorage.removeItem('blogcraft_token');
-      navigate('/');
-    }
-  };
-  
-  return (
-    <div className="dashboard-container">
-      <Sidebar theme={theme} toggleTheme={toggleTheme} />
-      
-      <div className="main-content">
-        <h1>Dashboard</h1>
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('blogcraft_token');
         
-        <div className="welcome-message">
-          <h2>Bem-vindo ao BlogCraft!</h2>
-          <p>Seu editor avançado para o Blogger.</p>
-        </div>
+        if (!token) {
+          throw new Error('No token');
+        }
         
-        <div className="quick-actions">
-          <h3>Ações Rápidas</h3>
-          <div className="action-buttons">
-            <button className="create-button" onClick={() => navigate('/editor')}>
-              Criar Novo Post
-            </button>
-            <button className="template-button" onClick={() => navigate('/templates')}>
-              Gerenciar Templates
-            </button>
-            <button className="settings-button" onClick={() => navigate('/settings')}>
-              Configurações
-            </button>
-          </div>
-        </div>
+        // Verificar se o token é válido
+        const isValid = await BloggerService.validateToken();
         
-        <div className="blogs-section">
-          <h3>Seus Blogs</h3>
-          <p>Carregando blogs...</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Componente da Barra Lateral
-function Sidebar({ theme, toggleTheme }) {
-  return (
-    <div className="sidebar">
-      <div className="logo">
-        <h2>BlogCraft</h2>
-      </div>
-      
-      <nav className="nav-menu">
-        <Link to="/dashboard" className="nav-item active">
-          Dashboard
-        </Link>
-        <Link to="/editor" className="nav-item">
-          Novo Post
-        </Link>
-        <Link to="/templates" className="nav-item">
-          Templates
-        </Link>
-        <Link to="/settings" className="nav-item">
-          Configurações
-        </Link>
-      </nav>
-      
-      <div className="theme-switch">
-        <button onClick={toggleTheme}>
-          {theme === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Escuro'}
-        </button>
-      </div>
-      
-      <div className="logout">
-        <button onClick={() => {
-          if (window.confirm('Tem certeza que deseja sair?')) {
-            localStorage.removeItem('blogcraft_token');
-            window.location.href = '/';
-          }
-        }}>
-          Sair
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// Verificação de Autenticação
-function RequireAuth({ children }) {
-  const token = localStorage.getItem('blogcraft_token');
+        if (!isValid) {
+          throw new Error('Invalid token');
+        }
+        
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Erro de autenticação:', error);
+        // Limpar token inválido
+        localStorage.removeItem('blogcraft_token');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    checkAuth();
+  }, [navigate, location]);
   
-  if (!token) {
-    return <Navigate to="/" replace />;
+  if (loading) {
+    return <div className="auth-loading">Verificando autenticação...</div>;
+  }
+  
+  if (!isAuthenticated) {
+    // Redirecionar para login preservando a URL de destino
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
   
   return children;
 }
 
+// Componente principal do App
 function App() {
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme || 'dark';
+  });
+
+  useEffect(() => {
+    document.body.className = theme;
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
+  };
+
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/dashboard" element={
-          <RequireAuth>
-            <Dashboard />
-          </RequireAuth>
-        } />
-        <Route path="/editor" element={
-          <RequireAuth>
-            <div className="placeholder-page">
-              <Sidebar theme="dark" toggleTheme={() => {}} />
-              <div className="main-content">
-                <h1>Editor</h1>
-                <p>Página do Editor - Em construção</p>
-                <Link to="/dashboard">Voltar para o Dashboard</Link>
-              </div>
-            </div>
-          </RequireAuth>
-        } />
-        <Route path="/templates" element={
-          <RequireAuth>
-            <div className="placeholder-page">
-              <Sidebar theme="dark" toggleTheme={() => {}} />
-              <div className="main-content">
-                <h1>Templates</h1>
-                <p>Página de Templates - Em construção</p>
-                <Link to="/dashboard">Voltar para o Dashboard</Link>
-              </div>
-            </div>
-          </RequireAuth>
-        } />
-        <Route path="/settings" element={
-          <RequireAuth>
-            <div className="placeholder-page">
-              <Sidebar theme="dark" toggleTheme={() => {}} />
-              <div className="main-content">
-                <h1>Configurações</h1>
-                <p>Página de Configurações - Em construção</p>
-                <Link to="/dashboard">Voltar para o Dashboard</Link>
-              </div>
-            </div>
-          </RequireAuth>
-        } />
-      </Routes>
-    </BrowserRouter>
+    <Router>
+      <div className={`app-container ${theme}`}>
+        <Routes>
+          {/* Rota de Login */}
+          <Route path="/" element={<Login />} />
+          
+          {/* Rotas Protegidas */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <RequireAuth>
+                <Dashboard theme={theme} toggleTheme={toggleTheme} />
+              </RequireAuth>
+            } 
+          />
+          
+          <Route 
+            path="/editor" 
+            element={
+              <RequireAuth>
+                <div className="layout-with-sidebar">
+                  <Sidebar theme={theme} toggleTheme={toggleTheme} />
+                  <PostEditor theme={theme} toggleTheme={toggleTheme} />
+                </div>
+              </RequireAuth>
+            } 
+          />
+          
+          <Route 
+            path="/editor/:postId" 
+            element={
+              <RequireAuth>
+                <div className="layout-with-sidebar">
+                  <Sidebar theme={theme} toggleTheme={toggleTheme} />
+                  <PostEditor theme={theme} toggleTheme={toggleTheme} />
+                </div>
+              </RequireAuth>
+            } 
+          />
+          
+          <Route 
+            path="/templates" 
+            element={
+              <RequireAuth>
+                <div className="layout-with-sidebar">
+                  <Sidebar theme={theme} toggleTheme={toggleTheme} />
+                  <TemplatesManager theme={theme} toggleTheme={toggleTheme} />
+                </div>
+              </RequireAuth>
+            } 
+          />
+          
+          <Route 
+            path="/settings" 
+            element={
+              <RequireAuth>
+                <div className="layout-with-sidebar">
+                  <Sidebar theme={theme} toggleTheme={toggleTheme} />
+                  <Settings theme={theme} toggleTheme={toggleTheme} />
+                </div>
+              </RequireAuth>
+            } 
+          />
+          
+          {/* Rota de fallback para qualquer outra URL */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 

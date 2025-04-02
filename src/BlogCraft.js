@@ -728,7 +728,7 @@ function PostEditor({ theme, toggleTheme }) {
             
             <div className="rich-editor">
               <Editor
-                apiKey="sua-chave-api-tinymce" // Substituir pela sua chave da TinyMCE
+                apiKey={process.env.REACT_APP_TINYMCE_API_KEY} // Substituir pela sua chave da TinyMCE
                 onInit={(evt, editor) => editorRef.current = editor}
                 value={postData.content}
                 onEditorChange={handleEditorChange}
@@ -885,7 +885,7 @@ function Templates({ theme, toggleTheme }) {
               </div>
               
               <Editor
-                apiKey="sua-chave-api-tinymce" // Substituir pela sua chave da TinyMCE
+                apiKey={process.env.REACT_APP_TINYMCE_API_KEY} // Substituir pela sua chave da TinyMCE
                 onInit={(evt, editor) => editorRef.current = editor}
                 initialValue={selectedTemplate.content}
                 onEditorChange={handleEditorChange}
