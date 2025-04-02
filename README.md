@@ -1,70 +1,124 @@
-# Getting Started with Create React App
+# BlogCraft - Editor Avançado para Blogger
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+BlogCraft é uma aplicação web moderna que substitui o Open Live Writer e outras aplicações descontinuadas, oferecendo uma solução completa para edição e publicação no Blogger com interface moderna e recursos avançados.
 
-## Available Scripts
+## 📋 Funcionalidades
 
-In the project directory, you can run:
+### ✏️ Edição Avançada
+- Editor de texto rico estilo Microsoft Word
+- Formatação completa de texto, imagens, tabelas e mais
+- Conversão otimizada para o formato do Blogger
 
-### `npm start`
+### 🎨 Interface Moderna
+- UI limpa e intuitiva
+- Suporte a Dark Mode e Light Mode
+- Design responsivo para desktop e mobile
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 📝 Gerenciamento de Conteúdo
+- Edição e automação de metadados
+- Gestão de títulos, subtítulos, tags e categorias
+- Visualização prévia do post
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### 📁 Templates
+- Criação e salvamento de templates personalizados
+- Reutilização rápida para posts similares
+- Organização de templates por categorias
 
-### `npm test`
+### 🚀 Publicação Integrada
+- Publicação direta para o Blogger via API oficial
+- Agendamento de posts (data e hora)
+- Status de publicação em tempo real
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 🔄 Recursos Extras
+- Importação de arquivos Word e TXT
+- Duplicação de posts existentes
+- Salvamento automático de rascunhos
+- Backup local de conteúdo
 
-### `npm run build`
+## 🚀 Instalação
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Pré-requisitos
+- Node.js 16.x ou superior
+- npm ou yarn
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Passos para instalação
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. Clone o repositório
+   ```bash
+   git clone https://github.com/seu-usuario/blogcraft.git
+   cd blogcraft
+   ```
 
-### `npm run eject`
+2. Instale as dependências
+   ```bash
+   npm install
+   # ou
+   yarn install
+   ```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+3. Configure as variáveis de ambiente
+   - Crie um arquivo `.env` na raiz do projeto
+   - Adicione sua chave da API TinyMCE:
+   ```
+   REACT_APP_TINYMCE_API_KEY=sua-chave-aqui
+   ```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+4. Execute o aplicativo
+   ```bash
+   npm start
+   # ou
+   yarn start
+   ```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+5. Acesse o aplicativo em `http://localhost:3000`
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 🔑 Autenticação
 
-## Learn More
+Para usar o BlogCraft, você precisará:
+1. Fazer login com sua conta Google associada ao Blogger
+2. Autorizar o aplicativo a acessar sua conta do Blogger
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+O aplicativo usa o protocolo OAuth2 para autenticação segura e não armazena suas credenciais.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 💻 Tecnologias Utilizadas
 
-### Code Splitting
+- React.js - Framework front-end
+- React Router - Navegação
+- TinyMCE - Editor de texto rico
+- Google OAuth - Autenticação
+- Blogger API v3 - Integração com o Blogger
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## 🔧 Configuração
 
-### Analyzing the Bundle Size
+No menu de configurações, você pode personalizar:
+- Blog padrão para publicação
+- Template padrão para novos posts
+- Intervalo de salvamento automático
+- Opções de backup
+- Preferências de tema (claro/escuro)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## 📱 Compatibilidade
 
-### Making a Progressive Web App
+- Navegadores modernos (Chrome, Firefox, Safari, Edge)
+- Responsivo para desktop, tablet e smartphone
+- Funcionalidade offline limitada para edição de rascunhos
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## 🔮 Recursos Futuros
 
-### Advanced Configuration
+- Integração com outras plataformas de blog
+- Editor em modo offline completo
+- Estatísticas de publicação
+- Gerenciamento de comentários
+- Suporte a múltiplos autores
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## 📄 Licença
 
-### Deployment
+Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## 📞 Suporte
 
-### `npm run build` fails to minify
+Para suporte, dúvidas ou sugestões, abra uma issue no repositório do GitHub ou entre em contato através de [seu-email@exemplo.com].
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+---
+
+Desenvolvido com ❤️ para a comunidade de blogueiros.
