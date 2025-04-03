@@ -1,124 +1,114 @@
-# BlogCraft - Editor Avançado para Blogger
+# BlogCraft - Advanced Blogger Editor
 
-BlogCraft é uma aplicação web moderna que substitui o Open Live Writer e outras aplicações descontinuadas, oferecendo uma solução completa para edição e publicação no Blogger com interface moderna e recursos avançados.
+###  UNDER DEVELOPMENT - NOT WORKING YET ###
 
-## 📋 Funcionalidades
+BlogCraft is a modern web application designed to replace discontinued tools like Open Live Writer, offering a comprehensive solution for editing and publishing on Blogger with an advanced interface and powerful features.
 
-### ✏️ Edição Avançada
-- Editor de texto rico estilo Microsoft Word
-- Formatação completa de texto, imagens, tabelas e mais
-- Conversão otimizada para o formato do Blogger
+## 🚀 Quick Start
 
-### 🎨 Interface Moderna
-- UI limpa e intuitiva
-- Suporte a Dark Mode e Light Mode
-- Design responsivo para desktop e mobile
+### Prerequisites
+- Node.js 18.x or higher (recommended)
+- npm (v9+) or Yarn (v1.22+)
+- Google Account with Blogger access
 
-### 📝 Gerenciamento de Conteúdo
-- Edição e automação de metadados
-- Gestão de títulos, subtítulos, tags e categorias
-- Visualização prévia do post
+### Installation
 
-### 📁 Templates
-- Criação e salvamento de templates personalizados
-- Reutilização rápida para posts similares
-- Organização de templates por categorias
-
-### 🚀 Publicação Integrada
-- Publicação direta para o Blogger via API oficial
-- Agendamento de posts (data e hora)
-- Status de publicação em tempo real
-
-### 🔄 Recursos Extras
-- Importação de arquivos Word e TXT
-- Duplicação de posts existentes
-- Salvamento automático de rascunhos
-- Backup local de conteúdo
-
-## 🚀 Instalação
-
-### Pré-requisitos
-- Node.js 16.x ou superior
-- npm ou yarn
-
-### Passos para instalação
-
-1. Clone o repositório
+1. Clone the repository
    ```bash
-   git clone https://github.com/seu-usuario/blogcraft.git
+   git clone https://github.com/your-username/blogcraft.git
    cd blogcraft
    ```
 
-2. Instale as dependências
+2. Install dependencies
    ```bash
    npm install
-   # ou
+   # or
    yarn install
    ```
 
-3. Configure as variáveis de ambiente
-   - Crie um arquivo `.env` na raiz do projeto
-   - Adicione sua chave da API TinyMCE:
+3. Configure environment variables
+   - Create a `.env` file in the project root with the following:
    ```
-   REACT_APP_TINYMCE_API_KEY=sua-chave-aqui
+   # Google OAuth Client ID (from Google Cloud Console)
+   REACT_APP_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+
+   # TinyMCE API Key (optional but recommended)
+   REACT_APP_TINYMCE_API_KEY=your-tinymce-api-key
    ```
 
-4. Execute o aplicativo
+4. Set up Google OAuth
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select an existing one
+   - Enable the Blogger API
+   - Create OAuth 2.0 credentials:
+     * Application type: Web application
+     * Authorized JavaScript origins: `http://localhost:3000`
+     * Authorized redirect URIs: `http://localhost:3000`
+   - Copy the Client ID to your `.env` file
+
+5. Run the application
    ```bash
    npm start
-   # ou
+   # or
    yarn start
    ```
 
-5. Acesse o aplicativo em `http://localhost:3000`
+6. Access the application at `http://localhost:3000`
 
-## 🔑 Autenticação
+## 🔑 Authentication Guide
 
-Para usar o BlogCraft, você precisará:
-1. Fazer login com sua conta Google associada ao Blogger
-2. Autorizar o aplicativo a acessar sua conta do Blogger
+### Google OAuth Setup
 
-O aplicativo usa o protocolo OAuth2 para autenticação segura e não armazena suas credenciais.
+1. **Create Google Cloud Project**
+   - Visit [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select an existing one
 
-## 💻 Tecnologias Utilizadas
+2. **Enable APIs**
+   - Navigate to "APIs & Services"
+   - Enable "Blogger API"
+   - Enable "Google+ API"
 
-- React.js - Framework front-end
-- React Router - Navegação
-- TinyMCE - Editor de texto rico
-- Google OAuth - Autenticação
-- Blogger API v3 - Integração com o Blogger
+3. **Create OAuth Credentials**
+   - Go to "Credentials"
+   - Click "Create Credentials" > "OAuth client ID"
+   - Select "Web application"
+   - Add authorized origins and redirect URIs
+     * For local development: `http://localhost:3000`
+     * For production: Your actual domain
 
-## 🔧 Configuração
+4. **Configure Consent Screen**
+   - Set up OAuth consent screen
+   - Add required scopes:
+     * `.../auth/blogger` (Blogger API)
+     * `email`
+     * `profile`
 
-No menu de configurações, você pode personalizar:
-- Blog padrão para publicação
-- Template padrão para novos posts
-- Intervalo de salvamento automático
-- Opções de backup
-- Preferências de tema (claro/escuro)
+5. **Security Considerations**
+   - Keep your Client ID and credentials confidential
+   - Never commit sensitive information to version control
+   - Use environment variables for sensitive data
 
-## 📱 Compatibilidade
+### Troubleshooting
+- Ensure your Google account has Blogger access
+- Verify Client ID and scopes match your application
+- Check network connectivity
+- Ensure browser supports modern OAuth flows
 
-- Navegadores modernos (Chrome, Firefox, Safari, Edge)
-- Responsivo para desktop, tablet e smartphone
-- Funcionalidade offline limitada para edição de rascunhos
+## 📚 More Help
+- [Blogger API Documentation](https://developers.google.com/blogger/docs/3.0/getting_started)
+- [Google OAuth Guide](https://developers.google.com/identity/protocols/oauth2)
 
-## 🔮 Recursos Futuros
+## 💻 Development Tips
+- Use incognito/private browsing to test login flows
+- Clear browser cache if experiencing authentication issues
+- Check browser console for detailed error messages
 
-- Integração com outras plataformas de blog
-- Editor em modo offline completo
-- Estatísticas de publicação
-- Gerenciamento de comentários
-- Suporte a múltiplos autores
-
-## 📄 Licença
-
-Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
-
-## 📞 Suporte
-
-Para suporte, dúvidas ou sugestões, abra uma issue no repositório do GitHub ou entre em contato através de [seu-email@exemplo.com].
+## 🛡️ Permissions
+BlogCraft requires minimal permissions to:
+- Read your Blogger blogs
+- Create, edit, and manage blog posts
+- Access basic profile information
 
 ---
 
-Desenvolvido com ❤️ para a comunidade de blogueiros.
+Developed with ❤️ for the blogging community
