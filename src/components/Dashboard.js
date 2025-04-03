@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import BloggerService from '../services/BloggerService';
+import AuthService from '../services/AuthService';
+import Feedback from './Feedback';
 
 /**
  * Componente Dashboard - Página inicial após login
@@ -22,11 +24,12 @@ function Dashboard({ theme, toggleTheme }) {
     postsByMonth: []
   });
   const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Carregar blogs do usuário
   useEffect(() => {
     fetchUserBlogs();
-  }, []);
+  }, [retryCount]);
 
   // Carregar posts quando o blog selecionado mudar
   useEffect(() => {
@@ -43,7 +46,9 @@ function Dashboard({ theme, toggleTheme }) {
       setLoading(true);
       setError(null);
       
+      console.log('Buscando blogs do usuário...');
       const data = await BloggerService.getUserBlogs();
+      console.log('Blogs recebidos:', data);
       
       if (data.items && data.items.length > 0) {
         setBlogs(data.items);
@@ -58,7 +63,28 @@ function Dashboard({ theme, toggleTheme }) {
       }
     } catch (error) {
       console.error('Erro ao buscar blogs:', error);
+      
+      // Verificar se o erro é relacionado a autenticação
+      if (error.message.includes('autenticação') || 
+          error.message.includes('login') || 
+          error.message.includes('token')) {
+        
+        // Limpar token para forçar novo login
+        AuthService.removeAuthToken();
+        
+        // Redirecionar para página de login
+        navigate('/', { replace: true });
+        return;
+      }
+      
       setError(`Erro ao carregar blogs: ${error.message}`);
+      
+      // Tentar novamente após 5 segundos (máximo de 3 tentativas)
+      if (retryCount < 3) {
+        setTimeout(() => {
+          setRetryCount(prevCount => prevCount + 1);
+        }, 5000);
+      }
     } finally {
       setLoading(false);
     }
@@ -110,6 +136,20 @@ function Dashboard({ theme, toggleTheme }) {
       );
     } catch (error) {
       console.error('Erro ao buscar posts:', error);
+      
+      // Verificar se o erro é relacionado a autenticação
+      if (error.message.includes('autenticação') || 
+          error.message.includes('login') || 
+          error.message.includes('token')) {
+        
+        // Limpar token para forçar novo login
+        AuthService.removeAuthToken();
+        
+        // Redirecionar para página de login
+        navigate('/', { replace: true });
+        return;
+      }
+      
       setError(`Erro ao carregar posts: ${error.message}`);
     } finally {
       setLoading(false);
@@ -194,6 +234,18 @@ function Dashboard({ theme, toggleTheme }) {
       });
     } catch (error) {
       console.error('Erro ao duplicar post:', error);
+      
+      // Verificar se é erro de autenticação
+      if (error.message.includes('autenticação') || 
+          error.message.includes('login') || 
+          error.message.includes('token')) {
+        
+        // Limpar token e redirecionar para login
+        AuthService.removeAuthToken();
+        navigate('/', { replace: true });
+        return;
+      }
+      
       alert(`Erro ao duplicar post: ${error.message}`);
     } finally {
       setLoading(false);
@@ -219,10 +271,29 @@ function Dashboard({ theme, toggleTheme }) {
       alert('Post excluído com sucesso!');
     } catch (error) {
       console.error('Erro ao excluir post:', error);
+      
+      // Verificar se é erro de autenticação
+      if (error.message.includes('autenticação') || 
+          error.message.includes('login') || 
+          error.message.includes('token')) {
+        
+        // Limpar token e redirecionar para login
+        AuthService.removeAuthToken();
+        navigate('/', { replace: true });
+        return;
+      }
+      
       alert(`Erro ao excluir post: ${error.message}`);
     } finally {
       setLoading(false);
     }
+  };
+
+  /**
+   * Tenta novamente após erro
+   */
+  const handleRetry = () => {
+    setRetryCount(prevCount => prevCount + 1);
   };
 
   /**
@@ -267,163 +338,168 @@ function Dashboard({ theme, toggleTheme }) {
   };
 
   return (
-    <div className="dashboard-container">
-      <Sidebar theme={theme} toggleTheme={toggleTheme} />
-      
-      <div className="main-content">
-        <div className="dashboard-header">
-          <h1>Dashboard</h1>
-          
-          {blogs.length > 0 && (
-            <div className="blog-selector">
-              <label>Blog:</label>
-              <select 
-                value={selectedBlog?.id || ''} 
-                onChange={handleChangeBlog}
-              >
-                {blogs.map(blog => (
-                  <option key={blog.id} value={blog.id}>{blog.name}</option>
-                ))}
-              </select>
-            </div>
-          )}
-        </div>
+    <div className="main-content">
+      <div className="dashboard-header">
+        <h1>Dashboard</h1>
         
-        {loading ? (
-          <div className="loading">Carregando...</div>
-        ) : error ? (
-          <div className="error-message">{error}</div>
-        ) : (
-          <>
-            {selectedBlog && (
-              <div className="dashboard-content">
-                <div className="blog-info">
-                  <div className="blog-details">
-                    <h2>{selectedBlog.name}</h2>
-                    <p className="blog-url">{selectedBlog.url}</p>
-                  </div>
-                  
-                  <button 
-                    className="create-button" 
-                    onClick={handleCreateNewPost}
-                  >
-                    Criar Novo Post
-                  </button>
-                </div>
-                
-                <div className="dashboard-stats">
-                  <div className="stat-card">
-                    <h3>Posts Publicados</h3>
-                    <div className="stat-number">{stats.totalPosts}</div>
-                  </div>
-                  
-                  <div className="stat-card">
-                    <h3>Rascunhos</h3>
-                    <div className="stat-number">{stats.draftPosts}</div>
-                  </div>
-                  
-                  <div className="stat-card">
-                    <h3>Agendados</h3>
-                    <div className="stat-number">{stats.scheduledPosts}</div>
-                  </div>
-                  
-                  <div className="stat-card stat-chart">
-                    <h3>Publicações por Mês</h3>
-                    <div className="month-chart">
-                      {stats.postsByMonth.map((month, index) => (
-                        <div key={index} className="month-bar">
-                          <div 
-                            className="bar" 
-                            style={{ 
-                              height: `${Math.max(5, month.count * 20)}px` 
-                            }}
-                          >
-                            <span className="bar-count">{month.count}</span>
-                          </div>
-                          <div className="bar-label">{month.label}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="posts-section">
-                  <h2>Posts Recentes</h2>
-                  
-                  {posts.length === 0 ? (
-                    <div className="no-posts">
-                      <p>Nenhum post encontrado.</p>
-                      <button 
-                        className="create-button small" 
-                        onClick={handleCreateNewPost}
-                      >
-                        Criar Primeiro Post
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="posts-list">
-                      {posts.map(post => (
-                        <div key={post.id} className="post-item">
-                          <div className="post-info">
-                            <h3>{post.title}</h3>
-                            <div className="post-meta">
-                              {getStatusBadge(post.status)}
-                              <span className="post-date">
-                                {post.status === 'SCHEDULED' 
-                                  ? `Agendado para: ${formatDate(post.scheduled || post.updated)}`
-                                  : post.status === 'LIVE'
-                                    ? `Publicado em: ${formatDate(post.published)}`
-                                    : `Atualizado em: ${formatDate(post.updated)}`
-                                }
-                              </span>
-                              
-                              {post.labels && post.labels.length > 0 && (
-                                <div className="post-labels">
-                                  {post.labels.map((label, index) => (
-                                    <span key={index} className="post-label">
-                                      {label}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          
-                          <div className="post-actions">
-                            <button 
-                              className="edit-button"
-                              onClick={() => handleEditPost(post.id)}
-                              title="Editar este post"
-                            >
-                              Editar
-                            </button>
-                            
-                            <button 
-                              className="duplicate-button"
-                              onClick={() => handleDuplicatePost(post.id)}
-                              title="Criar uma cópia deste post"
-                            >
-                              Duplicar
-                            </button>
-                            
-                            <button 
-                              className="delete-button"
-                              onClick={() => handleDeletePost(post.id)}
-                              title="Excluir este post"
-                            >
-                              Excluir
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </>
+        {blogs.length > 0 && (
+          <div className="blog-selector">
+            <label>Blog:</label>
+            <select 
+              value={selectedBlog?.id || ''} 
+              onChange={handleChangeBlog}
+            >
+              {blogs.map(blog => (
+                <option key={blog.id} value={blog.id}>{blog.name}</option>
+              ))}
+            </select>
+          </div>
         )}
       </div>
+      
+      {loading ? (
+        <div className="loading">Carregando...</div>
+      ) : error ? (
+        <div className="error-message">
+          <Feedback 
+            type="error" 
+            message={error} 
+            onDismiss={() => setError(null)}
+          />
+          <button onClick={handleRetry} className="retry-button">
+            Tentar Novamente
+          </button>
+        </div>
+      ) : (
+        <>
+          {selectedBlog && (
+            <div className="dashboard-content">
+              <div className="blog-info">
+                <div className="blog-details">
+                  <h2>{selectedBlog.name}</h2>
+                  <p className="blog-url">{selectedBlog.url}</p>
+                </div>
+                
+                <button 
+                  className="create-button" 
+                  onClick={handleCreateNewPost}
+                >
+                  Criar Novo Post
+                </button>
+              </div>
+              
+              <div className="dashboard-stats">
+                <div className="stat-card">
+                  <h3>Posts Publicados</h3>
+                  <div className="stat-number">{stats.totalPosts}</div>
+                </div>
+                
+                <div className="stat-card">
+                  <h3>Rascunhos</h3>
+                  <div className="stat-number">{stats.draftPosts}</div>
+                </div>
+                
+                <div className="stat-card">
+                  <h3>Agendados</h3>
+                  <div className="stat-number">{stats.scheduledPosts}</div>
+                </div>
+                
+                <div className="stat-card stat-chart">
+                  <h3>Publicações por Mês</h3>
+                  <div className="month-chart">
+                    {stats.postsByMonth.map((month, index) => (
+                      <div key={index} className="month-bar">
+                        <div 
+                          className="bar" 
+                          style={{ 
+                            height: `${Math.max(5, month.count * 20)}px` 
+                          }}
+                        >
+                          <span className="bar-count">{month.count}</span>
+                        </div>
+                        <div className="bar-label">{month.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="posts-section">
+                <h2>Posts Recentes</h2>
+                
+                {posts.length === 0 ? (
+                  <div className="no-posts">
+                    <p>Nenhum post encontrado.</p>
+                    <button 
+                      className="create-button small" 
+                      onClick={handleCreateNewPost}
+                    >
+                      Criar Primeiro Post
+                    </button>
+                  </div>
+                ) : (
+                  <div className="posts-list">
+                    {posts.map(post => (
+                      <div key={post.id} className="post-item">
+                        <div className="post-info">
+                          <h3>{post.title}</h3>
+                          <div className="post-meta">
+                            {getStatusBadge(post.status)}
+                            <span className="post-date">
+                              {post.status === 'SCHEDULED' 
+                                ? `Agendado para: ${formatDate(post.scheduled || post.updated)}`
+                                : post.status === 'LIVE'
+                                  ? `Publicado em: ${formatDate(post.published)}`
+                                  : `Atualizado em: ${formatDate(post.updated)}`
+                              }
+                            </span>
+                            
+                            {post.labels && post.labels.length > 0 && (
+                              <div className="post-labels">
+                                {post.labels.map((label, index) => (
+                                  <span key={index} className="post-label">
+                                    {label}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="post-actions">
+                          <button 
+                            className="edit-button"
+                            onClick={() => handleEditPost(post.id)}
+                            title="Editar este post"
+                          >
+                            Editar
+                          </button>
+                          
+                          <button 
+                            className="duplicate-button"
+                            onClick={() => handleDuplicatePost(post.id)}
+                            title="Criar uma cópia deste post"
+                          >
+                            Duplicar
+                          </button>
+                          
+                          <button 
+                            className="delete-button"
+                            onClick={() => handleDeletePost(post.id)}
+                            title="Excluir este post"
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

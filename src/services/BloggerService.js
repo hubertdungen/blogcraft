@@ -1,11 +1,11 @@
-import AuthService from './AuthService';
-
 /**
  * BloggerService - Serviço para comunicação com a API do Blogger
  * 
  * Encapsula todas as chamadas para a API do Blogger para facilitar
  * a integração e manutenção.
  */
+
+import AuthService from './AuthService';
 
 /**
  * Verifica se ocorreu erro na resposta da API
@@ -45,20 +45,75 @@ const handleResponse = async (response) => {
 };
 
 /**
+ * Pega o token de autenticação atual e verifica se é válido
+ * @returns {string} Token de autenticação
+ * @throws {Error} Se não houver token válido
+ */
+const getValidToken = () => {
+  const token = AuthService.getAuthToken();
+  if (!token) {
+    throw new Error('Usuário não autenticado');
+  }
+  
+  // Verificar se o token está expirado
+  if (AuthService.isTokenExpired()) {
+    throw new Error('Token expirado. Por favor, faça login novamente.');
+  }
+  
+  return token;
+};
+
+/**
  * Obtém os blogs do usuário autenticado
  * @returns {Promise<Array>} Lista de blogs do usuário
  */
 const getUserBlogs = async () => {
-  const token = AuthService.getAuthToken();
-  if (!token) throw new Error('Usuário não autenticado');
-  
-  const response = await fetch('https://www.googleapis.com/blogger/v3/users/self/blogs', {
-    headers: {
-      'Authorization': `Bearer ${token}`
+  try {
+    const token = getValidToken();
+    
+    console.log('Buscando blogs do usuário...');
+    const response = await fetch('https://www.googleapis.com/blogger/v3/users/self/blogs', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    console.log('Resposta status:', response.status);
+    
+    if (response.status === 401 || response.status === 403) {
+      // Token inválido ou sem permissão, tentar obter detalhes do erro
+      try {
+        const errorData = await response.json();
+        console.error('Erro de autenticação:', errorData);
+        
+        // Se for erro de token expirado, limpar token para forçar novo login
+        if (errorData.error && 
+            (errorData.error.status === 'UNAUTHENTICATED' || 
+             errorData.error.status === 'PERMISSION_DENIED' ||
+             errorData.error.message.includes('Invalid Credentials'))) {
+          console.log('Token inválido detectado, limpando...');
+          AuthService.removeAuthToken();
+        }
+      } catch (e) {
+        console.error('Erro ao processar resposta de erro:', e);
+      }
+      
+      throw new Error('Erro de autenticação. Por favor, faça login novamente.');
     }
-  });
-  
-  return handleResponse(response);
+    
+    return handleResponse(response);
+  } catch (error) {
+    console.error('Erro ao buscar blogs:', error);
+    
+    // Se for erro relacionado a autenticação, limpar token
+    if (error.message.includes('autenticado') || 
+        error.message.includes('token') || 
+        error.message.includes('login')) {
+      AuthService.removeAuthToken();
+    }
+    
+    throw error;
+  }
 };
 
 /**
@@ -67,16 +122,20 @@ const getUserBlogs = async () => {
  * @returns {Promise<Object>} Detalhes do blog
  */
 const getBlogInfo = async (blogId) => {
-  const token = AuthService.getAuthToken();
-  if (!token) throw new Error('Usuário não autenticado');
-  
-  const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}`, {
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  });
-  
-  return handleResponse(response);
+  try {
+    const token = getValidToken();
+    
+    const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    return handleResponse(response);
+  } catch (error) {
+    console.error('Erro ao buscar informações do blog:', error);
+    throw error;
+  }
 };
 
 /**
@@ -86,41 +145,45 @@ const getBlogInfo = async (blogId) => {
  * @returns {Promise<Array>} Lista de posts do blog
  */
 const getPosts = async (blogId, options = {}) => {
-  const token = AuthService.getAuthToken();
-  if (!token) throw new Error('Usuário não autenticado');
-  
-  // Construir query params a partir das opções
-  const queryParams = new URLSearchParams();
-  
-  if (options.maxResults) {
-    queryParams.append('maxResults', options.maxResults);
-  }
-  
-  if (options.status) {
-    queryParams.append('status', options.status);
-  }
-  
-  if (options.startDate) {
-    queryParams.append('startDate', options.startDate);
-  }
-  
-  if (options.endDate) {
-    queryParams.append('endDate', options.endDate);
-  }
-  
-  if (options.labels) {
-    queryParams.append('labels', options.labels);
-  }
-  
-  const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
-  
-  const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts${query}`, {
-    headers: {
-      'Authorization': `Bearer ${token}`
+  try {
+    const token = getValidToken();
+    
+    // Construir query params a partir das opções
+    const queryParams = new URLSearchParams();
+    
+    if (options.maxResults) {
+      queryParams.append('maxResults', options.maxResults);
     }
-  });
-  
-  return handleResponse(response);
+    
+    if (options.status) {
+      queryParams.append('status', options.status);
+    }
+    
+    if (options.startDate) {
+      queryParams.append('startDate', options.startDate);
+    }
+    
+    if (options.endDate) {
+      queryParams.append('endDate', options.endDate);
+    }
+    
+    if (options.labels) {
+      queryParams.append('labels', options.labels);
+    }
+    
+    const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
+    
+    const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts${query}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    return handleResponse(response);
+  } catch (error) {
+    console.error('Erro ao buscar posts:', error);
+    throw error;
+  }
 };
 
 /**
@@ -130,16 +193,20 @@ const getPosts = async (blogId, options = {}) => {
  * @returns {Promise<Object>} Detalhes do post
  */
 const getPost = async (blogId, postId) => {
-  const token = AuthService.getAuthToken();
-  if (!token) throw new Error('Usuário não autenticado');
-  
-  const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}`, {
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  });
-  
-  return handleResponse(response);
+  try {
+    const token = getValidToken();
+    
+    const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    return handleResponse(response);
+  } catch (error) {
+    console.error('Erro ao buscar post:', error);
+    throw error;
+  }
 };
 
 /**
@@ -149,19 +216,23 @@ const getPost = async (blogId, postId) => {
  * @returns {Promise<Object>} Post criado
  */
 const createPost = async (blogId, postData) => {
-  const token = AuthService.getAuthToken();
-  if (!token) throw new Error('Usuário não autenticado');
-  
-  const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(postData)
-  });
-  
-  return handleResponse(response);
+  try {
+    const token = getValidToken();
+    
+    const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(postData)
+    });
+    
+    return handleResponse(response);
+  } catch (error) {
+    console.error('Erro ao criar post:', error);
+    throw error;
+  }
 };
 
 /**
@@ -172,19 +243,23 @@ const createPost = async (blogId, postData) => {
  * @returns {Promise<Object>} Post atualizado
  */
 const updatePost = async (blogId, postId, postData) => {
-  const token = AuthService.getAuthToken();
-  if (!token) throw new Error('Usuário não autenticado');
-  
-  const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}`, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(postData)
-  });
-  
-  return handleResponse(response);
+  try {
+    const token = getValidToken();
+    
+    const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(postData)
+    });
+    
+    return handleResponse(response);
+  } catch (error) {
+    console.error('Erro ao atualizar post:', error);
+    throw error;
+  }
 };
 
 /**
@@ -194,17 +269,21 @@ const updatePost = async (blogId, postId, postData) => {
  * @returns {Promise<Object>} Post publicado
  */
 const publishPost = async (blogId, postId) => {
-  const token = AuthService.getAuthToken();
-  if (!token) throw new Error('Usuário não autenticado');
-  
-  const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}/publish`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  });
-  
-  return handleResponse(response);
+  try {
+    const token = getValidToken();
+    
+    const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}/publish`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    return handleResponse(response);
+  } catch (error) {
+    console.error('Erro ao publicar post:', error);
+    throw error;
+  }
 };
 
 /**
@@ -214,17 +293,21 @@ const publishPost = async (blogId, postId) => {
  * @returns {Promise<Object>} Post salvo como rascunho
  */
 const revertPostToDraft = async (blogId, postId) => {
-  const token = AuthService.getAuthToken();
-  if (!token) throw new Error('Usuário não autenticado');
-  
-  const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}/revert`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  });
-  
-  return handleResponse(response);
+  try {
+    const token = getValidToken();
+    
+    const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}/revert`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    return handleResponse(response);
+  } catch (error) {
+    console.error('Erro ao reverter post para rascunho:', error);
+    throw error;
+  }
 };
 
 /**
@@ -234,17 +317,21 @@ const revertPostToDraft = async (blogId, postId) => {
  * @returns {Promise<void>}
  */
 const deletePost = async (blogId, postId) => {
-  const token = AuthService.getAuthToken();
-  if (!token) throw new Error('Usuário não autenticado');
-  
-  const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  });
-  
-  return handleResponse(response);
+  try {
+    const token = getValidToken();
+    
+    const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    return handleResponse(response);
+  } catch (error) {
+    console.error('Erro ao excluir post:', error);
+    throw error;
+  }
 };
 
 /**
@@ -254,24 +341,20 @@ const deletePost = async (blogId, postId) => {
  * @returns {Promise<Array>} Lista de comentários do post
  */
 const getComments = async (blogId, postId) => {
-  const token = AuthService.getAuthToken();
-  if (!token) throw new Error('Usuário não autenticado');
-  
-  const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}/comments`, {
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  });
-  
-  return handleResponse(response);
-};
-
-/**
- * Verifica se o token de autenticação é válido
- * @returns {Promise<boolean>} True se o token é válido
- */
-const validateToken = async () => {
-  return AuthService.validateToken();
+  try {
+    const token = getValidToken();
+    
+    const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}/comments`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    return handleResponse(response);
+  } catch (error) {
+    console.error('Erro ao buscar comentários:', error);
+    throw error;
+  }
 };
 
 // Exportar todas as funções como um objeto
@@ -285,8 +368,7 @@ const BloggerService = {
   publishPost,
   revertPostToDraft,
   deletePost,
-  getComments,
-  validateToken
+  getComments
 };
 
 export default BloggerService;
