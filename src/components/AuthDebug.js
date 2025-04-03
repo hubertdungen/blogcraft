@@ -77,8 +77,11 @@ function AuthDebug() {
         
         {token ? (
           <>
-            <p><strong>Token encontrado:</strong> ✅</p>
-            <p><strong>Token expirado:</strong> {tokenExpired ? '❌ Sim' : '✅ Não'}</p>
+            <p><strong>Token encontrado:</strong> <span role="img" aria-label="verificado">✅</span></p>
+            <p><strong>Token expirado:</strong> {tokenExpired ? 
+                <><span role="img" aria-label="erro">❌</span> Sim</> : 
+                <><span role="img" aria-label="verificado">✅</span> Não</>}
+            </p>
             
             {decodedToken && (
               <div>
@@ -123,7 +126,7 @@ function AuthDebug() {
             </div>
           </>
         ) : (
-          <p>❌ Nenhum token de autenticação encontrado!</p>
+            <p><span role="img" aria-label="erro">❌</span> Nenhum token de autenticação encontrado!</p>
         )}
       </div>
       
@@ -150,7 +153,7 @@ function AuthDebug() {
           <div style={{ marginTop: '15px' }}>
             {apiTestResult.success ? (
               <div>
-                <p style={{ color: 'green' }}>✅ Comunicação bem-sucedida!</p>
+                <p style={{ color: 'green' }}><span role="img" aria-label="verificado">✅</span> Comunicação bem-sucedida!</p>
                 
                 {apiTestResult.data.items && (
                   <div>
@@ -182,7 +185,7 @@ function AuthDebug() {
               </div>
             ) : (
               <div>
-                <p style={{ color: 'red' }}>❌ Erro na comunicação com a API!</p>
+                <p style={{ color: 'red' }}><span role="img" aria-label="erro">❌</span> Erro na comunicação com a API!</p>
                 <p><strong>Mensagem de erro:</strong> {apiTestResult.error}</p>
                 
                 <div style={{ 

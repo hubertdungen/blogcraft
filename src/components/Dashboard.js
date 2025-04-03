@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from './Sidebar';
+//import Sidebar from './Sidebar';
 import BloggerService from '../services/BloggerService';
 import AuthService from '../services/AuthService';
 import Feedback from './Feedback';
@@ -29,6 +29,7 @@ function Dashboard({ theme, toggleTheme }) {
   // Carregar blogs do usuário
   useEffect(() => {
     fetchUserBlogs();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [retryCount]);
 
   // Carregar posts quando o blog selecionado mudar
@@ -36,6 +37,7 @@ function Dashboard({ theme, toggleTheme }) {
     if (selectedBlog) {
       fetchBlogPosts(selectedBlog);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBlog]);
 
   /**

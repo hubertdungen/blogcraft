@@ -98,18 +98,21 @@ function PostEditor({ theme, toggleTheme }) {
     
     // Limpar timer ao desmontar componente
     return () => {
-      if (autoSaveTimer) {
-        clearInterval(autoSaveTimer);
+      if (timer) {
+        clearInterval(timer);
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location, postId]);
-
-  // Efeito adicional para carregar post quando o blog selecionado mudar e houver postId
+  
+  // Corrigindo o segundo useEffect (linhas ~110-113)
   useEffect(() => {
     if (postId && selectedBlog) {
       fetchPost(selectedBlog, postId);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBlog, postId]);
+
 
   /**
    * Auto-salva o post atual como rascunho
