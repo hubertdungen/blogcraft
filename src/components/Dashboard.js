@@ -256,7 +256,7 @@ function Dashboard({ theme, toggleTheme }) {
    * Exclui um post após confirmação
    */
   const handleDeletePost = async (postId) => {
-    if (!confirm('Tem certeza que deseja excluir este post? Esta ação não pode ser desfeita.')) {
+    if (!window.confirm('Tem certeza que deseja excluir este post? Esta ação não pode ser desfeita.')) {
       return;
     }
     

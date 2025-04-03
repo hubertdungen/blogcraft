@@ -143,7 +143,7 @@ function TemplatesManager({ theme }) {
    * Exclui um template
    */
   const handleDeleteTemplate = (templateId) => {
-    if (!confirm('Tem certeza que deseja excluir este template? Esta ação não pode ser desfeita.')) {
+    if (!window.confirm('Tem certeza que deseja excluir este template? Esta ação não pode ser desfeita.')) {
       return;
     }
     
@@ -225,7 +225,7 @@ function TemplatesManager({ theme }) {
           }
           
           // Perguntar se deseja substituir ou mesclar
-          const shouldReplace = confirm(
+          const shouldReplace = window.confirm(
             `Importar ${validTemplates.length} templates. Deseja substituir todos os templates existentes? ` +
             `Escolha "OK" para substituir ou "Cancelar" para mesclar com os templates existentes.`
           );
@@ -250,7 +250,7 @@ function TemplatesManager({ theme }) {
             );
             
             if (conflictingTemplates.length > 0) {
-              const shouldOverwrite = confirm(
+              const shouldOverwrite = window.confirm(
                 `${conflictingTemplates.length} templates têm IDs conflitantes. ` +
                 `Deseja sobrescrever os templates existentes com o mesmo ID? ` +
                 `Escolha "OK" para sobrescrever ou "Cancelar" para manter os templates existentes.`
@@ -332,7 +332,7 @@ function TemplatesManager({ theme }) {
    * Cancela a edição do template atual
    */
   const handleCancelEdit = () => {
-    if (confirm('Há alterações não salvas. Deseja realmente cancelar?')) {
+    if (window.confirm('Há alterações não salvas. Deseja realmente cancelar?')) {
       setSelectedTemplate(null);
       setTemplateName('');
       setTemplateDescription('');
