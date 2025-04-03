@@ -2,21 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BloggerService from '../services/BloggerService';
 
+// Importar o serviço de internacionalização
+import i18n, { LOCALES, t } from '../services/I18nService';
+
 /**
  * Componente Settings - Configurações da aplicação
  * 
- * Permite ao usuário configurar:
+ * Permite ao utilizador configurar:
  * - Blog padrão
  * - Template padrão
  * - Intervalo de salvamento automático
  * - Backup automático
  * - Preferências visuais
+ * - Idioma da interface
  */
 function Settings({ theme, toggleTheme }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [blogs, setBlogs] = useState([]);
   const [templates, setTemplates] = useState([]);
+  const [language, setLanguage] = useState(i18n.getLocale());
   const [settings, setSettings] = useState({
     defaultBlogId: '',
     defaultTemplate: '',
@@ -26,7 +31,7 @@ function Settings({ theme, toggleTheme }) {
     defaultPublishStatus: 'draft'
   });
   const [error, setError] = useState(null);
-
+  
   // Carregar configurações e dados ao montar o componente
   useEffect(() => {
     loadSettings();
@@ -51,12 +56,12 @@ function Settings({ theme, toggleTheme }) {
       });
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
-      setError('Erro ao carregar configurações. As configurações padrão serão usadas.');
+      setError(t('settings.confirmations.loadError'));
     }
   };
 
   /**
-   * Carrega os blogs do usuário
+   * Carrega os blogs do utilizador
    */
   const loadBlogs = async () => {
     try {
@@ -69,7 +74,7 @@ function Settings({ theme, toggleTheme }) {
       }
     } catch (error) {
       console.error('Erro ao buscar blogs:', error);
-      setError(`Não foi possível carregar seus blogs: ${error.message}`);
+      setError(t('common.error', { message: error.message }));
     } finally {
       setLoading(false);
     }
@@ -106,15 +111,28 @@ function Settings({ theme, toggleTheme }) {
   };
 
   /**
+   * Manipula a mudança de idioma
+   */
+  const handleLanguageChange = (e) => {
+    const newLocale = e.target.value;
+    setLanguage(newLocale);
+  };
+
+  /**
    * Salva as configurações
    */
   const handleSaveSettings = () => {
     try {
+      // Salvar configurações gerais
       localStorage.setItem('blogcraft_settings', JSON.stringify(settings));
-      alert('Configurações salvas com sucesso!');
+      
+      // Salvar idioma
+      i18n.setLocale(language);
+      
+      alert(t('settings.confirmations.saveSuccess'));
     } catch (error) {
       console.error('Erro ao salvar configurações:', error);
-      alert(`Erro ao salvar configurações: ${error.message}`);
+      alert(t('common.error', { message: error.message }));
     }
   };
 
@@ -122,7 +140,7 @@ function Settings({ theme, toggleTheme }) {
    * Restaura as configurações padrão
    */
   const handleResetSettings = () => {
-    if (window.confirm('Tem certeza que deseja restaurar as configurações padrão? Esta ação não pode ser desfeita.')) {
+    if (window.confirm(t('settings.confirmations.resetConfirm'))) {
       const defaultSettings = {
         defaultBlogId: '',
         defaultTemplate: '',
@@ -134,7 +152,7 @@ function Settings({ theme, toggleTheme }) {
       
       setSettings(defaultSettings);
       localStorage.setItem('blogcraft_settings', JSON.stringify(defaultSettings));
-      alert('Configurações restauradas para os valores padrão.');
+      alert(t('settings.confirmations.resetSuccess'));
     }
   };
 
@@ -142,17 +160,19 @@ function Settings({ theme, toggleTheme }) {
    * Limpa todos os dados locais
    */
   const handleClearData = () => {
-    if (window.confirm('ATENÇÃO: Isso apagará todos os seus dados locais, incluindo templates e configurações. Esta ação não pode ser desfeita. Deseja continuar?')) {
+    if (window.confirm(t('settings.confirmations.clearDataConfirm'))) {
       // Manter apenas o token de autenticação
       const token = localStorage.getItem('blogcraft_token');
+      const currentLocale = i18n.getLocale(); // Preservar o idioma atual
       
       // Limpar localStorage
       localStorage.clear();
       
-      // Restaurar o token
+      // Restaurar o token e idioma
       if (token) {
         localStorage.setItem('blogcraft_token', token);
       }
+      localStorage.setItem('blogcraft_locale', currentLocale);
       
       // Recarregar a página
       window.location.reload();
@@ -163,7 +183,7 @@ function Settings({ theme, toggleTheme }) {
    * Realiza logout
    */
   const handleLogout = () => {
-    if (window.confirm('Tem certeza que deseja sair? Seus dados locais serão mantidos.')) {
+    if (window.confirm(t('auth.confirmLogout'))) {
       localStorage.removeItem('blogcraft_token');
       navigate('/');
     }
@@ -172,67 +192,67 @@ function Settings({ theme, toggleTheme }) {
   return (
     <div className="settings-container">
       <div className="settings-content">
-        <h1>Configurações</h1>
+        <h1>{t('settings.title')}</h1>
         
         {loading ? (
-          <div className="loading">Carregando...</div>
+          <div className="loading">{t('common.loading')}</div>
         ) : error ? (
-          <div className="error-message">{error}</div>
+          <div className="error-message">{t('common.error', { message: error })}</div>
         ) : (
           <div className="settings-form">
             <div className="setting-group">
-              <h2>Preferências Gerais</h2>
+              <h2>{t('settings.sections.general')}</h2>
               
               <div className="setting-item">
-                <label htmlFor="defaultBlog">Blog Padrão:</label>
+                <label htmlFor="defaultBlog">{t('settings.fields.defaultBlog')}</label>
                 <select
                   id="defaultBlog"
                   value={settings.defaultBlogId}
                   onChange={(e) => handleSettingChange(e, 'defaultBlogId')}
                 >
-                  <option value="">Selecionar...</option>
+                  <option value="">{t('common.selectOption')}</option>
                   {blogs.map(blog => (
                     <option key={blog.id} value={blog.id}>{blog.name}</option>
                   ))}
                 </select>
-                <p className="setting-description">Blog selecionado por padrão ao criar um novo post.</p>
+                <p className="setting-description">{t('settings.fields.defaultBlogDesc')}</p>
               </div>
               
               <div className="setting-item">
-                <label htmlFor="defaultTemplate">Template Padrão:</label>
+                <label htmlFor="defaultTemplate">{t('settings.fields.defaultTemplate')}</label>
                 <select
                   id="defaultTemplate"
                   value={settings.defaultTemplate}
                   onChange={(e) => handleSettingChange(e, 'defaultTemplate')}
                 >
-                  <option value="">Nenhum</option>
+                  <option value="">{t('editor.templates.none')}</option>
                   {templates.map(template => (
                     <option key={template.id} value={template.id}>{template.name}</option>
                   ))}
                 </select>
-                <p className="setting-description">Template carregado automaticamente ao criar um novo post.</p>
+                <p className="setting-description">{t('settings.fields.defaultTemplateDesc')}</p>
               </div>
               
               <div className="setting-item">
-                <label htmlFor="defaultPublishStatus">Status de Publicação Padrão:</label>
+                <label htmlFor="defaultPublishStatus">{t('settings.fields.publishStatus')}</label>
                 <select
                   id="defaultPublishStatus"
                   value={settings.defaultPublishStatus}
                   onChange={(e) => handleSettingChange(e, 'defaultPublishStatus')}
                 >
-                  <option value="draft">Rascunho</option>
-                  <option value="publish">Publicado</option>
-                  <option value="scheduled">Agendado</option>
+                  <option value="draft">{t('dashboard.posts.status.draft')}</option>
+                  <option value="publish">{t('dashboard.posts.status.published')}</option>
+                  <option value="scheduled">{t('dashboard.posts.status.scheduled')}</option>
                 </select>
-                <p className="setting-description">Status padrão ao salvar posts.</p>
+                <p className="setting-description">{t('settings.fields.publishStatusDesc')}</p>
               </div>
             </div>
             
             <div className="setting-group">
-              <h2>Salvamento Automático</h2>
+              <h2>{t('settings.sections.autoSave')}</h2>
               
               <div className="setting-item">
-                <label htmlFor="autoSaveInterval">Intervalo de Salvamento Automático (minutos):</label>
+                <label htmlFor="autoSaveInterval">{t('settings.fields.autoSaveInterval')}</label>
                 <input
                   id="autoSaveInterval"
                   type="number"
@@ -241,7 +261,7 @@ function Settings({ theme, toggleTheme }) {
                   value={settings.autoSaveInterval}
                   onChange={(e) => handleSettingChange(e, 'autoSaveInterval')}
                 />
-                <p className="setting-description">Intervalo de tempo para salvamento automático de rascunhos.</p>
+                <p className="setting-description">{t('settings.fields.autoSaveIntervalDesc')}</p>
               </div>
               
               <div className="setting-item">
@@ -251,14 +271,14 @@ function Settings({ theme, toggleTheme }) {
                     checked={settings.autoBackup}
                     onChange={(e) => handleSettingChange(e, 'autoBackup')}
                   />
-                  Backup Automático de Rascunhos
+                  {t('settings.fields.autoBackup')}
                 </label>
-                <p className="setting-description">Cria cópias locais de backup dos seus rascunhos.</p>
+                <p className="setting-description">{t('settings.fields.autoBackupDesc')}</p>
               </div>
             </div>
             
             <div className="setting-group">
-              <h2>Segurança</h2>
+              <h2>{t('settings.sections.security')}</h2>
               
               <div className="setting-item">
                 <label className="checkbox-label">
@@ -267,56 +287,70 @@ function Settings({ theme, toggleTheme }) {
                     checked={settings.confirmBeforeDelete}
                     onChange={(e) => handleSettingChange(e, 'confirmBeforeDelete')}
                   />
-                  Confirmar antes de excluir
+                  {t('settings.fields.confirmDelete')}
                 </label>
-                <p className="setting-description">Solicita confirmação antes de excluir posts ou templates.</p>
+                <p className="setting-description">{t('settings.fields.confirmDeleteDesc')}</p>
               </div>
             </div>
             
             <div className="setting-group">
-              <h2>Aparência</h2>
+              <h2>{t('settings.sections.appearance')}</h2>
               
               <div className="setting-item">
-                <label>Tema:</label>
+                <label>{t('settings.fields.theme')}</label>
                 <div className="theme-toggle">
                   <button 
                     className={`theme-button ${theme === 'light' ? 'active' : ''}`}
                     onClick={() => toggleTheme('light')}
                   >
-                    Claro
+                    {t('settings.fields.themeLight')}
                   </button>
                   <button 
                     className={`theme-button ${theme === 'dark' ? 'active' : ''}`}
                     onClick={() => toggleTheme('dark')}
                   >
-                    Escuro
+                    {t('settings.fields.themeDark')}
                   </button>
                 </div>
-                <p className="setting-description">Escolha entre tema claro ou escuro para a interface.</p>
+                <p className="setting-description">{t('settings.fields.themeDesc')}</p>
+              </div>
+              
+              {/* Seleção de idioma */}
+              <div className="setting-item">
+                <label htmlFor="language">{t('settings.fields.language')}</label>
+                <select
+                  id="language"
+                  value={language}
+                  onChange={handleLanguageChange}
+                >
+                  <option value={LOCALES.PT_PT}>Português</option>
+                  <option value={LOCALES.EN_US}>English</option>
+                </select>
+                <p className="setting-description">{t('settings.fields.languageDesc')}</p>
               </div>
             </div>
             
             <div className="setting-group">
-              <h2>Gerenciamento de Dados</h2>
+              <h2>{t('settings.sections.dataManagement')}</h2>
               
               <div className="data-actions">
                 <button className="reset-settings-button" onClick={handleResetSettings}>
-                  Restaurar Configurações Padrão
+                  {t('settings.buttons.reset')}
                 </button>
                 
                 <button className="clear-data-button" onClick={handleClearData}>
-                  Limpar Todos os Dados Locais
+                  {t('settings.buttons.clearData')}
                 </button>
               </div>
             </div>
             
             <div className="setting-actions">
               <button className="save-settings-button" onClick={handleSaveSettings}>
-                Salvar Configurações
+                {t('settings.buttons.save')}
               </button>
               
               <button className="logout-button" onClick={handleLogout}>
-                Sair
+                {t('auth.logout')}
               </button>
             </div>
           </div>

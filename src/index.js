@@ -23,7 +23,7 @@ const getClientId = () => {
 };
 
 root.render(
-  <GoogleOAuthProvider clientId={getClientId()}>
+  <React.StrictMode>
     <App />
-  </GoogleOAuthProvider>
+  </React.StrictMode>
 );
