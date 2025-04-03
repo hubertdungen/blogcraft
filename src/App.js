@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './styles/app.css';
 import './styles/feedback.css';
 
@@ -10,95 +10,54 @@ import PostEditor from './components/PostEditor';
 import TemplatesManager from './components/TemplatesManager';
 import Settings from './components/Settings';
 import Sidebar from './components/Sidebar';
-import Feedback from './components/Feedback';
+import AuthDebug from './components/AuthDebug';
 import AuthService from './services/AuthService';
 
 // Componente para verificação de autenticação
 function RequireAuth({ children }) {
   const location = useLocation();
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState(null);
   
   useEffect(() => {
-    let isMounted = true;
-    
     const checkAuth = async () => {
       try {
         const token = AuthService.getAuthToken();
         
         if (!token) {
-          throw new Error('No token');
+          throw new Error('Não autenticado');
         }
         
-        // Verificamos primeiro a validade do token localmente (sem API)
-        const tokenData = AuthService.decodeToken(token);
-        if (!tokenData) {
-          throw new Error('Invalid token format');
-        }
-        
-        // Verificamos se o token está expirado
+        // Verificar localmente se o token não parece expirado
         if (AuthService.isTokenExpired()) {
-          throw new Error('Token expired');
+          throw new Error('Token expirado');
         }
         
-        // Token parece válido localmente, permitimos o acesso
-        if (isMounted) {
-          setIsAuthenticated(true);
-          setLoading(false);
-        }
-        
-        // Fazemos uma validação com a API em segundo plano
-        try {
-          const isValid = await AuthService.validateToken();
-          if (!isValid && isMounted) {
-            console.warn('Token não validado pela API do Blogger');
-            // Não deslogamos imediatamente para evitar ciclos, apenas registramos o problema
-          }
-        } catch (apiError) {
-          console.error('Erro na validação de API:', apiError);
-        }
+        setIsAuthenticated(true);
       } catch (error) {
         console.error('Erro de autenticação:', error);
         
         // Limpar token inválido
         AuthService.removeAuthToken();
         
-        if (isMounted) {
-          setIsAuthenticated(false);
-          setError(error.message);
-          setLoading(false);
-          
-          // Redirecionar para login após um breve delay para evitar ciclos
-          setTimeout(() => {
-            if (location.pathname !== '/') {
-              navigate('/', { state: { from: location }, replace: true });
-            }
-          }, 100);
-        }
+        setIsAuthenticated(false);
+        setError(error.message);
+      } finally {
+        setLoading(false);
       }
     };
     
     checkAuth();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [location, navigate]);
+  }, []);
   
   if (loading) {
     return <div className="auth-loading">Verificando autenticação...</div>;
   }
   
   if (!isAuthenticated) {
-    // Mostrar mensagem de erro se houver
-    return (
-      <div className="auth-error">
-        {error && <Feedback type="error" message={`Erro de autenticação: ${error}`} />}
-        <Navigate to="/" state={{ from: location }} replace />
-      </div>
-    );
+    // Redirecionar para login preservando a URL de destino e informação de erro
+    return <Navigate to="/" state={{ from: location, authError: error }} replace />;
   }
   
   return children;
@@ -126,6 +85,9 @@ function App() {
         <Routes>
           {/* Rota de Login */}
           <Route path="/" element={<Login />} />
+          
+          {/* Rota de Depuração (acessível sem autenticação para ajudar em problemas de login) */}
+          <Route path="/auth-debug" element={<AuthDebug />} />
           
           {/* Rotas Protegidas */}
           <Route 

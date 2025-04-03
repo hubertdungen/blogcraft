@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Editor } from '@tinymce/tinymce-react';
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { saveAs } from 'file-saver';
+import Feedback from './Feedback';
 
 /**
  * Componente de Gerenciamento de Templates
@@ -19,6 +21,7 @@ function TemplatesManager({ theme }) {
   const [templateName, setTemplateName] = useState('');
   const [templateDescription, setTemplateDescription] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [feedback, setFeedback] = useState(null);
   const editorRef = useRef(null);
   
   // Carregar templates salvos no localStorage ao montar o componente
@@ -36,6 +39,10 @@ function TemplatesManager({ theme }) {
     } catch (error) {
       console.error('Erro ao carregar templates:', error);
       setTemplates([]);
+      setFeedback({
+        type: 'error',
+        message: 'Erro ao carregar templates. Os dados podem estar corrompidos.'
+      });
     }
   };
   
@@ -66,11 +73,6 @@ function TemplatesManager({ theme }) {
     setTemplateName('Novo Template');
     setTemplateDescription('');
     setIsEditing(true);
-    
-    // Limpar o editor
-    if (editorRef.current) {
-      editorRef.current.setContent('');
-    }
   };
   
   /**
@@ -78,19 +80,28 @@ function TemplatesManager({ theme }) {
    */
   const handleSaveTemplate = () => {
     if (!templateName.trim()) {
-      alert('Por favor, informe um nome para o template.');
+      setFeedback({
+        type: 'error',
+        message: 'Por favor, informe um nome para o template.'
+      });
       return;
     }
     
-    if (!editorRef.current) {
-      alert('Editor não inicializado. Por favor, tente novamente.');
+    if (!editorRef.current || !editorRef.current.getData) {
+      setFeedback({
+        type: 'error',
+        message: 'Editor não inicializado. Por favor, tente novamente.'
+      });
       return;
     }
     
-    const content = editorRef.current.getContent();
+    const content = editorRef.current.getData();
     
     if (!content.trim()) {
-      alert('O conteúdo do template não pode estar vazio.');
+      setFeedback({
+        type: 'error',
+        message: 'O conteúdo do template não pode estar vazio.'
+      });
       return;
     }
     
@@ -121,7 +132,11 @@ function TemplatesManager({ theme }) {
     setTemplates(updatedTemplates);
     setSelectedTemplate(updatedTemplate);
     
-    alert('Template salvo com sucesso!');
+    setFeedback({
+      type: 'success',
+      message: 'Template salvo com sucesso!',
+      duration: 3000
+    });
   };
   
   /**
@@ -147,7 +162,11 @@ function TemplatesManager({ theme }) {
       setIsEditing(false);
     }
     
-    alert('Template excluído com sucesso!');
+    setFeedback({
+      type: 'success',
+      message: 'Template excluído com sucesso!',
+      duration: 3000
+    });
   };
   
   /**
@@ -164,7 +183,10 @@ function TemplatesManager({ theme }) {
    */
   const handleExportAllTemplates = () => {
     if (templates.length === 0) {
-      alert('Não há templates para exportar.');
+      setFeedback({
+        type: 'error',
+        message: 'Não há templates para exportar.'
+      });
       return;
     }
     
@@ -195,7 +217,10 @@ function TemplatesManager({ theme }) {
           );
           
           if (validTemplates.length === 0) {
-            alert('Nenhum template válido encontrado no arquivo.');
+            setFeedback({
+              type: 'error',
+              message: 'Nenhum template válido encontrado no arquivo.'
+            });
             return;
           }
           
@@ -258,7 +283,11 @@ function TemplatesManager({ theme }) {
           // Atualizar estado
           setTemplates(updatedTemplates);
           
-          alert(`Importação concluída! ${validTemplates.length} templates importados.`);
+          setFeedback({
+            type: 'success',
+            message: `Importação concluída! ${validTemplates.length} templates importados.`,
+            duration: 3000
+          });
         } else if (importedData.id && importedData.name && importedData.content) {
           // É um único template
           const newTemplate = {
@@ -276,13 +305,23 @@ function TemplatesManager({ theme }) {
           // Atualizar estado
           setTemplates(updatedTemplates);
           
-          alert(`Template "${newTemplate.name}" importado com sucesso!`);
+          setFeedback({
+            type: 'success',
+            message: `Template "${newTemplate.name}" importado com sucesso!`,
+            duration: 3000
+          });
         } else {
-          alert('O arquivo não contém templates válidos.');
+          setFeedback({
+            type: 'error',
+            message: 'O arquivo não contém templates válidos.'
+          });
         }
       } catch (error) {
         console.error('Erro ao importar templates:', error);
-        alert('Erro ao processar o arquivo. Verifique se é um arquivo JSON válido.');
+        setFeedback({
+          type: 'error',
+          message: 'Erro ao processar o arquivo. Verifique se é um arquivo JSON válido.'
+        });
       }
     };
     
@@ -293,15 +332,12 @@ function TemplatesManager({ theme }) {
    * Cancela a edição do template atual
    */
   const handleCancelEdit = () => {
-    if (editorRef.current && editorRef.current.isDirty() && 
-        !confirm('Há alterações não salvas. Deseja realmente cancelar?')) {
-      return;
+    if (confirm('Há alterações não salvas. Deseja realmente cancelar?')) {
+      setSelectedTemplate(null);
+      setTemplateName('');
+      setTemplateDescription('');
+      setIsEditing(false);
     }
-    
-    setSelectedTemplate(null);
-    setTemplateName('');
-    setTemplateDescription('');
-    setIsEditing(false);
   };
   
   /**
@@ -328,186 +364,201 @@ function TemplatesManager({ theme }) {
   };
   
   return (
-    <div className="templates-container">
-      <div className="templates-content">
-        <div className="templates-header">
-          <h1>Gerenciador de Templates</h1>
-          
-          <div className="templates-actions">
-            <button 
-              className="create-template-button" 
-              onClick={handleCreateTemplate}
-              disabled={isEditing}
-            >
-              Criar Novo Template
-            </button>
-            
-            <button 
-              className="export-all-button" 
-              onClick={handleExportAllTemplates}
-              disabled={templates.length === 0}
-            >
-              Exportar Todos
-            </button>
-            
-            <label className="import-button">
-              Importar Templates
-              <input
-                type="file"
-                accept=".json"
-                onChange={handleImportTemplates}
-                style={{ display: 'none' }}
-              />
-            </label>
-          </div>
-        </div>
+    <div className="templates-content">
+      <div className="templates-header">
+        <h1>Gerenciador de Templates</h1>
         
-        <div className="templates-layout">
-          <div className="templates-list">
-            <h2>Templates Disponíveis ({templates.length})</h2>
-            
-            {templates.length === 0 ? (
-              <div className="templates-empty">
-                <p>Nenhum template disponível.</p>
-                <p>Crie um novo template ou importe templates existentes.</p>
-              </div>
-            ) : (
-              templates.map(template => (
-                <div 
-                  key={template.id} 
-                  className={`template-item ${selectedTemplate && selectedTemplate.id === template.id ? 'selected' : ''}`}
-                >
-                  <div className="template-info" onClick={() => handleSelectTemplate(template)}>
-                    <h3>{template.name}</h3>
-                    {template.description && (
-                      <p className="template-description">{template.description}</p>
-                    )}
-                    <p className="template-date">
-                      Atualizado em: {formatDate(template.updatedAt || template.createdAt)}
-                    </p>
-                  </div>
-                  
-                  <div className="template-actions">
-                    <button
-                      className="use-template-button"
-                      onClick={() => handleUseTemplate(template)}
-                      title="Usar este template para criar um novo post"
-                    >
-                      Usar
-                    </button>
-                    
-                    <button
-                      className="export-template-button"
-                      onClick={() => handleExportTemplate(template)}
-                      title="Exportar este template como arquivo JSON"
-                    >
-                      Exportar
-                    </button>
-                    
-                    <button 
-                      className="delete-template-button"
-                      onClick={() => handleDeleteTemplate(template.id)}
-                      title="Excluir este template"
-                    >
-                      Excluir
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+        <div className="templates-actions">
+          <button 
+            className="create-template-button" 
+            onClick={handleCreateTemplate}
+            disabled={isEditing}
+          >
+            Criar Novo Template
+          </button>
           
-          {isEditing && selectedTemplate && (
-            <div className="template-editor">
-              <div className="template-editor-header">
-                <h2>{selectedTemplate.id ? 'Editar Template' : 'Novo Template'}</h2>
+          <button 
+            className="export-all-button" 
+            onClick={handleExportAllTemplates}
+            disabled={templates.length === 0}
+          >
+            Exportar Todos
+          </button>
+          
+          <label className="import-button">
+            Importar Templates
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleImportTemplates}
+              style={{ display: 'none' }}
+            />
+          </label>
+        </div>
+      </div>
+      
+      {feedback && (
+        <Feedback 
+          type={feedback.type} 
+          message={feedback.message} 
+          onDismiss={() => setFeedback(null)}
+        />
+      )}
+      
+      <div className="templates-layout">
+        <div className="templates-list">
+          <h2>Templates Disponíveis ({templates.length})</h2>
+          
+          {templates.length === 0 ? (
+            <div className="templates-empty">
+              <p>Nenhum template disponível.</p>
+              <p>Crie um novo template ou importe templates existentes.</p>
+            </div>
+          ) : (
+            templates.map(template => (
+              <div 
+                key={template.id} 
+                className={`template-item ${selectedTemplate && selectedTemplate.id === template.id ? 'selected' : ''}`}
+              >
+                <div className="template-info" onClick={() => handleSelectTemplate(template)}>
+                  <h3>{template.name}</h3>
+                  {template.description && (
+                    <p className="template-description">{template.description}</p>
+                  )}
+                  <p className="template-date">
+                    Atualizado em: {formatDate(template.updatedAt || template.createdAt)}
+                  </p>
+                </div>
                 
-                <div className="template-editor-actions">
-                  <button 
-                    className="save-template-button" 
-                    onClick={handleSaveTemplate}
+                <div className="template-actions">
+                  <button
+                    className="use-template-button"
+                    onClick={() => handleUseTemplate(template)}
+                    title="Usar este template para criar um novo post"
                   >
-                    Salvar Template
+                    Usar
                   </button>
                   
                   <button
-                    className="cancel-edit-button"
-                    onClick={handleCancelEdit}
+                    className="export-template-button"
+                    onClick={() => handleExportTemplate(template)}
+                    title="Exportar este template como arquivo JSON"
                   >
-                    Cancelar
+                    Exportar
+                  </button>
+                  
+                  <button 
+                    className="delete-template-button"
+                    onClick={() => handleDeleteTemplate(template.id)}
+                    title="Excluir este template"
+                  >
+                    Excluir
                   </button>
                 </div>
               </div>
-              
-              <div className="template-form">
-                <div className="template-form-field">
-                  <label htmlFor="template-name">Nome do Template:</label>
-                  <input
-                    id="template-name"
-                    type="text"
-                    value={templateName}
-                    onChange={(e) => setTemplateName(e.target.value)}
-                    placeholder="Digite um nome para o template"
-                    required
-                  />
-                </div>
-                
-                <div className="template-form-field">
-                  <label htmlFor="template-description">Descrição (opcional):</label>
-                  <input
-                    id="template-description"
-                    type="text"
-                    value={templateDescription}
-                    onChange={(e) => setTemplateDescription(e.target.value)}
-                    placeholder="Uma breve descrição do template"
-                  />
-                </div>
-                
-                <div className="template-editor-content">
-                  <label>Conteúdo do Template:</label>
-                  <Editor
-                    apiKey={process.env.REACT_APP_TINYMCE_API_KEY} // Substituir pela sua chave da TinyMCE
-                    onInit={(evt, editor) => editorRef.current = editor}
-                    initialValue={selectedTemplate.content}
-                    init={{
-                      height: 500,
-                      menubar: true,
-                      plugins: [
-                        'advlist autolink lists link image charmap print preview anchor',
-                        'searchreplace visualblocks code fullscreen',
-                        'insertdatetime media table paste code help wordcount'
-                      ],
-                      toolbar: 'undo redo | formatselect | ' +
-                        'bold italic backcolor | alignleft aligncenter ' +
-                        'alignright alignjustify | bullist numlist outdent indent | ' +
-                        'removeformat | help | image | code',
-                      content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
-                      skin: theme === 'dark' ? 'oxide-dark' : 'oxide',
-                      content_css: theme === 'dark' ? 'dark' : 'default'
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {!isEditing && (
-            <div className="template-preview">
-              <h2>Selecione um template para editar</h2>
-              <p>Ou clique em "Criar Novo Template" para começar um novo.</p>
-              
-              <div className="template-tips">
-                <h3>Dicas para Templates</h3>
-                <ul>
-                  <li>Crie templates para tipos específicos de posts (revisões, tutoriais, notícias, etc.)</li>
-                  <li>Inclua espaços reservados para o conteúdo que você normalmente adiciona</li>
-                  <li>Use estilos consistentes para manter a identidade visual do seu blog</li>
-                  <li>Exporte seus templates favoritos para compartilhar com outros usuários</li>
-                </ul>
-              </div>
-            </div>
+            ))
           )}
         </div>
+        
+        {isEditing && selectedTemplate && (
+          <div className="template-editor">
+            <div className="template-editor-header">
+              <h2>{selectedTemplate.id ? 'Editar Template' : 'Novo Template'}</h2>
+              
+              <div className="template-editor-actions">
+                <button 
+                  className="save-template-button" 
+                  onClick={handleSaveTemplate}
+                >
+                  Salvar Template
+                </button>
+                
+                <button
+                  className="cancel-edit-button"
+                  onClick={handleCancelEdit}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+            
+            <div className="template-form">
+              <div className="template-form-field">
+                <label htmlFor="template-name">Nome do Template:</label>
+                <input
+                  id="template-name"
+                  type="text"
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  placeholder="Digite um nome para o template"
+                  required
+                />
+              </div>
+              
+              <div className="template-form-field">
+                <label htmlFor="template-description">Descrição (opcional):</label>
+                <input
+                  id="template-description"
+                  type="text"
+                  value={templateDescription}
+                  onChange={(e) => setTemplateDescription(e.target.value)}
+                  placeholder="Uma breve descrição do template"
+                />
+              </div>
+              
+              <div className="template-editor-content">
+                <label>Conteúdo do Template:</label>
+                <CKEditor
+                  editor={ClassicEditor}
+                  data={selectedTemplate.content}
+                  onReady={editor => {
+                    // Armazenar referência ao editor
+                    editorRef.current = editor;
+                    
+                    // Configurações adicionais
+                    editor.ui.view.editable.element.style.minHeight = '400px';
+                  }}
+                  onChange={(event, editor) => {
+                    // Nada a fazer aqui, salvamos apenas quando o usuário clica em salvar
+                  }}
+                  config={{
+                    toolbar: [
+                      'heading',
+                      '|',
+                      'bold', 'italic', 'strikethrough', 'underline',
+                      '|',
+                      'link', 'bulletedList', 'numberedList',
+                      '|',
+                      'indent', 'outdent',
+                      '|',
+                      'blockQuote', 'insertTable',
+                      '|',
+                      'undo', 'redo'
+                    ],
+                    language: 'pt-br'
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {!isEditing && (
+          <div className="template-preview">
+            <h2>Selecione um template para editar</h2>
+            <p>Ou clique em "Criar Novo Template" para começar um novo.</p>
+            
+            <div className="template-tips">
+              <h3>Dicas para Templates</h3>
+              <ul>
+                <li>Crie templates para tipos específicos de posts (revisões, tutoriais, notícias, etc.)</li>
+                <li>Inclua espaços reservados para o conteúdo que você normalmente adiciona</li>
+                <li>Use estilos consistentes para manter a identidade visual do seu blog</li>
+                <li>Exporte seus templates favoritos para compartilhar com outros usuários</li>
+              </ul>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -15,44 +15,50 @@ function Login() {
   const location = useLocation();
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [debugInfo, setDebugInfo] = useState(null);
   
-  // Destino após o login (se redirecionado de outra página)
+  // Obter a rota para onde o usuário tentou acessar (para redirecionamento após login)
   const from = location.state?.from?.pathname || '/dashboard';
+  
+  // Verificar se há mensagem de erro vinda do redirecionamento
+  useEffect(() => {
+    if (location.state?.authError) {
+      setError(`Sessão expirada ou inválida: ${location.state.authError}`);
+    }
+  }, [location]);
   
   // Verificar se já está autenticado
   useEffect(() => {
     const checkExistingAuth = async () => {
-      const token = AuthService.getAuthToken();
-      
-      if (token) {
-        try {
-          // Verificar se o token é válido localmente
-          const decodedToken = AuthService.decodeToken(token);
+      try {
+        const token = AuthService.getAuthToken();
+        
+        if (token) {
+          // Verificar localmente se o token parece válido
+          const tokenData = AuthService.decodeToken(token);
           
-          if (!decodedToken) {
-            console.log('Token inválido encontrado, removendo...');
+          if (!tokenData) {
+            console.log('Token inválido detectado');
             AuthService.removeAuthToken();
             return;
           }
           
           if (AuthService.isTokenExpired()) {
-            console.log('Token expirado encontrado, removendo...');
+            console.log('Token expirado detectado');
             AuthService.removeAuthToken();
             return;
           }
           
-          console.log('Token válido encontrado, redirecionando...');
-          navigate(from, { replace: true });
-        } catch (error) {
-          console.error('Erro ao verificar token existente:', error);
-          AuthService.removeAuthToken();
+          console.log('Token válido encontrado, redirecionando para dashboard');
+          navigate('/dashboard', { replace: true });
         }
+      } catch (error) {
+        console.error('Erro ao verificar autenticação existente:', error);
+        AuthService.removeAuthToken();
       }
     };
     
     checkExistingAuth();
-  }, [navigate, from]);
+  }, [navigate]);
   
   /**
    * Callback para login bem-sucedido
@@ -62,32 +68,39 @@ function Login() {
     setIsLoading(true);
     setError(null);
     
+    console.log('Login bem-sucedido, processando credenciais...');
+    
     try {
       if (!credentialResponse.credential) {
         throw new Error('Credencial não recebida do Google');
       }
       
-      // Log para debug (remova em produção)
-      console.log('Credencial recebida com sucesso');
-      
-      // Decodificar o token para debug (não faça isso em produção)
+      // Verificar se o token é válido no formato
       const tokenData = AuthService.decodeToken(credentialResponse.credential);
-      setDebugInfo(tokenData ? { 
-        sub: tokenData.sub,
-        exp: new Date(tokenData.exp * 1000).toLocaleString(),
-        email: tokenData.email
-      } : null);
       
-      // Salvar o token na autenticação
+      if (!tokenData) {
+        throw new Error('Token inválido ou não pôde ser decodificado');
+      }
+      
+      // Verificar se o token contém informações mínimas necessárias
+      if (!tokenData.sub || !tokenData.exp) {
+        throw new Error('Token não contém informações necessárias');
+      }
+      
+      console.log('Token validado localmente. ID do usuário:', tokenData.sub);
+      
+      // Salvar o token
       AuthService.setAuthToken(credentialResponse.credential);
       
-      // Redirecionar para o dashboard ou página original após um breve delay
-      // O delay ajuda a evitar problemas de redirecionamento no OAuth
+      // Mostrar feedback
+      console.log('Token salvo, redirecionando...');
+      
+      // Redirecionar para o dashboard ou página original
       setTimeout(() => {
         navigate(from, { replace: true });
       }, 500);
     } catch (error) {
-      console.error('Erro no processo de login:', error);
+      console.error('Erro no processamento do login:', error);
       setError(`Erro ao processar a autenticação: ${error.message}`);
       setIsLoading(false);
     }
@@ -95,10 +108,10 @@ function Login() {
   
   /**
    * Callback para erro no login
-   * @param {Object} error - Erro retornado pelo Google OAuth
+   * @param {Error} error - Erro retornado pelo Google OAuth
    */
   const handleLoginError = (error) => {
-    console.error('Erro de login:', error);
+    console.error('Erro no login Google OAuth:', error);
     setError('Falha na autenticação. Por favor, verifique sua conexão e tente novamente.');
     setIsLoading(false);
   };
@@ -132,22 +145,15 @@ function Login() {
                 width="280px"
                 locale="pt-BR"
                 logo_alignment="center"
+                scope={AuthService.BLOGGER_API_SCOPE}
               />
               
               {/* Nota informativa */}
               <p className="login-note">
                 Ao fazer login, você autoriza o BlogCraft a acessar sua conta do Blogger.
+                Certifique-se de que sua conta tenha acesso a blogs no Blogger.
               </p>
             </>
-          )}
-          
-          {/* Informações de debug (remova em produção) */}
-          {debugInfo && (
-            <div className="debug-info" style={{marginTop: '20px', fontSize: '12px', color: '#888'}}>
-              <p>ID: {debugInfo.sub}</p>
-              <p>Email: {debugInfo.email}</p>
-              <p>Expira: {debugInfo.exp}</p>
-            </div>
           )}
         </div>
       </div>

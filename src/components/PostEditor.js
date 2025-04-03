@@ -1,14 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { Editor } from '@tinymce/tinymce-react';
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import DateTimePicker from 'react-datetime-picker';
 import { saveAs } from 'file-saver';
+import BloggerService from '../services/BloggerService';
+import AuthService from '../services/AuthService';
+import Feedback from './Feedback';
 
 /**
  * Componente do Editor de Posts
  * 
  * Recursos:
- * - Editor TinyMCE para conteúdo rico
+ * - Editor CKEditor para conteúdo rico (semelhante ao Word)
  * - Gerenciamento de tags/labels
  * - Suporte a templates
  * - Agendamento de publicações
@@ -45,6 +49,10 @@ function PostEditor({ theme, toggleTheme }) {
     keywords: ''
   });
   const [showMetadataEditor, setShowMetadataEditor] = useState(false);
+  
+  // Estado para mensagens de feedback
+  const [feedback, setFeedback] = useState(null);
+  const [autoSaveTimer, setAutoSaveTimer] = useState(null);
 
   // Efeito para carregar dados iniciais
   useEffect(() => {
@@ -77,6 +85,23 @@ function PostEditor({ theme, toggleTheme }) {
     if (postId && selectedBlog) {
       fetchPost(selectedBlog, postId);
     }
+    
+    // Configurar autosalvamento
+    const settings = JSON.parse(localStorage.getItem('blogcraft_settings') || '{}');
+    const autoSaveInterval = settings.autoSaveInterval || 5; // 5 minutos padrão
+    
+    const timer = setInterval(() => {
+      handleAutoSave();
+    }, autoSaveInterval * 60 * 1000);
+    
+    setAutoSaveTimer(timer);
+    
+    // Limpar timer ao desmontar componente
+    return () => {
+      if (autoSaveTimer) {
+        clearInterval(autoSaveTimer);
+      }
+    };
   }, [location, postId]);
 
   // Efeito adicional para carregar post quando o blog selecionado mudar e houver postId
@@ -85,6 +110,29 @@ function PostEditor({ theme, toggleTheme }) {
       fetchPost(selectedBlog, postId);
     }
   }, [selectedBlog, postId]);
+
+  /**
+   * Auto-salva o post atual como rascunho
+   */
+  const handleAutoSave = () => {
+    if (!postData.title || !selectedBlog) return;
+    
+    // Salvar como rascunho local
+    const key = `blogcraft_draft_${selectedBlog}_${postId || 'new'}`;
+    const draftData = {
+      ...postData,
+      metadata,
+      savedAt: new Date().toISOString()
+    };
+    
+    localStorage.setItem(key, JSON.stringify(draftData));
+    
+    setFeedback({
+      type: 'info',
+      message: `Rascunho salvo automaticamente às ${new Date().toLocaleTimeString()}`,
+      duration: 3000
+    });
+  };
 
   /**
    * Busca a lista de blogs do usuário autenticado
@@ -99,18 +147,9 @@ function PostEditor({ theme, toggleTheme }) {
       }
       
       setLoading(true);
-      // Chamada para a API do Blogger para obter os blogs
-      const response = await fetch('https://www.googleapis.com/blogger/v3/users/self/blogs', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
       
-      if (!response.ok) {
-        throw new Error(`Erro ao buscar blogs: ${response.status}`);
-      }
-      
-      const data = await response.json();
+      // Buscar blogs usando o serviço
+      const data = await BloggerService.getUserBlogs();
       
       if (data.items) {
         setBlogs(data.items);
@@ -122,7 +161,21 @@ function PostEditor({ theme, toggleTheme }) {
       }
     } catch (error) {
       console.error('Erro ao buscar blogs:', error);
-      alert('Não foi possível carregar seus blogs. Por favor, verifique sua conexão e tente novamente.');
+      
+      // Se for erro de autenticação, redirecionar para login
+      if (error.message.includes('autenticação') || 
+          error.message.includes('login') || 
+          error.message.includes('token')) {
+        
+        AuthService.removeAuthToken();
+        navigate('/', { replace: true });
+        return;
+      }
+      
+      setFeedback({
+        type: 'error',
+        message: 'Não foi possível carregar seus blogs. Por favor, verifique sua conexão e tente novamente.'
+      });
     } finally {
       setLoading(false);
     }
@@ -134,20 +187,9 @@ function PostEditor({ theme, toggleTheme }) {
   const fetchPost = async (blogId, postId) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('blogcraft_token');
       
       // Buscar o post existente
-      const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Erro ao buscar post: ${response.status}`);
-      }
-      
-      const data = await response.json();
+      const data = await BloggerService.getPost(blogId, postId);
       
       // Extrair metadados do conteúdo (se houver)
       const metaDescription = extractMetadata(data.content, 'description');
@@ -169,7 +211,21 @@ function PostEditor({ theme, toggleTheme }) {
       });
     } catch (error) {
       console.error('Erro ao buscar post:', error);
-      alert('Não foi possível carregar o post. Por favor, verifique sua conexão e tente novamente.');
+      
+      // Se for erro de autenticação, redirecionar para login
+      if (error.message.includes('autenticação') || 
+          error.message.includes('login') || 
+          error.message.includes('token')) {
+        
+        AuthService.removeAuthToken();
+        navigate('/', { replace: true });
+        return;
+      }
+      
+      setFeedback({
+        type: 'error',
+        message: 'Não foi possível carregar o post. Por favor, verifique sua conexão e tente novamente.'
+      });
     } finally {
       setLoading(false);
     }
@@ -188,9 +244,10 @@ function PostEditor({ theme, toggleTheme }) {
   };
 
   /**
-   * Handler para mudanças no editor TinyMCE
+   * Handler para mudanças no editor CKEditor
    */
-  const handleEditorChange = (content) => {
+  const handleEditorChange = (event, editor) => {
+    const content = editor.getData();
     setPostData(prev => ({
       ...prev,
       content
@@ -259,14 +316,19 @@ function PostEditor({ theme, toggleTheme }) {
     const newTemplate = {
       id: Date.now(),
       name: templateName,
-      content: postData.content
+      content: postData.content,
+      createdAt: new Date().toISOString()
     };
     
     const updatedTemplates = [...templates, newTemplate];
     setTemplates(updatedTemplates);
     localStorage.setItem('blogcraft_templates', JSON.stringify(updatedTemplates));
     
-    alert('Template salvo com sucesso!');
+    setFeedback({
+      type: 'success',
+      message: 'Template salvo com sucesso!',
+      duration: 3000
+    });
   };
 
   /**
@@ -288,6 +350,35 @@ function PostEditor({ theme, toggleTheme }) {
         ...prev,
         content: template.content
       }));
+      
+      // Atualizar o editor com o conteúdo do template
+      if (editorRef.current) {
+        editorRef.current.setData(template.content);
+      }
+    }
+  };
+
+  /**
+   * Insere metadata no conteúdo HTML
+   */
+  const insertMetadata = (content, metaType, metaValue) => {
+    const metaTag = `<meta name="${metaType}" content="${metaValue}">`;
+    
+    // Verificar se já existe a meta tag
+    const metaRegex = new RegExp(`<meta name="${metaType}" content="[^"]*"`, 'i');
+    
+    if (metaRegex.test(content)) {
+      // Substituir a meta tag existente
+      return content.replace(metaRegex, metaTag);
+    } else {
+      // Adicionar nova meta tag após a tag <head> ou no início do documento
+      if (content.includes('<head>')) {
+        return content.replace('<head>', `<head>\n  ${metaTag}`);
+      } else if (content.includes('<html>')) {
+        return content.replace('<html>', `<html>\n<head>\n  ${metaTag}\n</head>`);
+      } else {
+        return `<head>\n  ${metaTag}\n</head>\n${content}`;
+      }
     }
   };
 
@@ -296,18 +387,23 @@ function PostEditor({ theme, toggleTheme }) {
    */
   const handleSavePost = async (publish = false) => {
     if (!selectedBlog) {
-      alert('Por favor, selecione um blog antes de salvar o post.');
+      setFeedback({
+        type: 'error',
+        message: 'Por favor, selecione um blog antes de salvar o post.'
+      });
       return;
     }
     
     if (!postData.title.trim()) {
-      alert('Por favor, insira um título para o post.');
+      setFeedback({
+        type: 'error',
+        message: 'Por favor, insira um título para o post.'
+      });
       return;
     }
     
     try {
       setSaving(true);
-      const token = localStorage.getItem('blogcraft_token');
       
       // Adicionar metadados ao conteúdo
       let finalContent = postData.content;
@@ -335,72 +431,55 @@ function PostEditor({ theme, toggleTheme }) {
         postPayload.published = postData.scheduledPublish.toISOString();
       }
       
-      // Determinar se estamos criando ou atualizando um post
-      const method = postId ? 'PUT' : 'POST';
-      const url = postId 
-        ? `https://www.googleapis.com/blogger/v3/blogs/${selectedBlog}/posts/${postId}`
-        : `https://www.googleapis.com/blogger/v3/blogs/${selectedBlog}/posts`;
+      let savedPost;
       
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(postPayload)
+      // Determinar se estamos criando ou atualizando um post
+      if (postId) {
+        // Atualizar post existente
+        savedPost = await BloggerService.updatePost(selectedBlog, postId, postPayload);
+      } else {
+        // Criar novo post
+        savedPost = await BloggerService.createPost(selectedBlog, postPayload);
+      }
+      
+      // Se pediu para publicar e não está agendado, publicar imediatamente
+      if (publish && !postData.scheduledPublish) {
+        await BloggerService.publishPost(selectedBlog, savedPost.id);
+      }
+      
+      setFeedback({
+        type: 'success',
+        message: publish ? 'Post publicado com sucesso!' : 'Rascunho salvo com sucesso!',
+        duration: 3000
       });
       
-      if (!response.ok) {
-        throw new Error(`Erro ao salvar post: ${response.status}`);
-      }
+      // Limpar rascunho local após salvar
+      const draftKey = `blogcraft_draft_${selectedBlog}_${postId || 'new'}`;
+      localStorage.removeItem(draftKey);
       
-      const savedPost = await response.json();
-      
-      if (publish && !postData.scheduledPublish) {
-        // Publicar imediatamente se não estiver agendado
-        const publishResponse = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${selectedBlog}/posts/${savedPost.id}/publish`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (!publishResponse.ok) {
-          throw new Error(`Erro ao publicar post: ${publishResponse.status}`);
-        }
-      }
-      
-      alert(publish ? 'Post publicado com sucesso!' : 'Rascunho salvo com sucesso!');
-      navigate('/dashboard');
+      // Redirecionar para o dashboard após um breve atraso
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1500);
     } catch (error) {
       console.error('Erro ao salvar post:', error);
-      alert(`Ocorreu um erro ao salvar o post: ${error.message}`);
+      
+      // Se for erro de autenticação, redirecionar para login
+      if (error.message.includes('autenticação') || 
+          error.message.includes('login') || 
+          error.message.includes('token')) {
+        
+        AuthService.removeAuthToken();
+        navigate('/', { replace: true });
+        return;
+      }
+      
+      setFeedback({
+        type: 'error',
+        message: `Ocorreu um erro ao salvar o post: ${error.message}`
+      });
     } finally {
       setSaving(false);
-    }
-  };
-
-  /**
-   * Insere metadata no conteúdo HTML
-   */
-  const insertMetadata = (content, metaType, metaValue) => {
-    const metaTag = `<meta name="${metaType}" content="${metaValue}">`;
-    
-    // Verificar se já existe a meta tag
-    const metaRegex = new RegExp(`<meta name="${metaType}" content="[^"]*"`, 'i');
-    
-    if (metaRegex.test(content)) {
-      // Substituir a meta tag existente
-      return content.replace(metaRegex, metaTag);
-    } else {
-      // Adicionar nova meta tag após a tag <head> ou no início do documento
-      if (content.includes('<head>')) {
-        return content.replace('<head>', `<head>\n  ${metaTag}`);
-      } else if (content.includes('<html>')) {
-        return content.replace('<html>', `<html>\n<head>\n  ${metaTag}\n</head>`);
-      } else {
-        return `<head>\n  ${metaTag}\n</head>\n${content}`;
-      }
     }
   };
 
@@ -487,6 +566,11 @@ function PostEditor({ theme, toggleTheme }) {
         title: title || prev.title,
         content: content || prev.content
       }));
+      
+      // Atualizar o editor com o novo conteúdo
+      if (editorRef.current) {
+        editorRef.current.setData(content);
+      }
     };
     
     if (file.name.endsWith('.txt') || file.name.endsWith('.html')) {
@@ -500,200 +584,241 @@ function PostEditor({ theme, toggleTheme }) {
    * Render do componente
    */
   return (
-    <div className="editor-container">
-      <div className="editor-content">
-        <div className="editor-header">
-          <h1>Editor de Post</h1>
-          
-          <div className="editor-actions">
-            <button 
-              className="save-draft-button" 
-              onClick={handleSaveAsDraft}
-              disabled={saving}
-            >
-              Salvar Rascunho
-            </button>
-            
-            <button 
-              className="publish-button" 
-              onClick={handlePublish}
-              disabled={saving}
-            >
-              {postData.scheduledPublish ? 'Agendar' : 'Publicar'}
-            </button>
-          </div>
-        </div>
+    <div className="editor-content">
+      <div className="editor-header">
+        <h1>Editor de Post</h1>
         
-        {loading ? (
-          <div className="loading">Carregando...</div>
-        ) : (
-          <>
-            <div className="blog-selector">
-              <label>Blog:</label>
-              <select 
-                value={selectedBlog} 
-                onChange={(e) => setSelectedBlog(e.target.value)}
-                disabled={!!postId} // Não permitir trocar o blog ao editar um post existente
-              >
-                {blogs.length === 0 ? (
-                  <option value="">Carregando blogs...</option>
-                ) : (
-                  blogs.map(blog => (
-                    <option key={blog.id} value={blog.id}>{blog.name}</option>
-                  ))
-                )}
-              </select>
+        <div className="editor-actions">
+          <button 
+            className="save-draft-button" 
+            onClick={handleSaveAsDraft}
+            disabled={saving}
+          >
+            {saving ? 'Salvando...' : 'Salvar Rascunho'}
+          </button>
+          
+          <button 
+            className="publish-button" 
+            onClick={handlePublish}
+            disabled={saving}
+          >
+            {saving ? 'Processando...' : (postData.scheduledPublish ? 'Agendar' : 'Publicar')}
+          </button>
+        </div>
+      </div>
+      
+      {feedback && (
+        <Feedback 
+          type={feedback.type} 
+          message={feedback.message} 
+          onDismiss={() => setFeedback(null)}
+        />
+      )}
+      
+      {loading ? (
+        <div className="loading">Carregando...</div>
+      ) : (
+        <>
+          <div className="blog-selector">
+            <label>Blog:</label>
+            <select 
+              value={selectedBlog} 
+              onChange={(e) => setSelectedBlog(e.target.value)}
+              disabled={!!postId} // Não permitir trocar o blog ao editar um post existente
+            >
+              {blogs.length === 0 ? (
+                <option value="">Carregando blogs...</option>
+              ) : (
+                blogs.map(blog => (
+                  <option key={blog.id} value={blog.id}>{blog.name}</option>
+                ))
+              )}
+            </select>
+          </div>
+          
+          <div className="post-options">
+            <div className="title-input">
+              <input
+                type="text"
+                placeholder="Título do post"
+                value={postData.title}
+                onChange={handleTitleChange}
+              />
             </div>
             
-            <div className="post-options">
-              <div className="title-input">
+            <div className="post-actions">
+              <div className="labels-input">
+                <label>Tags (separadas por vírgula):</label>
                 <input
                   type="text"
-                  placeholder="Título do post"
-                  value={postData.title}
-                  onChange={handleTitleChange}
+                  value={postData.labels.join(', ')}
+                  onChange={handleLabelsChange}
+                  placeholder="Exemplo: tecnologia, tutorial, dicas"
                 />
               </div>
               
-              <div className="post-actions">
-                <div className="labels-input">
-                  <label>Tags (separadas por vírgula):</label>
+              <div className="template-select">
+                <label>Template:</label>
+                <select onChange={handleTemplateSelect} value={selectedTemplate?.id || 0}>
+                  <option value={0}>Selecionar template...</option>
+                  {templates.map(template => (
+                    <option key={template.id} value={template.id}>
+                      {template.name}
+                    </option>
+                  ))}
+                </select>
+                <button onClick={handleSaveTemplate}>Salvar como Template</button>
+              </div>
+              
+              <div className="schedule-input">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={!!postData.scheduledPublish}
+                    onChange={() => handleScheduleChange(postData.scheduledPublish ? null : new Date())}
+                  />
+                  Agendar publicação
+                </label>
+                
+                {postData.scheduledPublish && (
+                  <DateTimePicker
+                    onChange={handleScheduleChange}
+                    value={postData.scheduledPublish}
+                    minDate={new Date()}
+                    format="dd/MM/yyyy HH:mm"
+                  />
+                )}
+              </div>
+              
+              <div className="draft-toggle">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={postData.isDraft}
+                    onChange={handleDraftToggle}
+                  />
+                  Salvar como rascunho
+                </label>
+              </div>
+              
+              <div className="metadata-toggle">
+                <button onClick={() => setShowMetadataEditor(!showMetadataEditor)}>
+                  {showMetadataEditor ? 'Esconder Metadados' : 'Editar Metadados'}
+                </button>
+              </div>
+              
+              <div className="import-export">
+                <button onClick={handleExportWord}>Exportar como Word</button>
+                <label className="file-input-label">
+                  Importar Arquivo
+                  <input
+                    type="file"
+                    accept=".txt,.doc,.docx,.html"
+                    onChange={handleFileImport}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+              </div>
+            </div>
+            
+            {showMetadataEditor && (
+              <div className="metadata-editor">
+                <h3>Metadados</h3>
+                
+                <div className="metadata-field">
+                  <label>Descrição (SEO):</label>
                   <input
                     type="text"
-                    value={postData.labels.join(', ')}
-                    onChange={handleLabelsChange}
-                    placeholder="Exemplo: tecnologia, tutorial, dicas"
+                    value={metadata.description}
+                    onChange={(e) => handleMetadataChange(e, 'description')}
+                    placeholder="Breve descrição do post para motores de busca"
                   />
                 </div>
                 
-                <div className="template-select">
-                  <label>Template:</label>
-                  <select onChange={handleTemplateSelect} value={selectedTemplate?.id || 0}>
-                    <option value={0}>Selecionar template...</option>
-                    {templates.map(template => (
-                      <option key={template.id} value={template.id}>
-                        {template.name}
-                      </option>
-                    ))}
-                  </select>
-                  <button onClick={handleSaveTemplate}>Salvar como Template</button>
+                <div className="metadata-field">
+                  <label>Autor:</label>
+                  <input
+                    type="text"
+                    value={metadata.author}
+                    onChange={(e) => handleMetadataChange(e, 'author')}
+                    placeholder="Nome do autor"
+                  />
                 </div>
                 
-                <div className="schedule-input">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={!!postData.scheduledPublish}
-                      onChange={() => handleScheduleChange(postData.scheduledPublish ? null : new Date())}
-                    />
-                    Agendar publicação
-                  </label>
-                  
-                  {postData.scheduledPublish && (
-                    <DateTimePicker
-                      onChange={handleScheduleChange}
-                      value={postData.scheduledPublish}
-                      minDate={new Date()}
-                      format="dd/MM/yyyy HH:mm"
-                    />
-                  )}
-                </div>
-                
-                <div className="draft-toggle">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={postData.isDraft}
-                      onChange={handleDraftToggle}
-                    />
-                    Salvar como rascunho
-                  </label>
-                </div>
-                
-                <div className="metadata-toggle">
-                  <button onClick={() => setShowMetadataEditor(!showMetadataEditor)}>
-                    {showMetadataEditor ? 'Esconder Metadados' : 'Editar Metadados'}
-                  </button>
-                </div>
-                
-                <div className="import-export">
-                  <button onClick={handleExportWord}>Exportar como Word</button>
-                  <label className="file-input-label">
-                    Importar Arquivo
-                    <input
-                      type="file"
-                      accept=".txt,.doc,.docx,.html"
-                      onChange={handleFileImport}
-                      style={{ display: 'none' }}
-                    />
-                  </label>
+                <div className="metadata-field">
+                  <label>Palavras-chave (SEO):</label>
+                  <input
+                    type="text"
+                    value={metadata.keywords}
+                    onChange={(e) => handleMetadataChange(e, 'keywords')}
+                    placeholder="Palavras-chave separadas por vírgula"
+                  />
                 </div>
               </div>
-              
-              {showMetadataEditor && (
-                <div className="metadata-editor">
-                  <h3>Metadados</h3>
-                  
-                  <div className="metadata-field">
-                    <label>Descrição (SEO):</label>
-                    <input
-                      type="text"
-                      value={metadata.description}
-                      onChange={(e) => handleMetadataChange(e, 'description')}
-                      placeholder="Breve descrição do post para motores de busca"
-                    />
-                  </div>
-                  
-                  <div className="metadata-field">
-                    <label>Autor:</label>
-                    <input
-                      type="text"
-                      value={metadata.author}
-                      onChange={(e) => handleMetadataChange(e, 'author')}
-                      placeholder="Nome do autor"
-                    />
-                  </div>
-                  
-                  <div className="metadata-field">
-                    <label>Palavras-chave (SEO):</label>
-                    <input
-                      type="text"
-                      value={metadata.keywords}
-                      onChange={(e) => handleMetadataChange(e, 'keywords')}
-                      placeholder="Palavras-chave separadas por vírgula"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <div className="rich-editor">
-              <Editor
-                apiKey="sua-chave-api-tinymce" // Substituir pela sua chave da TinyMCE
-                onInit={(evt, editor) => editorRef.current = editor}
-                value={postData.content}
-                onEditorChange={handleEditorChange}
-                init={{
-                  height: 500,
-                  menubar: true,
-                  plugins: [
-                    'advlist autolink lists link image charmap print preview anchor',
-                    'searchreplace visualblocks code fullscreen',
-                    'insertdatetime media table paste code help wordcount'
-                  ],
-                  toolbar: 'undo redo | formatselect | ' +
-                    'bold italic backcolor | alignleft aligncenter ' +
-                    'alignright alignjustify | bullist numlist outdent indent | ' +
-                    'removeformat | help | image | code',
-                  content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
-                  skin: theme === 'dark' ? 'oxide-dark' : 'oxide',
-                  content_css: theme === 'dark' ? 'dark' : 'default'
-                }}
-              />
-            </div>
-          </>
-        )}
-      </div>
+            )}
+          </div>
+          
+          <div className="rich-editor">
+            <CKEditor
+              editor={ClassicEditor}
+              data={postData.content}
+              onChange={handleEditorChange}
+              onReady={editor => {
+                // Armazenar referência ao editor
+                editorRef.current = editor;
+                
+                // Configurações adicionais
+                editor.ui.view.editable.element.style.minHeight = '500px';
+              }}
+              config={{
+                toolbar: [
+                  'heading',
+                  '|',
+                  'bold', 'italic', 'strikethrough', 'underline',
+                  '|',
+                  'link', 'bulletedList', 'numberedList', 'todoList',
+                  '|',
+                  'indent', 'outdent',
+                  '|',
+                  'imageUpload', 'blockQuote', 'insertTable', 'mediaEmbed',
+                  '|',
+                  'undo', 'redo',
+                  '|',
+                  'fontBackgroundColor', 'fontColor',
+                  '|',
+                  'fontSize', 'fontFamily',
+                  '|',
+                  'alignment',
+                  '|',
+                  'horizontalLine'
+                ],
+                image: {
+                  // Configuração para upload de imagens
+                  toolbar: [
+                    'imageTextAlternative',
+                    'imageStyle:full',
+                    'imageStyle:side'
+                  ]
+                },
+                table: {
+                  contentToolbar: [
+                    'tableColumn', 'tableRow', 'mergeTableCells',
+                    'tableCellProperties', 'tableProperties'
+                  ]
+                },
+                language: 'pt-br'
+              }}
+            />
+          </div>
+        </>
+      )}
+      
+      {/* Indicador de salvamento */}
+      {saving && (
+        <div className="save-indicator show saving">
+          Salvando...
+        </div>
+      )}
     </div>
   );
 }
