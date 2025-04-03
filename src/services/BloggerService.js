@@ -52,12 +52,21 @@ const handleResponse = async (response) => {
 const getValidToken = () => {
   const token = AuthService.getAuthToken();
   if (!token) {
+    console.error('Token não encontrado');
     throw new Error('Usuário não autenticado');
   }
   
   // Verificar se o token está expirado
   if (AuthService.isTokenExpired()) {
+    console.error('Token expirado em getValidToken');
     throw new Error('Token expirado. Por favor, faça login novamente.');
+  }
+  
+  // CORREÇÃO: Verificar formato básico do token
+  const parts = token.split('.');
+  if (parts.length !== 3) {
+    console.error('Formato do token inválido');
+    throw new Error('Token inválido. Por favor, faça login novamente.');
   }
   
   return token;
@@ -71,43 +80,67 @@ const getUserBlogs = async () => {
   try {
     const token = getValidToken();
     
-    console.log('Buscando blogs do usuário...');
+    console.log('Buscando blogs do usuário com token...');
+    
+    // MODIFICAÇÃO: Adicionar timeout mais longo para evitar problemas de rede
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos
+    
     const response = await fetch('https://www.googleapis.com/blogger/v3/users/self/blogs', {
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      },
+      signal: controller.signal
     });
     
-    console.log('Resposta status:', response.status);
+    clearTimeout(timeoutId);
     
-    if (response.status === 401 || response.status === 403) {
-      // Token inválido ou sem permissão, tentar obter detalhes do erro
-      try {
-        const errorData = await response.json();
-        console.error('Erro de autenticação:', errorData);
-        
-        // Se for erro de token expirado, limpar token para forçar novo login
-        if (errorData.error && 
-            (errorData.error.status === 'UNAUTHENTICATED' || 
-             errorData.error.status === 'PERMISSION_DENIED' ||
-             errorData.error.message.includes('Invalid Credentials'))) {
-          console.log('Token inválido detectado, limpando...');
-          AuthService.removeAuthToken();
-        }
-      } catch (e) {
-        console.error('Erro ao processar resposta de erro:', e);
-      }
+    console.log('Resposta API blogs - status:', response.status);
+    
+    // MODIFICAÇÃO: Tratamento específico para cada tipo de erro
+    if (response.status === 401) {
+      const errorData = await response.json();
+      console.error('Erro de autenticação (401):', errorData);
       
-      throw new Error('Erro de autenticação. Por favor, faça login novamente.');
+      AuthService.removeAuthToken();
+      throw new Error('Credenciais inválidas. Por favor, faça login novamente.');
     }
     
-    return handleResponse(response);
+    if (response.status === 403) {
+      const errorData = await response.json();
+      console.error('Erro de permissão (403):', errorData);
+      
+      if (errorData.error && errorData.error.message && 
+          (errorData.error.message.includes('scope') || 
+           errorData.error.message.includes('permission'))) {
+        throw new Error('O token não tem permissão para acessar a API do Blogger. Verifique as configurações de OAuth.');
+      }
+      
+      throw new Error('Acesso proibido à API do Blogger.');
+    }
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Erro na API (${response.status}):`, errorText);
+      throw new Error(`Erro na API do Blogger: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('Dados recebidos:', data ? 'Sim' : 'Não');
+    
+    return data;
   } catch (error) {
     console.error('Erro ao buscar blogs:', error);
     
-    // Se for erro relacionado a autenticação, limpar token
+    // MODIFICAÇÃO: Melhor detecção de erros relacionados a autenticação
+    if (error.name === 'AbortError') {
+      throw new Error('Tempo limite excedido ao acessar a API do Blogger. Verifique sua conexão de internet.');
+    }
+    
     if (error.message.includes('autenticado') || 
         error.message.includes('token') || 
+        error.message.includes('credenciais') ||
         error.message.includes('login')) {
       AuthService.removeAuthToken();
     }

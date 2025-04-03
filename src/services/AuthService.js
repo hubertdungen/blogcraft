@@ -5,18 +5,19 @@
  * e validar os tokens para acesso à API do Blogger.
  */
 
-// Chave para armazenamento do token no localStorage
-const TOKEN_KEY = 'blogcraft_token';
+// Importar o TokenManager
+import TokenManager from './TokenManager';
 
 // Escopo correto para a API do Blogger
-const BLOGGER_API_SCOPE = 'https://www.googleapis.com/auth/blogger';
+const BLOGGER_API_SCOPE = process.env.REACT_APP_OAUTH_SCOPE || 'https://www.googleapis.com/auth/blogger';
+
 
 /**
  * Verifica se o usuário está autenticado
  * @returns {string|null} Token de autenticação ou null
  */
 const getAuthToken = () => {
-  return localStorage.getItem(TOKEN_KEY);
+  return TokenManager.getToken();
 };
 
 /**
@@ -28,17 +29,15 @@ const setAuthToken = (token) => {
     console.error('Tentativa de salvar token vazio');
     return;
   }
-  localStorage.setItem(TOKEN_KEY, token);
-  
-  // Log para debug (remova em produção)
-  console.log('Token salvo com sucesso');
+  TokenManager.setToken(token);
 };
 
 /**
  * Remove o token de autenticação (logout)
+ * @param {string} source - Identificador da fonte que está removendo o token (para debug)
  */
-const removeAuthToken = () => {
-  localStorage.removeItem(TOKEN_KEY);
+const removeAuthToken = (source = 'AuthService') => {
+  TokenManager.removeToken(source);
 };
 
 /**
@@ -47,17 +46,12 @@ const removeAuthToken = () => {
  */
 const validateToken = async () => {
   try {
-    const token = getAuthToken();
-    if (!token) {
-      console.log("Nenhum token para validar");
+    // Primeiro verificar localmente
+    if (!TokenManager.validateToken()) {
       return false;
     }
     
-    // Verificar localmente primeiro se o token não parece expirado
-    if (isTokenExpired()) {
-      console.log("Token expirado localmente");
-      return false;
-    }
+    const token = getAuthToken();
     
     // Fazer uma requisição simples para verificar a validade do token
     console.log("Fazendo requisição para validar token...");
@@ -143,12 +137,9 @@ const isTokenExpired = () => {
     return true;
   }
   
-  // Adicionar 5 minutos de margem para evitar problemas de sincronização
-  const safetyMargin = 5 * 60; // 5 minutos em segundos
-  
   // Comparar com o tempo atual (em segundos)
   const currentTime = Math.floor(Date.now() / 1000);
-  const isExpired = userInfo.exp < (currentTime - safetyMargin);
+  const isExpired = userInfo.exp < currentTime;
   
   // Log para debug (remova em produção)
   if (isExpired) {
@@ -159,16 +150,68 @@ const isTokenExpired = () => {
   return isExpired;
 };
 
-// Exportar o serviço
-const AuthService = {
-  getAuthToken,
-  setAuthToken,
-  removeAuthToken,
-  validateToken,
-  decodeToken,
-  getUserInfo,
-  isTokenExpired,
-  BLOGGER_API_SCOPE
-};
+/**
+ * Verifica se o token armazenado é válido
+ * @param {boolean} strictMode - Se verdadeiro, aplica validação rigorosa
+ * @returns {boolean} True se o token é válido
+ */
+const validateStoredToken = (strictMode = true) => {
+    try {
+      const token = getAuthToken();
+      
+      // Se não há token, não é válido
+      if (!token) {
+        return false;
+      }
+      
+      // Verificar formato básico de JWT
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        console.warn('Token com formato inválido detectado');
+        return false;
+      }
+      
+      // Decodificar e verificar conteúdo
+      const decoded = decodeToken(token);
+      if (!decoded || !decoded.sub) {
+        console.warn('Token com conteúdo inválido detectado');
+        return false;
+      }
+      
+      // Verificar expiração apenas em modo estrito ou se exp estiver presente
+      if (decoded.exp) {
+        const currentTime = Math.floor(Date.now() / 1000);
+        const isExpired = decoded.exp <= currentTime;
+        
+        if (isExpired) {
+          console.warn('Token expirado detectado durante validação');
+          return false;
+        }
+      } else if (strictMode) {
+        // Em modo estrito, rejeitamos tokens sem data de expiração
+        console.warn('Token sem data de expiração rejeitado em modo estrito');
+        return false;
+      }
+      
+      // Passar por todas as verificações significa que o token é válido
+      return true;
+    } catch (error) {
+      console.error('Erro ao validar token armazenado:', error);
+      return false;
+    }
+  };
+  
+  // Exportar o serviço
+  const AuthService = {
+    getAuthToken,
+    setAuthToken,
+    removeAuthToken,
+    validateToken,
+    decodeToken,
+    getUserInfo,
+    isTokenExpired,
+    validateStoredToken,
+    BLOGGER_API_SCOPE
+  };
 
 export default AuthService;

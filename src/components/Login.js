@@ -60,15 +60,16 @@ function Login() {
     checkExistingAuth();
   }, [navigate]);
   
-  /**
-   * Callback para login bem-sucedido
-   * @param {Object} credentialResponse - Resposta do Google OAuth
-   */
-  const handleLoginSuccess = (credentialResponse) => {
+/**
+ * Callback para login bem-sucedido
+ * @param {Object} credentialResponse - Resposta do Google OAuth
+ */
+const handleLoginSuccess = (credentialResponse) => {
     setIsLoading(true);
     setError(null);
     
     console.log('Login bem-sucedido, processando credenciais...');
+    console.log('Resposta contém credencial:', !!credentialResponse.credential);
     
     try {
       if (!credentialResponse.credential) {
@@ -78,13 +79,44 @@ function Login() {
       // Verificar se o token é válido no formato
       const tokenData = AuthService.decodeToken(credentialResponse.credential);
       
+      console.log('Token decodificado:', tokenData ? 'Sim' : 'Não');
+      console.log('Detalhes do token:', JSON.stringify({
+        sub: tokenData?.sub,
+        exp: tokenData?.exp,
+        scope: tokenData?.scope,
+        aud: tokenData?.aud
+      }));
+      
       if (!tokenData) {
         throw new Error('Token inválido ou não pôde ser decodificado');
       }
       
+      // VERIFICAÇÃO ADICIONAL: Validar se o token tem escopo suficiente
+      // Isso é importante para confirmação, mesmo que o Google não inclua
+      // o escopo diretamente no token (ele geralmente está na resposta completa)
+      console.log('AVISO: Não estamos verificando o escopo do token, apenas seu formato');
+      
       // Verificar se o token contém informações mínimas necessárias
-      if (!tokenData.sub || !tokenData.exp) {
-        throw new Error('Token não contém informações necessárias');
+      console.log('Token contém id:', !!tokenData.sub);
+      console.log('Token contém expiração:', !!tokenData.exp);
+      
+      if (!tokenData.sub) {
+        throw new Error('Token não contém ID do usuário');
+      }
+      
+      // IMPORTANTE: Alguns tokens do Google não incluem exp no payload
+      // Neste caso, vamos definir uma expiração arbitrária (1 hora)
+      if (!tokenData.exp) {
+        console.log('AVISO: Token não contém data de expiração. Usando valor padrão (1 hora)');
+        const oneHourInSeconds = 3600;
+        const currentTime = Math.floor(Date.now() / 1000);
+        tokenData.exp = currentTime + oneHourInSeconds;
+      }
+      
+      // Verificar se o token já está expirado (improvável, mas por segurança)
+      const currentTime = Math.floor(Date.now() / 1000);
+      if (tokenData.exp <= currentTime) {
+        throw new Error('Token já expirado ao receber');
       }
       
       console.log('Token validado localmente. ID do usuário:', tokenData.sub);
@@ -159,6 +191,8 @@ function Login() {
       </div>
     </div>
   );
+
+  
 }
 
 export default Login;

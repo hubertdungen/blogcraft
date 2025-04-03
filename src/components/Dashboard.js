@@ -41,14 +41,27 @@ function Dashboard({ theme, toggleTheme }) {
   }, [selectedBlog]);
 
   /**
-   * Busca os blogs do usuário autenticado
-   */
-  const fetchUserBlogs = async () => {
+ * Busca os blogs do usuário autenticado
+ */
+const fetchUserBlogs = async () => {
+  try {
+    setLoading(true);
+    setError(null);
+    
+    // CORREÇÃO: Verificar token antes de fazer a chamada
+    if (!AuthService.validateStoredToken()) {
+      // Usuário não está autenticado, redirecionar para login
+      console.log('Token inválido detectado em Dashboard. Redirecionando para login...');
+      navigate('/', { 
+        replace: true, 
+        state: { authError: 'Sessão inválida. Por favor, faça login novamente.' } 
+      });
+      return;
+    }
+    
+    console.log('Buscando blogs do usuário...');
+    
     try {
-      setLoading(true);
-      setError(null);
-      
-      console.log('Buscando blogs do usuário...');
       const data = await BloggerService.getUserBlogs();
       console.log('Blogs recebidos:', data);
       
@@ -63,34 +76,40 @@ function Dashboard({ theme, toggleTheme }) {
         setBlogs([]);
         setError('Nenhum blog encontrado. Verifique se você tem acesso a blogs no Blogger.');
       }
-    } catch (error) {
-      console.error('Erro ao buscar blogs:', error);
-      
-      // Verificar se o erro é relacionado a autenticação
-      if (error.message.includes('autenticação') || 
-          error.message.includes('login') || 
-          error.message.includes('token')) {
+    } catch (apiError) {
+      // CORREÇÃO: Se a API retornar erro de autenticação, limpar token e redirecionar
+      if (apiError.message.includes('login') || 
+          apiError.message.includes('credenciais') || 
+          apiError.message.includes('token') ||
+          apiError.message.includes('autenticação')) {
         
-        // Limpar token para forçar novo login
+        console.error('Erro de autenticação na API:', apiError);
         AuthService.removeAuthToken();
         
         // Redirecionar para página de login
-        navigate('/', { replace: true });
+        navigate('/', { 
+          replace: true, 
+          state: { authError: apiError.message } 
+        });
         return;
       }
       
-      setError(`Erro ao carregar blogs: ${error.message}`);
-      
-      // Tentar novamente após 5 segundos (máximo de 3 tentativas)
-      if (retryCount < 3) {
-        setTimeout(() => {
-          setRetryCount(prevCount => prevCount + 1);
-        }, 5000);
-      }
-    } finally {
-      setLoading(false);
+      throw apiError;
     }
-  };
+  } catch (error) {
+    console.error('Erro ao buscar blogs:', error);
+    setError(`Erro ao carregar blogs: ${error.message}`);
+    
+    // Tentar novamente após 5 segundos (máximo de 3 tentativas)
+    if (retryCount < 3) {
+      setTimeout(() => {
+        setRetryCount(prevCount => prevCount + 1);
+      }, 5000);
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   /**
    * Busca os posts do blog selecionado
