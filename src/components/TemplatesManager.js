@@ -466,7 +466,7 @@ function TemplatesManager({ theme }) {
                 <div className="template-editor-content">
                   <label>Conteúdo do Template:</label>
                   <Editor
-                    apiKey="sua-chave-api-tinymce" // Substituir pela sua chave da TinyMCE
+                    apiKey={process.env.REACT_APP_TINYMCE_API_KEY} // Substituir pela sua chave da TinyMCE
                     onInit={(evt, editor) => editorRef.current = editor}
                     initialValue={selectedTemplate.content}
                     init={{
