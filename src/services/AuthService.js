@@ -1,15 +1,15 @@
 /**
  * AuthService - Enhanced service for BlogCraft authentication
- * Provides cleaner error handling and better token management
+ * Fixed to properly handle Google OAuth token validation
  */
 
 // Constants
 const TOKEN_KEY = 'blogcraft_token';
-const BLOGGER_API_SCOPE = process.env.REACT_APP_OAUTH_SCOPE || 'https://www.googleapis.com/auth/blogger';
+const BLOGGER_API_SCOPE = 'https://www.googleapis.com/auth/blogger';
 const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
 
-// Debug flag (disable in production)
-const DEBUG = process.env.NODE_ENV !== 'production';
+// Debug flag (enable for troubleshooting)
+const DEBUG = true;
 
 /**
  * Log helper for consistent debugging
@@ -32,7 +32,11 @@ const log = {
  */
 const getAuthToken = () => {
   try {
-    return localStorage.getItem(TOKEN_KEY);
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) {
+      log.info('No token found in localStorage');
+    }
+    return token;
   } catch (error) {
     log.error('Error accessing localStorage', error);
     return null;
@@ -53,6 +57,14 @@ const setAuthToken = (token) => {
   try {
     localStorage.setItem(TOKEN_KEY, token);
     log.info('Token successfully stored');
+    
+    // Verify token after storage
+    const storedToken = localStorage.getItem(TOKEN_KEY);
+    if (storedToken !== token) {
+      log.error('Token verification failed - storage mismatch');
+      return false;
+    }
+    
     return true;
   } catch (error) {
     log.error('Failed to store token', error);
@@ -76,6 +88,14 @@ const removeAuthToken = (source = 'unknown') => {
     
     localStorage.removeItem(TOKEN_KEY);
     log.info(`Token removed (source: ${source})`);
+    
+    // Verify removal
+    const tokenAfterRemoval = localStorage.getItem(TOKEN_KEY);
+    if (tokenAfterRemoval) {
+      log.error('Token removal verification failed');
+      return false;
+    }
+    
     return true;
   } catch (error) {
     log.error(`Failed to remove token (source: ${source})`, error);
@@ -106,17 +126,41 @@ const decodeToken = (token) => {
     const base64Url = parts[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     
-    // Handle browser encoding correctly
+    // Create padding if needed
+    const pad = base64.length % 4;
+    const paddedBase64 = pad === 0 
+      ? base64 
+      : base64 + '='.repeat(4 - pad);
+    
+    // Fix for non-standard base64 padding in some JWT implementations
     let jsonPayload;
     try {
-      // Modern browsers
-      jsonPayload = atob(base64);
+      // Try standard decoding first
+      jsonPayload = atob(paddedBase64);
     } catch (e) {
-      // Fallback for non-browser environments or encoding issues
-      jsonPayload = Buffer.from(base64, 'base64').toString('utf-8');
+      // Fallback for problematic tokens
+      try {
+        // Modern browser approach
+        jsonPayload = atob(base64Url);
+      } catch (e2) {
+        // Last resort - use safer padding approach
+        const safePadding = base64.length % 4;
+        const safeBase64 = safePadding ? base64 + '='.repeat(4 - safePadding) : base64;
+        jsonPayload = atob(safeBase64);
+      }
     }
     
-    return JSON.parse(jsonPayload);
+    // Parse and return the payload
+    const payload = JSON.parse(jsonPayload);
+    
+    // Log key token details for debugging
+    log.info('Token decoded successfully', {
+      sub: payload.sub ? payload.sub.substring(0, 8) + '...' : 'missing',
+      aud: payload.aud ? (typeof payload.aud === 'string' ? payload.aud.substring(0, 15) + '...' : 'array') : 'missing',
+      exp: payload.exp ? new Date(payload.exp * 1000).toISOString() : 'missing',
+    });
+    
+    return payload;
   } catch (error) {
     log.error('Failed to decode token', error);
     return null;
@@ -131,19 +175,21 @@ const isTokenExpired = () => {
   const token = getAuthToken();
   
   if (!token) {
+    log.info('isTokenExpired: No token found');
     return true;
   }
   
   const payload = decodeToken(token);
   
   if (!payload) {
+    log.warn('isTokenExpired: Could not decode token');
     return true;
   }
   
   // Check for expiration
   if (!payload.exp) {
-    log.warn('Token has no expiration claim');
-    return false; // Being lenient here, could change to true for stricter checks
+    log.warn('Token has no expiration claim - treating as valid');
+    return false;
   }
   
   const currentTime = Math.floor(Date.now() / 1000);
@@ -152,7 +198,8 @@ const isTokenExpired = () => {
   if (isExpired) {
     log.info('Token is expired', {
       expiration: new Date(payload.exp * 1000).toISOString(),
-      currentTime: new Date(currentTime * 1000).toISOString()
+      currentTime: new Date(currentTime * 1000).toISOString(),
+      timeDiff: `${Math.floor((currentTime - payload.exp) / 60)} minutes`
     });
   }
   
@@ -176,12 +223,13 @@ const getUserInfo = () => {
     email: payload.email || null,
     name: payload.name || null,
     picture: payload.picture || null,
-    exp: payload.exp || null
+    exp: payload.exp || null,
+    scope: payload.scope || null
   };
 };
 
 /**
- * Validates the current token
+ * Validates the current token with more comprehensive checks
  * @param {boolean} strictMode - Use stricter validation rules
  * @returns {boolean} True if token is valid
  */
@@ -190,6 +238,13 @@ const validateToken = (strictMode = false) => {
   
   if (!token) {
     log.info('No token to validate');
+    return false;
+  }
+  
+  // Check basic JWT format
+  const parts = token.split('.');
+  if (parts.length !== 3) {
+    log.warn('Token format invalid (not a JWT)');
     return false;
   }
   
@@ -210,7 +265,11 @@ const validateToken = (strictMode = false) => {
   if (payload.exp) {
     const currentTime = Math.floor(Date.now() / 1000);
     if (payload.exp <= currentTime) {
-      log.warn('Token is expired');
+      log.warn('Token is expired', {
+        expTime: new Date(payload.exp * 1000).toISOString(),
+        currentTime: new Date(currentTime * 1000).toISOString(),
+        differenceMinutes: Math.floor((currentTime - payload.exp) / 60)
+      });
       return false;
     }
   } else if (strictMode) {
@@ -218,11 +277,40 @@ const validateToken = (strictMode = false) => {
     return false;
   }
   
-  // Check scopes if in strict mode
+  // Google OAuth ID token validations
+  if (strictMode) {
+    // Check issuer (should be Google)
+    if (!payload.iss || 
+        !(payload.iss.includes('google') || 
+          payload.iss.includes('accounts.google.com'))) {
+      log.warn('Token not issued by Google');
+      return false;
+    }
+    
+    // Check audience (should match our client ID)
+    const clientId = CLIENT_ID.trim();
+    if (clientId && payload.aud) {
+      // Handle both string and array aud fields
+      const audiences = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
+      const hasMatchingAud = audiences.some(aud => aud === clientId);
+      
+      if (!hasMatchingAud) {
+        log.warn('Token audience does not match client ID', {
+          expectedClientId: clientId,
+          tokenAudiences: audiences
+        });
+        return false;
+      }
+    }
+  }
+  
+  // Check for scope (required for Blogger API)
+  // Note: Google ID tokens might not have scope in the payload
+  // This is usually in a separate access token, but we check anyway
   if (strictMode && payload.scope) {
     const hasRequiredScope = 
       payload.scope.includes('blogger') || 
-      payload.scope.includes('https://www.googleapis.com/auth/blogger');
+      payload.scope.includes(BLOGGER_API_SCOPE);
     
     if (!hasRequiredScope) {
       log.warn('Token missing required scope for Blogger API');
@@ -230,11 +318,12 @@ const validateToken = (strictMode = false) => {
     }
   }
   
+  log.info('Token validation successful');
   return true;
 };
 
 /**
- * Generate default scopes for OAuth
+ * Get default scopes for OAuth
  * @returns {string} OAuth scopes
  */
 const getDefaultScopes = () => {

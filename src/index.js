@@ -11,6 +11,7 @@ import './styles/editor.css';
 import './styles/templates.css';
 import './styles/settings.css';
 import './styles/feedback.css';
+import './styles/debug.css';
 
 const container = document.getElementById('root');
 const root = createRoot(container);

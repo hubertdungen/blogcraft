@@ -1,7 +1,8 @@
 /**
- * BloggerService - Enhanced service for Blogger API integration
+ * BloggerService - Improved and Fixed
  * 
- * Provides robust error handling, caching, and rate limiting protection
+ * Provides robust error handling and proper token management
+ * for Blogger API integration
  */
 
 import AuthService from './AuthService';
@@ -9,8 +10,8 @@ import AuthService from './AuthService';
 // API base URL
 const API_BASE_URL = 'https://www.googleapis.com/blogger/v3';
 
-// Debug flag (disable in production)
-const DEBUG = process.env.NODE_ENV !== 'production';
+// Debug flag (enable for troubleshooting)
+const DEBUG = true;
 
 // Cache configuration
 const CACHE_ENABLED = true;
@@ -68,23 +69,24 @@ const cacheResponse = (key, data) => {
 };
 
 /**
- * Make an API request with proper error handling
+ * Make an API request with proper error handling and token validation
  */
 const request = async (endpoint, options = {}) => {
   // Get auth token
   const token = AuthService.getAuthToken();
   if (!token) {
-    throw new Error('Not authenticated');
+    log.error('No authentication token found');
+    throw new Error('Authentication required. Please log in.');
   }
   
-  // Check if token is expired
-  if (AuthService.isTokenExpired()) {
-    log.warn('Token expired, removing');
-    AuthService.removeAuthToken('BloggerService-expired');
-    throw new Error('Authentication expired. Please login again.');
+  // Validate token format and expiration
+  if (!AuthService.validateToken()) {
+    log.warn('Token validation failed, removing invalid token');
+    AuthService.removeAuthToken('BloggerService-invalid');
+    throw new Error('Authentication session expired or invalid. Please log in again.');
   }
   
-  // Prepare request URL and params
+  // Prepare request URL
   const url = `${API_BASE_URL}${endpoint}`;
   
   // Check cache for GET requests
@@ -117,7 +119,9 @@ const request = async (endpoint, options = {}) => {
       'Authorization': `Bearer ${token}`,
       'Accept': 'application/json',
       ...options.headers
-    }
+    },
+    // Enable credentials for proper cookie handling
+    credentials: 'same-origin'
   };
   
   // Add body for non-GET requests
@@ -149,32 +153,46 @@ const request = async (endpoint, options = {}) => {
     const contentType = response.headers.get('content-type');
     const isJson = contentType && contentType.includes('application/json');
     
+    // Handle authentication errors
     if (response.status === 401) {
-      const data = isJson ? await response.json() : await response.text();
-      log.error('Authentication error (401)', data);
+      log.error('Authentication error (401)');
+      
+      // Parse response for details
+      const errorData = isJson ? await response.json() : await response.text();
+      log.error('Auth error details:', errorData);
       
       // Clear invalid token
       AuthService.removeAuthToken('BloggerService-401');
       
-      throw new Error('Authentication failed. Please login again.');
+      throw new Error('Your session has expired. Please log in again.');
     }
     
+    // Handle permission errors
     if (response.status === 403) {
       const data = isJson ? await response.json() : await response.text();
       log.error('Permission error (403)', data);
       
-      // Check for scope issues
-      const errorMessage = isJson && data.error && data.error.message;
-      if (errorMessage && (errorMessage.includes('scope') || errorMessage.includes('permission'))) {
-        throw new Error('Your account does not have permission to access the Blogger API. Please check OAuth scopes.');
+      // Get detailed error message
+      const errorMessage = isJson && data.error ? 
+        data.error.message : 'Access denied to the Blogger API.';
+      
+      // Handle scope-related issues
+      if (errorMessage.includes('scope') || 
+          errorMessage.includes('permission') || 
+          errorMessage.includes('insufficient')) {
+        throw new Error(
+          'Your Google account does not have the required permissions. ' + 
+          'Please ensure you granted access to your Blogger blogs during login.'
+        );
       }
       
-      throw new Error('Access denied to the Blogger API.');
+      throw new Error('Access denied to the Blogger API. ' + errorMessage);
     }
     
+    // Handle rate limiting
     if (response.status === 429) {
       log.warn('Rate limit exceeded (429)');
-      throw new Error('You have exceeded the API rate limit. Please try again later.');
+      throw new Error('API rate limit exceeded. Please try again in a few minutes.');
     }
     
     // Handle general error responses
@@ -182,6 +200,7 @@ const request = async (endpoint, options = {}) => {
       const errorData = isJson ? await response.json() : await response.text();
       log.error(`API error (${response.status})`, errorData);
       
+      // Extract specific error message when available
       const errorMessage = isJson && errorData.error && errorData.error.message
         ? errorData.error.message
         : `API request failed with status ${response.status}`;
@@ -207,10 +226,17 @@ const request = async (endpoint, options = {}) => {
     // Clear timeout
     clearTimeout(timeoutId);
     
-    // Handle abort errors
+    // Handle abort errors (timeout)
     if (error.name === 'AbortError') {
       log.error('Request timeout', error);
       throw new Error('Request timed out. Please check your internet connection and try again.');
+    }
+    
+    // Special handling for fetch/network errors
+    if (error.message.includes('Failed to fetch') || 
+        error.message.includes('Network request failed')) {
+      log.error('Network error', error);
+      throw new Error('Network connection error. Please check your internet connection.');
     }
     
     // Log and rethrow
@@ -228,16 +254,43 @@ const clearCache = () => {
 };
 
 /**
+ * Custom error for Blogger API
+ */
+class BloggerApiError extends Error {
+  constructor(message, code, details = null) {
+    super(message);
+    this.name = 'BloggerApiError';
+    this.code = code;
+    this.details = details;
+  }
+}
+
+/**
  * Retrieves the user's blogs
  */
 const getUserBlogs = async (options = {}) => {
-  return request('/users/self/blogs', { ...options });
+  try {
+    return await request('/users/self/blogs', { ...options });
+  } catch (error) {
+    // Convert to a more specific error
+    if (error.message.includes('permission')) {
+      throw new BloggerApiError(
+        'Your account does not have access to any Blogger blogs. Make sure you have created a blog or have been granted access to one.',
+        'PERMISSION_DENIED',
+        { originalError: error }
+      );
+    }
+    throw error;
+  }
 };
 
 /**
  * Retrieves a specific blog by ID
  */
 const getBlog = async (blogId, options = {}) => {
+  if (!blogId) {
+    throw new Error('Blog ID is required');
+  }
   return request(`/blogs/${blogId}`, { ...options });
 };
 
@@ -245,6 +298,9 @@ const getBlog = async (blogId, options = {}) => {
  * Retrieves posts from a blog
  */
 const getPosts = async (blogId, params = {}, options = {}) => {
+  if (!blogId) {
+    throw new Error('Blog ID is required');
+  }
   return request(`/blogs/${blogId}/posts`, { 
     params,
     ...options
@@ -255,6 +311,9 @@ const getPosts = async (blogId, params = {}, options = {}) => {
  * Retrieves a specific post by ID
  */
 const getPost = async (blogId, postId, options = {}) => {
+  if (!blogId || !postId) {
+    throw new Error('Blog ID and Post ID are required');
+  }
   return request(`/blogs/${blogId}/posts/${postId}`, { ...options });
 };
 
@@ -262,6 +321,12 @@ const getPost = async (blogId, postId, options = {}) => {
  * Creates a new post
  */
 const createPost = async (blogId, postData, options = {}) => {
+  if (!blogId) {
+    throw new Error('Blog ID is required');
+  }
+  if (!postData || !postData.title) {
+    throw new Error('Post data with title is required');
+  }
   return request(`/blogs/${blogId}/posts`, {
     method: 'POST',
     body: postData,
@@ -273,6 +338,12 @@ const createPost = async (blogId, postData, options = {}) => {
  * Updates an existing post
  */
 const updatePost = async (blogId, postId, postData, options = {}) => {
+  if (!blogId || !postId) {
+    throw new Error('Blog ID and Post ID are required');
+  }
+  if (!postData) {
+    throw new Error('Post data is required');
+  }
   return request(`/blogs/${blogId}/posts/${postId}`, {
     method: 'PUT',
     body: postData,
@@ -284,6 +355,9 @@ const updatePost = async (blogId, postId, postData, options = {}) => {
  * Deletes a post
  */
 const deletePost = async (blogId, postId, options = {}) => {
+  if (!blogId || !postId) {
+    throw new Error('Blog ID and Post ID are required');
+  }
   return request(`/blogs/${blogId}/posts/${postId}`, {
     method: 'DELETE',
     ...options
@@ -294,6 +368,10 @@ const deletePost = async (blogId, postId, options = {}) => {
  * Publishes a post (moves from draft to published)
  */
 const publishPost = async (blogId, postId, publishDate, options = {}) => {
+  if (!blogId || !postId) {
+    throw new Error('Blog ID and Post ID are required');
+  }
+  
   let endpoint = `/blogs/${blogId}/posts/${postId}/publish`;
   
   // Add publish date if specified
@@ -313,6 +391,9 @@ const publishPost = async (blogId, postId, publishDate, options = {}) => {
  * Reverts a post to draft status
  */
 const revertToDraft = async (blogId, postId, options = {}) => {
+  if (!blogId || !postId) {
+    throw new Error('Blog ID and Post ID are required');
+  }
   return request(`/blogs/${blogId}/posts/${postId}/revert`, {
     method: 'POST',
     ...options
@@ -323,10 +404,35 @@ const revertToDraft = async (blogId, postId, options = {}) => {
  * Gets comments for a post
  */
 const getComments = async (blogId, postId, params = {}, options = {}) => {
+  if (!blogId || !postId) {
+    throw new Error('Blog ID and Post ID are required');
+  }
   return request(`/blogs/${blogId}/posts/${postId}/comments`, {
     params,
     ...options
   });
+};
+
+/**
+ * Test API connection
+ * Useful for diagnosing permission or authentication issues
+ */
+const testConnection = async () => {
+  try {
+    const result = await getUserBlogs();
+    return {
+      success: true,
+      data: result,
+      message: `Connection successful. Found ${result.items?.length || 0} blogs.`
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+      code: error.code || 'UNKNOWN_ERROR',
+      details: error.details || null
+    };
+  }
 };
 
 // Export the BloggerService with all methods
@@ -341,7 +447,8 @@ const BloggerService = {
   publishPost,
   revertToDraft,
   getComments,
-  clearCache
+  clearCache,
+  testConnection
 };
 
 export default BloggerService;
