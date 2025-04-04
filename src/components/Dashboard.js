@@ -1,19 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-//import Sidebar from './Sidebar';
 import BloggerService from '../services/BloggerService';
 import AuthService from '../services/AuthService';
 import Feedback from './Feedback';
 
 /**
- * Componente Dashboard - Página inicial após login
+ * Dashboard Component - Main application interface after login
  * 
- * Exibe os blogs do usuário, posts recentes e acesso rápido
- * às principais funcionalidades da aplicação.
+ * Shows user's blogs, recent posts, and statistics with a clean,
+ * responsive interface and robust error handling.
  */
-function Dashboard({ theme, toggleTheme }) {
+function Dashboard() {
   const navigate = useNavigate();
+  
+  // State
   const [loading, setLoading] = useState(true);
+  const [loadingStats, setLoadingStats] = useState(false);
   const [blogs, setBlogs] = useState([]);
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -23,124 +25,126 @@ function Dashboard({ theme, toggleTheme }) {
     scheduledPosts: 0,
     postsByMonth: []
   });
-  const [error, setError] = useState(null);
-  const [retryCount, setRetryCount] = useState(0);
+  const [feedback, setFeedback] = useState(null);
+  const [retryAttempts, setRetryAttempts] = useState(0);
 
-  // Carregar blogs do usuário
+  // Load user blogs on component mount
   useEffect(() => {
     fetchUserBlogs();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [retryCount]);
+  }, [retryAttempts]);
 
-  // Carregar posts quando o blog selecionado mudar
+  // Load posts when selected blog changes
   useEffect(() => {
     if (selectedBlog) {
-      fetchBlogPosts(selectedBlog);
+      fetchBlogPosts(selectedBlog.id);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBlog]);
 
   /**
- * Busca os blogs do usuário autenticado
- */
-const fetchUserBlogs = async () => {
-  try {
-    setLoading(true);
-    setError(null);
-    
-    // CORREÇÃO: Verificar token antes de fazer a chamada
-    if (!AuthService.validateStoredToken()) {
-      // Usuário não está autenticado, redirecionar para login
-      console.log('Token inválido detectado em Dashboard. Redirecionando para login...');
-      navigate('/', { 
-        replace: true, 
-        state: { authError: 'Sessão inválida. Por favor, faça login novamente.' } 
-      });
-      return;
-    }
-    
-    console.log('Buscando blogs do usuário...');
-    
+   * Fetch all blogs the user has access to
+   */
+  const fetchUserBlogs = useCallback(async () => {
     try {
-      const data = await BloggerService.getUserBlogs();
-      console.log('Blogs recebidos:', data);
+      setLoading(true);
+      setFeedback(null);
       
-      if (data.items && data.items.length > 0) {
-        setBlogs(data.items);
+      // Validate token before API call
+      if (!AuthService.validateToken()) {
+        // Token is invalid or expired
+        AuthService.removeAuthToken('Dashboard-fetchUserBlogs');
         
-        // Selecionar o primeiro blog por padrão ou blog salvo anteriormente
-        const savedBlogId = localStorage.getItem('blogcraft_lastBlog');
-        const defaultBlog = data.items.find(blog => blog.id === savedBlogId) || data.items[0];
-        setSelectedBlog(defaultBlog);
-      } else {
-        setBlogs([]);
-        setError('Nenhum blog encontrado. Verifique se você tem acesso a blogs no Blogger.');
-      }
-    } catch (apiError) {
-      // CORREÇÃO: Se a API retornar erro de autenticação, limpar token e redirecionar
-      if (apiError.message.includes('login') || 
-          apiError.message.includes('credenciais') || 
-          apiError.message.includes('token') ||
-          apiError.message.includes('autenticação')) {
-        
-        console.error('Erro de autenticação na API:', apiError);
-        AuthService.removeAuthToken();
-        
-        // Redirecionar para página de login
         navigate('/', { 
           replace: true, 
-          state: { authError: apiError.message } 
+          state: { authError: 'Session expired. Please log in again.' } 
         });
         return;
       }
       
-      throw apiError;
+      // Fetch blogs from API
+      const data = await BloggerService.getUserBlogs();
+      
+      if (data.items && data.items.length > 0) {
+        setBlogs(data.items);
+        
+        // Get preferred blog from localStorage
+        const savedBlogId = localStorage.getItem('blogcraft_lastBlog');
+        
+        // Select first blog or saved blog
+        const defaultBlog = data.items.find(blog => blog.id === savedBlogId) || data.items[0];
+        setSelectedBlog(defaultBlog);
+      } else {
+        setBlogs([]);
+        setFeedback({
+          type: 'warning',
+          message: 'Nenhum blog encontrado. Verifique se você tem acesso a blogs no Blogger.'
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching blogs:', error);
+      
+      // Handle authentication errors
+      if (
+        error.message.includes('login') || 
+        error.message.includes('authen') || 
+        error.message.includes('token')
+      ) {
+        // Clear token and redirect to login
+        AuthService.removeAuthToken('Dashboard-fetchUserBlogs-auth-error');
+        
+        navigate('/', { 
+          replace: true, 
+          state: { authError: error.message } 
+        });
+        return;
+      }
+      
+      // Show general error message
+      setFeedback({
+        type: 'error',
+        message: `Erro ao carregar blogs: ${error.message}`
+      });
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Erro ao buscar blogs:', error);
-    setError(`Erro ao carregar blogs: ${error.message}`);
-    
-    // Tentar novamente após 5 segundos (máximo de 3 tentativas)
-    if (retryCount < 3) {
-      setTimeout(() => {
-        setRetryCount(prevCount => prevCount + 1);
-      }, 5000);
-    }
-  } finally {
-    setLoading(false);
-  }
-};
+  }, [navigate]);
 
   /**
-   * Busca os posts do blog selecionado
+   * Fetch posts for the selected blog
    */
-  const fetchBlogPosts = async (blog) => {
+  const fetchBlogPosts = useCallback(async (blogId) => {
     try {
-      setLoading(true);
-      setError(null);
+      setLoadingStats(true);
       
-      // Salvar o blog selecionado para uso futuro
-      localStorage.setItem('blogcraft_lastBlog', blog.id);
+      // Save selected blog ID for future use
+      localStorage.setItem('blogcraft_lastBlog', blogId);
       
-      // Buscar posts publicados
-      const publishedData = await BloggerService.getPosts(blog.id, {
-        maxResults: 10,
-        status: 'live'
-      });
+      // Fetch different post types in parallel
+      const [publishedData, draftData, scheduledData] = await Promise.all([
+        // Published posts
+        BloggerService.getPosts(blogId, { 
+          status: 'live',
+          maxResults: 10,
+          fetchBodies: false
+        }),
+        
+        // Draft posts
+        BloggerService.getPosts(blogId, {
+          status: 'draft',
+          maxResults: 10,
+          fetchBodies: false
+        }),
+        
+        // Scheduled posts
+        BloggerService.getPosts(blogId, {
+          status: 'scheduled',
+          maxResults: 10,
+          fetchBodies: false
+        })
+      ]);
       
-      // Buscar posts em rascunho
-      const draftData = await BloggerService.getPosts(blog.id, {
-        maxResults: 10,
-        status: 'draft'
-      });
-      
-      // Buscar posts agendados
-      const scheduledData = await BloggerService.getPosts(blog.id, {
-        maxResults: 10,
-        status: 'scheduled'
-      });
-      
-      // Combinar todos os posts
+      // Combine and sort all posts
       const allPosts = [
         ...(publishedData.items || []).map(post => ({ ...post, status: 'LIVE' })),
         ...(draftData.items || []).map(post => ({ ...post, status: 'DRAFT' })),
@@ -149,44 +153,51 @@ const fetchUserBlogs = async () => {
       
       setPosts(allPosts);
       
-      // Calcular estatísticas
+      // Calculate statistics
       calculateStats(
         publishedData.items || [],
         draftData.items || [],
         scheduledData.items || []
       );
     } catch (error) {
-      console.error('Erro ao buscar posts:', error);
+      console.error('Error fetching posts:', error);
       
-      // Verificar se o erro é relacionado a autenticação
-      if (error.message.includes('autenticação') || 
-          error.message.includes('login') || 
-          error.message.includes('token')) {
+      // Handle authentication errors
+      if (
+        error.message.includes('login') || 
+        error.message.includes('authen') || 
+        error.message.includes('token')
+      ) {
+        // Clear token and redirect to login
+        AuthService.removeAuthToken('Dashboard-fetchBlogPosts-auth-error');
         
-        // Limpar token para forçar novo login
-        AuthService.removeAuthToken();
-        
-        // Redirecionar para página de login
-        navigate('/', { replace: true });
+        navigate('/', { 
+          replace: true, 
+          state: { authError: error.message } 
+        });
         return;
       }
       
-      setError(`Erro ao carregar posts: ${error.message}`);
+      // Show error message
+      setFeedback({
+        type: 'error',
+        message: `Erro ao carregar posts: ${error.message}`
+      });
     } finally {
-      setLoading(false);
+      setLoadingStats(false);
     }
-  };
+  }, [navigate]);
 
   /**
-   * Calcula estatísticas baseadas nos posts
+   * Calculate statistics from posts data
    */
-  const calculateStats = (published, drafts, scheduled) => {
-    // Total de posts por status
+  const calculateStats = useCallback((published, drafts, scheduled) => {
+    // Count posts by status
     const totalPosts = published.length;
     const draftPosts = drafts.length;
     const scheduledPosts = scheduled.length;
     
-    // Agrupar posts por mês (últimos 6 meses)
+    // Group posts by month (last 6 months)
     const now = new Date();
     const last6Months = [];
     
@@ -200,11 +211,14 @@ const fetchUserBlogs = async () => {
       });
     }
     
-    // Contar posts por mês
+    // Count posts per month
     for (const post of published) {
+      if (!post.published) continue;
+      
       const publishedDate = new Date(post.published);
       const monthIndex = last6Months.findIndex(m => 
-        m.month === publishedDate.getMonth() && m.year === publishedDate.getFullYear()
+        m.month === publishedDate.getMonth() && 
+        m.year === publishedDate.getFullYear()
       );
       
       if (monthIndex !== -1) {
@@ -212,39 +226,52 @@ const fetchUserBlogs = async () => {
       }
     }
     
+    // Update stats state
     setStats({
       totalPosts,
       draftPosts,
       scheduledPosts,
       postsByMonth: last6Months
     });
-  };
+  }, []);
 
   /**
-   * Navega para o editor para criar um novo post
+   * Navigate to create new post
    */
-  const handleCreateNewPost = () => {
+  const handleCreateNewPost = useCallback(() => {
+    if (!selectedBlog) return;
     navigate('/editor', { state: { blogId: selectedBlog.id } });
-  };
+  }, [navigate, selectedBlog]);
 
   /**
-   * Navega para o editor para editar um post existente
+   * Navigate to edit existing post
    */
-  const handleEditPost = (postId) => {
-    navigate(`/editor/${postId}`, { state: { blogId: selectedBlog.id, postId } });
-  };
+  const handleEditPost = useCallback((postId) => {
+    if (!selectedBlog) return;
+    navigate(`/editor/${postId}`, { 
+      state: { 
+        blogId: selectedBlog.id, 
+        postId 
+      } 
+    });
+  }, [navigate, selectedBlog]);
 
   /**
-   * Navega para o editor para duplicar um post existente
+   * Duplicate an existing post
    */
-  const handleDuplicatePost = async (postId) => {
+  const handleDuplicatePost = useCallback(async (postId) => {
+    if (!selectedBlog) return;
+    
     try {
-      setLoading(true);
+      setFeedback({
+        type: 'loading',
+        message: 'Carregando post para duplicação...'
+      });
       
-      // Buscar o post original
+      // Fetch the post to duplicate
       const postData = await BloggerService.getPost(selectedBlog.id, postId);
       
-      // Navegar para o editor com os dados do post
+      // Navigate to editor with post data
       navigate('/editor', { 
         state: { 
           blogId: selectedBlog.id,
@@ -254,109 +281,173 @@ const fetchUserBlogs = async () => {
         } 
       });
     } catch (error) {
-      console.error('Erro ao duplicar post:', error);
+      console.error('Error duplicating post:', error);
       
-      // Verificar se é erro de autenticação
-      if (error.message.includes('autenticação') || 
-          error.message.includes('login') || 
-          error.message.includes('token')) {
+      // Handle authentication errors
+      if (
+        error.message.includes('login') || 
+        error.message.includes('authen') || 
+        error.message.includes('token')
+      ) {
+        AuthService.removeAuthToken('Dashboard-duplicatePost-auth-error');
         
-        // Limpar token e redirecionar para login
-        AuthService.removeAuthToken();
-        navigate('/', { replace: true });
+        navigate('/', { 
+          replace: true, 
+          state: { authError: error.message } 
+        });
         return;
       }
       
-      alert(`Erro ao duplicar post: ${error.message}`);
-    } finally {
-      setLoading(false);
+      // Show error message
+      setFeedback({
+        type: 'error',
+        message: `Erro ao duplicar post: ${error.message}`
+      });
     }
-  };
+  }, [navigate, selectedBlog]);
 
   /**
-   * Exclui um post após confirmação
+   * Delete a post
    */
-  const handleDeletePost = async (postId) => {
+  const handleDeletePost = useCallback(async (postId) => {
+    if (!selectedBlog) return;
+    
+    // Confirm deletion
     if (!window.confirm('Tem certeza que deseja excluir este post? Esta ação não pode ser desfeita.')) {
       return;
     }
     
     try {
-      setLoading(true);
+      setFeedback({
+        type: 'loading',
+        message: 'Excluindo post...'
+      });
       
+      // Delete the post
       await BloggerService.deletePost(selectedBlog.id, postId);
       
-      // Remover o post da lista
+      // Update posts list
       setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
       
-      alert('Post excluído com sucesso!');
+      // Show success message
+      setFeedback({
+        type: 'success',
+        message: 'Post excluído com sucesso!',
+        duration: 3000
+      });
     } catch (error) {
-      console.error('Erro ao excluir post:', error);
+      console.error('Error deleting post:', error);
       
-      // Verificar se é erro de autenticação
-      if (error.message.includes('autenticação') || 
-          error.message.includes('login') || 
-          error.message.includes('token')) {
+      // Handle authentication errors
+      if (
+        error.message.includes('login') || 
+        error.message.includes('authen') || 
+        error.message.includes('token')
+      ) {
+        AuthService.removeAuthToken('Dashboard-deletePost-auth-error');
         
-        // Limpar token e redirecionar para login
-        AuthService.removeAuthToken();
-        navigate('/', { replace: true });
+        navigate('/', { 
+          replace: true, 
+          state: { authError: error.message } 
+        });
         return;
       }
       
-      alert(`Erro ao excluir post: ${error.message}`);
-    } finally {
-      setLoading(false);
+      // Show error message
+      setFeedback({
+        type: 'error',
+        message: `Erro ao excluir post: ${error.message}`
+      });
     }
-  };
+  }, [navigate, selectedBlog]);
 
   /**
-   * Tenta novamente após erro
+   * Change selected blog
    */
-  const handleRetry = () => {
-    setRetryCount(prevCount => prevCount + 1);
-  };
-
-  /**
-   * Muda o blog selecionado
-   */
-  const handleChangeBlog = (e) => {
+  const handleChangeBlog = useCallback((e) => {
     const blogId = e.target.value;
-    const selectedBlog = blogs.find(blog => blog.id === blogId);
+    const blog = blogs.find(blog => blog.id === blogId);
     
-    if (selectedBlog) {
-      setSelectedBlog(selectedBlog);
+    if (blog) {
+      setSelectedBlog(blog);
     }
-  };
+  }, [blogs]);
 
   /**
-   * Formata a data para exibição
+   * Retry loading blogs after error
+   */
+  const handleRetry = useCallback(() => {
+    setRetryAttempts(prev => prev + 1);
+  }, []);
+
+  /**
+   * Format date for display
    */
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (!dateString) return 'N/A';
+    
+    try {
+      return new Date(dateString).toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      return dateString;
+    }
   };
 
   /**
-   * Retorna um badge de status para o post
+   * Get status badge for post
    */
-  const getStatusBadge = (status) => {
+  const StatusBadge = ({ status }) => {
+    let badgeClass = '';
+    let text = '';
+    
     switch (status) {
       case 'LIVE':
-        return <span className="status-badge status-live">Publicado</span>;
+        badgeClass = 'status-badge status-live';
+        text = 'Publicado';
+        break;
       case 'DRAFT':
-        return <span className="status-badge status-draft">Rascunho</span>;
+        badgeClass = 'status-badge status-draft';
+        text = 'Rascunho';
+        break;
       case 'SCHEDULED':
-        return <span className="status-badge status-scheduled">Agendado</span>;
+        badgeClass = 'status-badge status-scheduled';
+        text = 'Agendado';
+        break;
       default:
-        return null;
+        badgeClass = 'status-badge';
+        text = status || 'Desconhecido';
     }
+    
+    return <span className={badgeClass}>{text}</span>;
   };
+
+  // Render empty state when no posts
+  const renderEmptyState = () => (
+    <div className="no-posts">
+      <h3>Nenhum post encontrado</h3>
+      <p>Comece criando seu primeiro post ou verifique os critérios de busca.</p>
+      <button 
+        className="create-button small" 
+        onClick={handleCreateNewPost}
+      >
+        Criar Primeiro Post
+      </button>
+    </div>
+  );
+
+  // Render loading state
+  const renderLoading = () => (
+    <div className="loading-container">
+      <div className="loading-spinner"></div>
+      <p>Carregando...</p>
+    </div>
+  );
 
   return (
     <div className="main-content">
@@ -369,28 +460,29 @@ const fetchUserBlogs = async () => {
             <select 
               value={selectedBlog?.id || ''} 
               onChange={handleChangeBlog}
+              disabled={loading}
             >
               {blogs.map(blog => (
-                <option key={blog.id} value={blog.id}>{blog.name}</option>
+                <option key={blog.id} value={blog.id}>
+                  {blog.name}
+                </option>
               ))}
             </select>
           </div>
         )}
       </div>
       
+      {/* Feedback component for errors, warnings, etc. */}
+      {feedback && (
+        <Feedback
+          type={feedback.type}
+          message={feedback.message}
+          onDismiss={() => setFeedback(null)}
+        />
+      )}
+      
       {loading ? (
-        <div className="loading">Carregando...</div>
-      ) : error ? (
-        <div className="error-message">
-          <Feedback 
-            type="error" 
-            message={error} 
-            onDismiss={() => setError(null)}
-          />
-          <button onClick={handleRetry} className="retry-button">
-            Tentar Novamente
-          </button>
-        </div>
+        renderLoading()
       ) : (
         <>
           {selectedBlog && (
@@ -398,66 +490,81 @@ const fetchUserBlogs = async () => {
               <div className="blog-info">
                 <div className="blog-details">
                   <h2>{selectedBlog.name}</h2>
-                  <p className="blog-url">{selectedBlog.url}</p>
+                  <a 
+                    href={selectedBlog.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="blog-url"
+                  >
+                    {selectedBlog.url}
+                  </a>
                 </div>
                 
                 <button 
                   className="create-button" 
                   onClick={handleCreateNewPost}
+                  disabled={loadingStats}
                 >
                   Criar Novo Post
                 </button>
               </div>
               
+              {/* Statistics cards */}
               <div className="dashboard-stats">
                 <div className="stat-card">
                   <h3>Posts Publicados</h3>
-                  <div className="stat-number">{stats.totalPosts}</div>
+                  <div className="stat-number">
+                    {loadingStats ? '...' : stats.totalPosts}
+                  </div>
                 </div>
                 
                 <div className="stat-card">
                   <h3>Rascunhos</h3>
-                  <div className="stat-number">{stats.draftPosts}</div>
+                  <div className="stat-number">
+                    {loadingStats ? '...' : stats.draftPosts}
+                  </div>
                 </div>
                 
                 <div className="stat-card">
                   <h3>Agendados</h3>
-                  <div className="stat-number">{stats.scheduledPosts}</div>
+                  <div className="stat-number">
+                    {loadingStats ? '...' : stats.scheduledPosts}
+                  </div>
                 </div>
                 
+                {/* Posts by month chart */}
                 <div className="stat-card stat-chart">
                   <h3>Publicações por Mês</h3>
-                  <div className="month-chart">
-                    {stats.postsByMonth.map((month, index) => (
-                      <div key={index} className="month-bar">
-                        <div 
-                          className="bar" 
-                          style={{ 
-                            height: `${Math.max(5, month.count * 20)}px` 
-                          }}
-                        >
-                          <span className="bar-count">{month.count}</span>
+                  {loadingStats ? (
+                    <div className="chart-loading">Carregando estatísticas...</div>
+                  ) : (
+                    <div className="month-chart">
+                      {stats.postsByMonth.map((month, index) => (
+                        <div key={index} className="month-bar">
+                          <div 
+                            className="bar" 
+                            style={{ 
+                              height: `${Math.max(5, month.count * 20)}px` 
+                            }}
+                          >
+                            <span className="bar-count">{month.count}</span>
+                          </div>
+                          <div className="bar-label">{month.label}</div>
                         </div>
-                        <div className="bar-label">{month.label}</div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
               
+              {/* Posts list */}
               <div className="posts-section">
                 <h2>Posts Recentes</h2>
                 
-                {posts.length === 0 ? (
-                  <div className="no-posts">
-                    <p>Nenhum post encontrado.</p>
-                    <button 
-                      className="create-button small" 
-                      onClick={handleCreateNewPost}
-                    >
-                      Criar Primeiro Post
-                    </button>
-                  </div>
+                {loadingStats ? (
+                  renderLoading()
+                ) : posts.length === 0 ? (
+                  renderEmptyState()
                 ) : (
                   <div className="posts-list">
                     {posts.map(post => (
@@ -465,7 +572,8 @@ const fetchUserBlogs = async () => {
                         <div className="post-info">
                           <h3>{post.title}</h3>
                           <div className="post-meta">
-                            {getStatusBadge(post.status)}
+                            <StatusBadge status={post.status} />
+                            
                             <span className="post-date">
                               {post.status === 'SCHEDULED' 
                                 ? `Agendado para: ${formatDate(post.scheduled || post.updated)}`
@@ -475,6 +583,7 @@ const fetchUserBlogs = async () => {
                               }
                             </span>
                             
+                            {/* Tags/Labels */}
                             {post.labels && post.labels.length > 0 && (
                               <div className="post-labels">
                                 {post.labels.map((label, index) => (
@@ -487,6 +596,7 @@ const fetchUserBlogs = async () => {
                           </div>
                         </div>
                         
+                        {/* Post actions */}
                         <div className="post-actions">
                           <button 
                             className="edit-button"
@@ -517,6 +627,19 @@ const fetchUserBlogs = async () => {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+          
+          {!selectedBlog && !loading && (
+            <div className="no-blogs-container">
+              <h2>Nenhum blog encontrado</h2>
+              <p>Você precisa ter acesso a pelo menos um blog no Blogger para usar este aplicativo.</p>
+              <button 
+                className="retry-button"
+                onClick={handleRetry}
+              >
+                Tentar Novamente
+              </button>
             </div>
           )}
         </>

@@ -5,146 +5,116 @@ import AuthService from '../services/AuthService';
 import Feedback from './Feedback';
 
 /**
- * Componente de Login
+ * Enhanced Login Component
  * 
- * Gerencia a autenticação do usuário com o Google OAuth
- * e redireciona para o Dashboard após sucesso.
+ * Provides robust Google OAuth integration with improved error handling
+ * and better user feedback during the authentication process.
  */
 function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [clientIdValid, setClientIdValid] = useState(false);
   
-  // Obter a rota para onde o usuário tentou acessar (para redirecionamento após login)
+  // Determine where to redirect after successful login
   const from = location.state?.from?.pathname || '/dashboard';
   
-  // Verificar se há mensagem de erro vinda do redirecionamento
+  // Check environment setup and existing auth on mount
   useEffect(() => {
-    if (location.state?.authError) {
-      setError(`Sessão expirada ou inválida: ${location.state.authError}`);
-    }
-  }, [location]);
-  
-  // Verificar se já está autenticado
-  useEffect(() => {
+    const checkEnvironment = () => {
+      // Check if client ID is configured
+      const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+      if (!clientId) {
+        setError('Google Client ID is not configured. Please check your .env file.');
+        setClientIdValid(false);
+        return;
+      }
+      
+      // Simple validation of client ID format
+      if (!clientId.includes('.apps.googleusercontent.com')) {
+        setError('Google Client ID appears to be invalid. Please check your configuration.');
+        setClientIdValid(false);
+        return;
+      }
+      
+      setClientIdValid(true);
+    };
+    
     const checkExistingAuth = async () => {
       try {
         const token = AuthService.getAuthToken();
         
         if (token) {
-          // Verificar localmente se o token parece válido
-          const tokenData = AuthService.decodeToken(token);
-          
-          if (!tokenData) {
-            console.log('Token inválido detectado');
-            AuthService.removeAuthToken();
+          // Check if token is valid
+          if (!AuthService.isTokenExpired()) {
+            console.log('Valid token found, redirecting to dashboard');
+            navigate(from, { replace: true });
             return;
+          } else {
+            console.log('Expired token found, removing it');
+            AuthService.removeAuthToken('Login-expired');
           }
-          
-          if (AuthService.isTokenExpired()) {
-            console.log('Token expirado detectado');
-            AuthService.removeAuthToken();
-            return;
-          }
-          
-          console.log('Token válido encontrado, redirecionando para dashboard');
-          navigate('/dashboard', { replace: true });
         }
       } catch (error) {
-        console.error('Erro ao verificar autenticação existente:', error);
-        AuthService.removeAuthToken();
+        console.error('Error checking existing authentication:', error);
+        AuthService.removeAuthToken('Login-error');
       }
     };
     
+    // Run checks
+    checkEnvironment();
     checkExistingAuth();
-  }, [navigate]);
+    
+    // Check for error message in location state (from redirects)
+    if (location.state?.authError) {
+      setError(`${location.state.authError}`);
+    }
+  }, [navigate, from, location.state]);
   
-/**
- * Callback para login bem-sucedido
- * @param {Object} credentialResponse - Resposta do Google OAuth
- */
-const handleLoginSuccess = (credentialResponse) => {
+  /**
+   * Handle successful Google login
+   */
+  const handleLoginSuccess = (credentialResponse) => {
     setIsLoading(true);
     setError(null);
     
-    console.log('Login bem-sucedido, processando credenciais...');
-    console.log('Resposta contém credencial:', !!credentialResponse.credential);
+    console.log('Login successful, processing credentials...');
     
     try {
       if (!credentialResponse.credential) {
-        throw new Error('Credencial não recebida do Google');
+        throw new Error('No credential received from Google');
       }
       
-      // Verificar se o token é válido no formato
+      // Decode token to verify format
       const tokenData = AuthService.decodeToken(credentialResponse.credential);
       
-      console.log('Token decodificado:', tokenData ? 'Sim' : 'Não');
-      console.log('Detalhes do token:', JSON.stringify({
-        sub: tokenData?.sub,
-        exp: tokenData?.exp,
-        scope: tokenData?.scope,
-        aud: tokenData?.aud
-      }));
-      
       if (!tokenData) {
-        throw new Error('Token inválido ou não pôde ser decodificado');
+        throw new Error('Received token is invalid or could not be decoded');
       }
       
-      // VERIFICAÇÃO ADICIONAL: Validar se o token tem escopo suficiente
-      // Isso é importante para confirmação, mesmo que o Google não inclua
-      // o escopo diretamente no token (ele geralmente está na resposta completa)
-      console.log('AVISO: Não estamos verificando o escopo do token, apenas seu formato');
+      console.log('Token validated, storing credentials...');
       
-      // Verificar se o token contém informações mínimas necessárias
-      console.log('Token contém id:', !!tokenData.sub);
-      console.log('Token contém expiração:', !!tokenData.exp);
-      
-      if (!tokenData.sub) {
-        throw new Error('Token não contém ID do usuário');
-      }
-      
-      // IMPORTANTE: Alguns tokens do Google não incluem exp no payload
-      // Neste caso, vamos definir uma expiração arbitrária (1 hora)
-      if (!tokenData.exp) {
-        console.log('AVISO: Token não contém data de expiração. Usando valor padrão (1 hora)');
-        const oneHourInSeconds = 3600;
-        const currentTime = Math.floor(Date.now() / 1000);
-        tokenData.exp = currentTime + oneHourInSeconds;
-      }
-      
-      // Verificar se o token já está expirado (improvável, mas por segurança)
-      const currentTime = Math.floor(Date.now() / 1000);
-      if (tokenData.exp <= currentTime) {
-        throw new Error('Token já expirado ao receber');
-      }
-      
-      console.log('Token validado localmente. ID do usuário:', tokenData.sub);
-      
-      // Salvar o token
+      // Store the token
       AuthService.setAuthToken(credentialResponse.credential);
       
-      // Mostrar feedback
-      console.log('Token salvo, redirecionando...');
-      
-      // Redirecionar para o dashboard ou página original
+      // Add a slight delay for better UX
       setTimeout(() => {
         navigate(from, { replace: true });
       }, 500);
     } catch (error) {
-      console.error('Erro no processamento do login:', error);
-      setError(`Erro ao processar a autenticação: ${error.message}`);
+      console.error('Error during login process:', error);
+      setError(`Authentication failed: ${error.message}`);
       setIsLoading(false);
     }
   };
   
   /**
-   * Callback para erro no login
-   * @param {Error} error - Erro retornado pelo Google OAuth
+   * Handle Google login error
    */
   const handleLoginError = (error) => {
-    console.error('Erro no login Google OAuth:', error);
-    setError('Falha na autenticação. Por favor, verifique sua conexão e tente novamente.');
+    console.error('Google OAuth error:', error);
+    setError('Authentication failed. Please check your connection and try again.');
     setIsLoading(false);
   };
   
@@ -164,7 +134,31 @@ const handleLoginSuccess = (credentialResponse) => {
         
         <div className="login-form">
           {isLoading ? (
-            <div className="loading">Autenticando...</div>
+            <div className="auth-loading">Autenticando...</div>
+          ) : !clientIdValid ? (
+            <div className="configuration-error">
+              <p>A configuração de OAuth está incompleta.</p>
+              <p>Verifique o arquivo .env com as variáveis de ambiente necessárias.</p>
+              
+              <details style={{ marginTop: '20px', cursor: 'pointer' }}>
+                <summary>Informações para Desenvolvedores</summary>
+                <div style={{ 
+                  marginTop: '10px', 
+                  fontSize: '14px', 
+                  padding: '10px', 
+                  background: 'rgba(0,0,0,0.05)', 
+                  borderRadius: '4px' 
+                }}>
+                  <p>O aplicativo está procurando por:</p>
+                  <code>REACT_APP_GOOGLE_CLIENT_ID</code>
+                  <p>Atual: {process.env.REACT_APP_GOOGLE_CLIENT_ID || 'não definido'}</p>
+                  
+                  <p style={{ marginTop: '10px' }}>Também verifique:</p>
+                  <code>REACT_APP_OAUTH_SCOPE</code>
+                  <p>Atual: {process.env.REACT_APP_OAUTH_SCOPE || 'https://www.googleapis.com/auth/blogger'}</p>
+                </div>
+              </details>
+            </div>
           ) : (
             <>
               <GoogleLogin
@@ -180,8 +174,11 @@ const handleLoginSuccess = (credentialResponse) => {
                 scope={AuthService.BLOGGER_API_SCOPE}
               />
               
-              {/* Nota informativa */}
-              <p className="login-note">
+              <p className="login-note" style={{ 
+                marginTop: '20px', 
+                fontSize: '14px', 
+                opacity: 0.8 
+              }}>
                 Ao fazer login, você autoriza o BlogCraft a acessar sua conta do Blogger.
                 Certifique-se de que sua conta tenha acesso a blogs no Blogger.
               </p>
@@ -191,8 +188,6 @@ const handleLoginSuccess = (credentialResponse) => {
       </div>
     </div>
   );
-
-  
 }
 
 export default Login;

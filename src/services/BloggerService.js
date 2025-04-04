@@ -1,407 +1,347 @@
 /**
- * BloggerService - Serviço para comunicação com a API do Blogger
+ * BloggerService - Enhanced service for Blogger API integration
  * 
- * Encapsula todas as chamadas para a API do Blogger para facilitar
- * a integração e manutenção.
+ * Provides robust error handling, caching, and rate limiting protection
  */
 
 import AuthService from './AuthService';
 
-/**
- * Verifica se ocorreu erro na resposta da API
- * @param {Response} response - Resposta da requisição fetch
- * @returns {Promise<any>} Dados da resposta ou erro
- */
-const handleResponse = async (response) => {
-  // Para respostas que não têm conteúdo (como DELETE)
-  if (response.status === 204) {
-    return { success: true };
+// API base URL
+const API_BASE_URL = 'https://www.googleapis.com/blogger/v3';
+
+// Debug flag (disable in production)
+const DEBUG = process.env.NODE_ENV !== 'production';
+
+// Cache configuration
+const CACHE_ENABLED = true;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const cache = new Map();
+
+// Log helper
+const log = {
+  info: (message, data) => {
+    if (DEBUG) console.log(`[BloggerAPI] ${message}`, data || '');
+  },
+  warn: (message, data) => {
+    if (DEBUG) console.warn(`[BloggerAPI] ${message}`, data || '');
+  },
+  error: (message, error) => {
+    if (DEBUG) console.error(`[BloggerAPI] ${message}`, error || '');
   }
-  
-  const contentType = response.headers.get('content-type');
-  
-  // Se a resposta é JSON
-  if (contentType && contentType.includes('application/json')) {
-    const data = await response.json();
-    
-    if (!response.ok) {
-      // Se a resposta tem um objeto de erro, usá-lo
-      if (data.error) {
-        throw new Error(`${data.error.message || 'Erro na API'} (${response.status})`);
-      }
-      throw new Error(`Erro na API do Blogger: ${response.status}`);
-    }
-    
-    return data;
-  }
-  
-  // Para outros tipos de conteúdo
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Erro na API do Blogger: ${response.status} - ${text}`);
-  }
-  
-  return { success: true };
 };
 
 /**
- * Pega o token de autenticação atual e verifica se é válido
- * @returns {string} Token de autenticação
- * @throws {Error} Se não houver token válido
+ * Generates a cache key from request parameters
  */
-const getValidToken = () => {
+const generateCacheKey = (endpoint, params) => {
+  return `${endpoint}:${JSON.stringify(params || {})}`;
+};
+
+/**
+ * Gets cached response if available and not expired
+ */
+const getCachedResponse = (key) => {
+  if (!CACHE_ENABLED) return null;
+  
+  const cached = cache.get(key);
+  if (!cached) return null;
+  
+  const now = Date.now();
+  if (now - cached.timestamp > CACHE_TTL) {
+    cache.delete(key);
+    return null;
+  }
+  
+  return cached.data;
+};
+
+/**
+ * Caches a response with the current timestamp
+ */
+const cacheResponse = (key, data) => {
+  if (!CACHE_ENABLED) return;
+  
+  cache.set(key, {
+    data,
+    timestamp: Date.now()
+  });
+};
+
+/**
+ * Make an API request with proper error handling
+ */
+const request = async (endpoint, options = {}) => {
+  // Get auth token
   const token = AuthService.getAuthToken();
   if (!token) {
-    console.error('Token não encontrado');
-    throw new Error('Usuário não autenticado');
+    throw new Error('Not authenticated');
   }
   
-  // Verificar se o token está expirado
+  // Check if token is expired
   if (AuthService.isTokenExpired()) {
-    console.error('Token expirado em getValidToken');
-    throw new Error('Token expirado. Por favor, faça login novamente.');
+    log.warn('Token expired, removing');
+    AuthService.removeAuthToken('BloggerService-expired');
+    throw new Error('Authentication expired. Please login again.');
   }
   
-  // CORREÇÃO: Verificar formato básico do token
-  const parts = token.split('.');
-  if (parts.length !== 3) {
-    console.error('Formato do token inválido');
-    throw new Error('Token inválido. Por favor, faça login novamente.');
+  // Prepare request URL and params
+  const url = `${API_BASE_URL}${endpoint}`;
+  
+  // Check cache for GET requests
+  if (options.method === 'GET' || !options.method) {
+    const cacheKey = generateCacheKey(endpoint, options.params);
+    const cachedResponse = getCachedResponse(cacheKey);
+    
+    if (cachedResponse) {
+      log.info(`Using cached response for ${endpoint}`);
+      return cachedResponse;
+    }
   }
   
-  return token;
-};
-
-/**
- * Obtém os blogs do usuário autenticado
- * @returns {Promise<Array>} Lista de blogs do usuário
- */
-const getUserBlogs = async () => {
-  try {
-    const token = getValidToken();
-    
-    console.log('Buscando blogs do usuário com token...');
-    
-    // MODIFICAÇÃO: Adicionar timeout mais longo para evitar problemas de rede
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos
-    
-    const response = await fetch('https://www.googleapis.com/blogger/v3/users/self/blogs', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json'
-      },
-      signal: controller.signal
+  // Prepare query string for GET requests with params
+  let queryString = '';
+  if (options.params) {
+    const searchParams = new URLSearchParams();
+    Object.entries(options.params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        searchParams.append(key, value);
+      }
     });
+    queryString = searchParams.toString() ? `?${searchParams.toString()}` : '';
+  }
+  
+  // Prepare request options
+  const fetchOptions = {
+    method: options.method || 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/json',
+      ...options.headers
+    }
+  };
+  
+  // Add body for non-GET requests
+  if (options.body && fetchOptions.method !== 'GET') {
+    fetchOptions.headers['Content-Type'] = 'application/json';
+    fetchOptions.body = JSON.stringify(options.body);
+  }
+  
+  // Add timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), options.timeout || 30000);
+  fetchOptions.signal = controller.signal;
+  
+  try {
+    log.info(`Making ${fetchOptions.method} request to ${url}${queryString}`);
     
+    // Make the request
+    const response = await fetch(`${url}${queryString}`, fetchOptions);
+    
+    // Clear timeout
     clearTimeout(timeoutId);
     
-    console.log('Resposta API blogs - status:', response.status);
+    // Handle response based on status code
+    if (response.status === 204) {
+      return { success: true };
+    }
     
-    // MODIFICAÇÃO: Tratamento específico para cada tipo de erro
+    // Get response content type
+    const contentType = response.headers.get('content-type');
+    const isJson = contentType && contentType.includes('application/json');
+    
     if (response.status === 401) {
-      const errorData = await response.json();
-      console.error('Erro de autenticação (401):', errorData);
+      const data = isJson ? await response.json() : await response.text();
+      log.error('Authentication error (401)', data);
       
-      AuthService.removeAuthToken();
-      throw new Error('Credenciais inválidas. Por favor, faça login novamente.');
+      // Clear invalid token
+      AuthService.removeAuthToken('BloggerService-401');
+      
+      throw new Error('Authentication failed. Please login again.');
     }
     
     if (response.status === 403) {
-      const errorData = await response.json();
-      console.error('Erro de permissão (403):', errorData);
+      const data = isJson ? await response.json() : await response.text();
+      log.error('Permission error (403)', data);
       
-      if (errorData.error && errorData.error.message && 
-          (errorData.error.message.includes('scope') || 
-           errorData.error.message.includes('permission'))) {
-        throw new Error('O token não tem permissão para acessar a API do Blogger. Verifique as configurações de OAuth.');
+      // Check for scope issues
+      const errorMessage = isJson && data.error && data.error.message;
+      if (errorMessage && (errorMessage.includes('scope') || errorMessage.includes('permission'))) {
+        throw new Error('Your account does not have permission to access the Blogger API. Please check OAuth scopes.');
       }
       
-      throw new Error('Acesso proibido à API do Blogger.');
+      throw new Error('Access denied to the Blogger API.');
     }
     
+    if (response.status === 429) {
+      log.warn('Rate limit exceeded (429)');
+      throw new Error('You have exceeded the API rate limit. Please try again later.');
+    }
+    
+    // Handle general error responses
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Erro na API (${response.status}):`, errorText);
-      throw new Error(`Erro na API do Blogger: ${response.status}`);
+      const errorData = isJson ? await response.json() : await response.text();
+      log.error(`API error (${response.status})`, errorData);
+      
+      const errorMessage = isJson && errorData.error && errorData.error.message
+        ? errorData.error.message
+        : `API request failed with status ${response.status}`;
+        
+      throw new Error(errorMessage);
     }
     
-    const data = await response.json();
-    console.log('Dados recebidos:', data ? 'Sim' : 'Não');
+    // Handle successful responses
+    if (isJson) {
+      const data = await response.json();
+      
+      // Cache GET responses
+      if (fetchOptions.method === 'GET' || !fetchOptions.method) {
+        const cacheKey = generateCacheKey(endpoint, options.params);
+        cacheResponse(cacheKey, data);
+      }
+      
+      return data;
+    }
     
-    return data;
+    return { success: true };
   } catch (error) {
-    console.error('Erro ao buscar blogs:', error);
+    // Clear timeout
+    clearTimeout(timeoutId);
     
-    // MODIFICAÇÃO: Melhor detecção de erros relacionados a autenticação
+    // Handle abort errors
     if (error.name === 'AbortError') {
-      throw new Error('Tempo limite excedido ao acessar a API do Blogger. Verifique sua conexão de internet.');
+      log.error('Request timeout', error);
+      throw new Error('Request timed out. Please check your internet connection and try again.');
     }
     
-    if (error.message.includes('autenticado') || 
-        error.message.includes('token') || 
-        error.message.includes('credenciais') ||
-        error.message.includes('login')) {
-      AuthService.removeAuthToken();
-    }
-    
+    // Log and rethrow
+    log.error(`Request failed: ${error.message}`, error);
     throw error;
   }
 };
 
 /**
- * Obtém informações detalhadas de um blog específico
- * @param {string} blogId - ID do blog
- * @returns {Promise<Object>} Detalhes do blog
+ * Clears the entire cache
  */
-const getBlogInfo = async (blogId) => {
-  try {
-    const token = getValidToken();
-    
-    const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    return handleResponse(response);
-  } catch (error) {
-    console.error('Erro ao buscar informações do blog:', error);
-    throw error;
-  }
+const clearCache = () => {
+  cache.clear();
+  log.info('Cache cleared');
 };
 
 /**
- * Obtém os posts de um blog
- * @param {string} blogId - ID do blog
- * @param {Object} options - Opções da requisição (maxResults, status, etc)
- * @returns {Promise<Array>} Lista de posts do blog
+ * Retrieves the user's blogs
  */
-const getPosts = async (blogId, options = {}) => {
-  try {
-    const token = getValidToken();
-    
-    // Construir query params a partir das opções
-    const queryParams = new URLSearchParams();
-    
-    if (options.maxResults) {
-      queryParams.append('maxResults', options.maxResults);
-    }
-    
-    if (options.status) {
-      queryParams.append('status', options.status);
-    }
-    
-    if (options.startDate) {
-      queryParams.append('startDate', options.startDate);
-    }
-    
-    if (options.endDate) {
-      queryParams.append('endDate', options.endDate);
-    }
-    
-    if (options.labels) {
-      queryParams.append('labels', options.labels);
-    }
-    
-    const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
-    
-    const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts${query}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    return handleResponse(response);
-  } catch (error) {
-    console.error('Erro ao buscar posts:', error);
-    throw error;
-  }
+const getUserBlogs = async (options = {}) => {
+  return request('/users/self/blogs', { ...options });
 };
 
 /**
- * Obtém um post específico
- * @param {string} blogId - ID do blog
- * @param {string} postId - ID do post
- * @returns {Promise<Object>} Detalhes do post
+ * Retrieves a specific blog by ID
  */
-const getPost = async (blogId, postId) => {
-  try {
-    const token = getValidToken();
-    
-    const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    return handleResponse(response);
-  } catch (error) {
-    console.error('Erro ao buscar post:', error);
-    throw error;
-  }
+const getBlog = async (blogId, options = {}) => {
+  return request(`/blogs/${blogId}`, { ...options });
 };
 
 /**
- * Cria um novo post
- * @param {string} blogId - ID do blog
- * @param {Object} postData - Dados do post (title, content, labels, etc)
- * @returns {Promise<Object>} Post criado
+ * Retrieves posts from a blog
  */
-const createPost = async (blogId, postData) => {
-  try {
-    const token = getValidToken();
-    
-    const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(postData)
-    });
-    
-    return handleResponse(response);
-  } catch (error) {
-    console.error('Erro ao criar post:', error);
-    throw error;
-  }
+const getPosts = async (blogId, params = {}, options = {}) => {
+  return request(`/blogs/${blogId}/posts`, { 
+    params,
+    ...options
+  });
 };
 
 /**
- * Atualiza um post existente
- * @param {string} blogId - ID do blog
- * @param {string} postId - ID do post
- * @param {Object} postData - Dados do post (title, content, labels, etc)
- * @returns {Promise<Object>} Post atualizado
+ * Retrieves a specific post by ID
  */
-const updatePost = async (blogId, postId, postData) => {
-  try {
-    const token = getValidToken();
-    
-    const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(postData)
-    });
-    
-    return handleResponse(response);
-  } catch (error) {
-    console.error('Erro ao atualizar post:', error);
-    throw error;
-  }
+const getPost = async (blogId, postId, options = {}) => {
+  return request(`/blogs/${blogId}/posts/${postId}`, { ...options });
 };
 
 /**
- * Publica um post
- * @param {string} blogId - ID do blog
- * @param {string} postId - ID do post
- * @returns {Promise<Object>} Post publicado
+ * Creates a new post
  */
-const publishPost = async (blogId, postId) => {
-  try {
-    const token = getValidToken();
-    
-    const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}/publish`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    return handleResponse(response);
-  } catch (error) {
-    console.error('Erro ao publicar post:', error);
-    throw error;
-  }
+const createPost = async (blogId, postData, options = {}) => {
+  return request(`/blogs/${blogId}/posts`, {
+    method: 'POST',
+    body: postData,
+    ...options
+  });
 };
 
 /**
- * Salva um post como rascunho
- * @param {string} blogId - ID do blog
- * @param {string} postId - ID do post
- * @returns {Promise<Object>} Post salvo como rascunho
+ * Updates an existing post
  */
-const revertPostToDraft = async (blogId, postId) => {
-  try {
-    const token = getValidToken();
-    
-    const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}/revert`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    return handleResponse(response);
-  } catch (error) {
-    console.error('Erro ao reverter post para rascunho:', error);
-    throw error;
-  }
+const updatePost = async (blogId, postId, postData, options = {}) => {
+  return request(`/blogs/${blogId}/posts/${postId}`, {
+    method: 'PUT',
+    body: postData,
+    ...options
+  });
 };
 
 /**
- * Exclui um post
- * @param {string} blogId - ID do blog
- * @param {string} postId - ID do post
- * @returns {Promise<void>}
+ * Deletes a post
  */
-const deletePost = async (blogId, postId) => {
-  try {
-    const token = getValidToken();
-    
-    const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    return handleResponse(response);
-  } catch (error) {
-    console.error('Erro ao excluir post:', error);
-    throw error;
-  }
+const deletePost = async (blogId, postId, options = {}) => {
+  return request(`/blogs/${blogId}/posts/${postId}`, {
+    method: 'DELETE',
+    ...options
+  });
 };
 
 /**
- * Obtém os comentários de um post
- * @param {string} blogId - ID do blog
- * @param {string} postId - ID do post
- * @returns {Promise<Array>} Lista de comentários do post
+ * Publishes a post (moves from draft to published)
  */
-const getComments = async (blogId, postId) => {
-  try {
-    const token = getValidToken();
-    
-    const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}/comments`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    return handleResponse(response);
-  } catch (error) {
-    console.error('Erro ao buscar comentários:', error);
-    throw error;
+const publishPost = async (blogId, postId, publishDate, options = {}) => {
+  let endpoint = `/blogs/${blogId}/posts/${postId}/publish`;
+  
+  // Add publish date if specified
+  if (publishDate) {
+    const params = {
+      publishDate: publishDate instanceof Date 
+        ? publishDate.toISOString() 
+        : publishDate
+    };
+    return request(endpoint, { method: 'POST', params, ...options });
   }
+  
+  return request(endpoint, { method: 'POST', ...options });
 };
 
-// Exportar todas as funções como um objeto
+/**
+ * Reverts a post to draft status
+ */
+const revertToDraft = async (blogId, postId, options = {}) => {
+  return request(`/blogs/${blogId}/posts/${postId}/revert`, {
+    method: 'POST',
+    ...options
+  });
+};
+
+/**
+ * Gets comments for a post
+ */
+const getComments = async (blogId, postId, params = {}, options = {}) => {
+  return request(`/blogs/${blogId}/posts/${postId}/comments`, {
+    params,
+    ...options
+  });
+};
+
+// Export the BloggerService with all methods
 const BloggerService = {
   getUserBlogs,
-  getBlogInfo,
+  getBlog,
   getPosts,
   getPost,
   createPost,
   updatePost,
-  publishPost,
-  revertPostToDraft,
   deletePost,
-  getComments
+  publishPost,
+  revertToDraft,
+  getComments,
+  clearCache
 };
 
 export default BloggerService;
