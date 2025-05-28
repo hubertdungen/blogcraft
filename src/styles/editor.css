@@ -354,3 +354,60 @@
       flex-direction: column;
     }
   }
+  
+  /* CKEditor Theme Isolation - Always show as light theme */
+.ck-editor__main {
+  --ck-color-base-background: #ffffff !important;
+  --ck-color-base-foreground: #fafafa !important;
+  --ck-color-text: #333333 !important;
+  --ck-color-editor-base-text: #333333 !important;
+  background-color: #ffffff !important;
+}
+
+/* Editor content area */
+.ck-content {
+  background-color: #ffffff !important;
+  color: #333333 !important;
+}
+
+/* Ensure all text in editor is dark */
+.ck-content * {
+  color: #333333 !important;
+}
+
+/* Override dark theme for editor content */
+.dark .ck-editor__main,
+.dark .ck-content {
+  background-color: #ffffff !important;
+  color: #333333 !important;
+}
+
+.dark .ck-content p,
+.dark .ck-content h1,
+.dark .ck-content h2,
+.dark .ck-content h3,
+.dark .ck-content h4,
+.dark .ck-content h5,
+.dark .ck-content h6,
+.dark .ck-content li,
+.dark .ck-content blockquote,
+.dark .ck-content td,
+.dark .ck-content th {
+  color: #333333 !important;
+}
+
+/* Editor toolbar can stay themed */
+.ck-toolbar {
+  border-bottom: 1px solid #e0e0e0 !important;
+}
+
+/* Fix for the editable area */
+.ck-editor__editable {
+  background-color: #ffffff !important;
+  color: #333333 !important;
+}
+
+.ck-editor__editable:focus {
+  background-color: #ffffff !important;
+  color: #333333 !important;
+}
