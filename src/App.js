@@ -79,8 +79,16 @@ function App() {
     };
   }, []);
 
-  const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
+  /**
+   * Alterna o tema ou define explicitamente um tema
+   * @param {('light'|'dark')} [newTheme] - Tema opcional a ser definido
+   */
+  const toggleTheme = (newTheme) => {
+    if (newTheme === 'light' || newTheme === 'dark') {
+      setTheme(newTheme);
+    } else {
+      setTheme(prevTheme => (prevTheme === 'dark' ? 'light' : 'dark'));
+    }
   };
 
   useEffect(() => {
