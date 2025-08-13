@@ -48,9 +48,14 @@ Estado: Alpha/Preview — executável localmente. Fluxos principais (login com G
 
 5. Executar a aplicação
    ```bash
+   # No macOS/Linux
+   ./run.sh
+
+   # No Windows
+   run.bat
+
+   # Ou iniciar manualmente
    npm start
-   # ou
-   yarn start
    ```
 
 6. Aceder à aplicação em `http://localhost:3000`
