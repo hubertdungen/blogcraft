@@ -54,9 +54,14 @@ BlogCraft is a modern web application designed to replace discontinued tools lik
 
 5. Run the application
    ```bash
+   # On macOS/Linux
+   ./run.sh
+
+   # On Windows
+   run.bat
+
+   # Or start manually
    npm start
-   # or
-   yarn start
    ```
 
 6. Access the application at `http://localhost:3000`
