@@ -1,8 +1,14 @@
 # BlogCraft - Advanced Blogger Editor
 
-###  UNDER DEVELOPMENT - NOT WORKING YET ###
+### Currently in Beta – functional release! ###
 
 BlogCraft is a modern web application designed to replace discontinued tools like Open Live Writer, offering a comprehensive solution for editing and publishing on Blogger with an advanced interface and powerful features.
+
+## 🆕 What's New
+
+- **Beta v0.4.21** – the application is now runnable with essential features.
+- Fixed theme toggle to seamlessly switch between light and dark modes.
+- Updated test suite to ensure core functionality works as expected.
 
 ## 🚀 Quick Start
 
