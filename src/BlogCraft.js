@@ -436,17 +436,13 @@ function PostEditor({ theme, toggleTheme }) {
         content: finalContent,
         labels: postData.labels
       };
-      
-      if (postData.scheduledPublish && publish) {
-        postPayload.published = postData.scheduledPublish.toISOString();
-      }
-      
-      // Determinar se estamos criando ou atualizando um post
+
+      // Sempre salvar como rascunho para controlar publicação
       const method = postId ? 'PUT' : 'POST';
-      const url = postId 
+      const url = postId
         ? `https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}`
-        : `https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts`;
-      
+        : `https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts?isDraft=true`;
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -462,17 +458,24 @@ function PostEditor({ theme, toggleTheme }) {
       
       const savedPost = await response.json();
       
-      if (publish && !postData.scheduledPublish) {
-        // Publicar imediatamente se não estiver agendado
-        await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${savedPost.id}/publish`, {
+      if (publish) {
+        // Publicar imediatamente ou agendar
+        const publishUrl = `https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${savedPost.id}/publish` +
+          (postData.scheduledPublish ? `?publishDate=${encodeURIComponent(postData.scheduledPublish.toISOString())}` : '');
+
+        await fetch(publishUrl, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
       }
-      
-      alert(publish ? 'Post publicado com sucesso!' : 'Rascunho salvo com sucesso!');
+
+      alert(postData.scheduledPublish
+        ? 'Post agendado com sucesso!'
+        : publish
+          ? 'Post publicado com sucesso!'
+          : 'Rascunho salvo com sucesso!');
       navigate('/dashboard');
     } catch (error) {
       console.error('Erro ao salvar post:', error);
