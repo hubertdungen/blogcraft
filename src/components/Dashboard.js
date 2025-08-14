@@ -123,24 +123,27 @@ function Dashboard() {
       // Fetch different post types in parallel
       const [publishedData, draftData, scheduledData] = await Promise.all([
         // Published posts
-        BloggerService.getPosts(blogId, { 
+        BloggerService.getPosts(blogId, {
           status: 'live',
           maxResults: 10,
-          fetchBodies: false
+          fetchBodies: false,
+          fetchImages: true
         }),
         
         // Draft posts
         BloggerService.getPosts(blogId, {
           status: 'draft',
           maxResults: 10,
-          fetchBodies: false
+          fetchBodies: false,
+          fetchImages: true
         }),
         
         // Scheduled posts
         BloggerService.getPosts(blogId, {
           status: 'scheduled',
           maxResults: 10,
-          fetchBodies: false
+          fetchBodies: false,
+          fetchImages: true
         })
       ]);
       
@@ -569,6 +572,16 @@ function Dashboard() {
                   <div className="posts-list">
                     {posts.map(post => (
                       <div key={post.id} className="post-item">
+                        {post.images && post.images.length > 0 ? (
+                          <img
+                            src={post.images[0].url}
+                            alt={post.title}
+                            className="post-thumbnail"
+                          />
+                        ) : (
+                          <div className="post-thumbnail no-image" />
+                        )}
+
                         <div className="post-info">
                           <h3>{post.title}</h3>
                           <div className="post-meta">
