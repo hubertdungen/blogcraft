@@ -50,6 +50,11 @@ function App() {
     return savedTheme || 'dark'; // Default to dark theme
   });
 
+  const [showDebugger, setShowDebugger] = useState(() => {
+    const savedSettings = JSON.parse(localStorage.getItem('blogcraft_settings') || '{}');
+    return savedSettings.showDebugger || false;
+  });
+
   // Tracking authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -60,22 +65,33 @@ function App() {
       const validated = token && !AuthService.isTokenExpired();
       setIsAuthenticated(validated);
     };
-    
+
+    const updateDebugger = () => {
+      const savedSettings = JSON.parse(localStorage.getItem('blogcraft_settings') || '{}');
+      setShowDebugger(savedSettings.showDebugger || false);
+    };
+
     // Check immediately
     checkAuth();
-    
+    updateDebugger();
+
     // Setup localStorage event listener to detect changes
     const handleStorageChange = (e) => {
       if (e.key === 'blogcraft_token') {
         checkAuth();
       }
+      if (e.key === 'blogcraft_settings') {
+        updateDebugger();
+      }
     };
-    
+
     window.addEventListener('storage', handleStorageChange);
-    
+    window.addEventListener('blogcraft_settings_updated', updateDebugger);
+
     // Cleanup
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('blogcraft_settings_updated', updateDebugger);
     };
   }, []);
 
@@ -100,8 +116,8 @@ function App() {
     <BrowserRouter>
       <div className={`app-container ${theme}`}>
 
-        {/* Add the debugger here, before Routes */}
-        {process.env.NODE_ENV !== 'production' && <LoginDebugger />}
+          {/* Add the debugger here, before Routes */}
+          {process.env.NODE_ENV !== 'production' && showDebugger && <LoginDebugger />}
         
 
         <Routes>
