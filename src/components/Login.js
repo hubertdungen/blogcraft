@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';  // MUDANÇA AQUI
 import AuthService from '../services/AuthService';
 import Feedback from './Feedback';
+import logo from '../logo.svg';
 
 function Login() {
   const navigate = useNavigate();
@@ -58,7 +59,10 @@ function Login() {
   return (
     <div className="login-container">
       <div className="login-card">
-        <h1>BlogCraft</h1>
+        <h1>
+          <img src={logo} alt="BlogCraft logo" className="logo-icon" />
+          BlogCraft
+        </h1>
         <p>Editor Avançado para Blogger</p>
         
         {error && (
