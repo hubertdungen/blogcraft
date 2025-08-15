@@ -7,9 +7,46 @@ import 'react-datetime-picker/dist/DateTimePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import 'react-clock/dist/Clock.css';
 import { saveAs } from 'file-saver';
+import imageCompression from 'browser-image-compression';
 import BloggerService from '../services/BloggerService';
 import AuthService from '../services/AuthService';
 import Feedback from './Feedback';
+
+// Utilitário para comprimir imagens antes do upload
+const compressImage = async (file) => {
+  const options = {
+    maxSizeMB: 1,
+    maxWidthOrHeight: 1024,
+    useWebWorker: true
+  };
+
+  try {
+    return await imageCompression(file, options);
+  } catch (error) {
+    console.error('Erro ao comprimir imagem:', error);
+    return file;
+  }
+};
+
+// Plugin para substituir o adaptador de upload do CKEditor
+const uploadAdapterPlugin = (editor) => {
+  editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+    return {
+      upload: async () => {
+        const file = await loader.file;
+        const compressed = await compressImage(file);
+
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve({ default: reader.result });
+          reader.onerror = reject;
+          reader.readAsDataURL(compressed);
+        });
+      },
+      abort: () => {}
+    };
+  };
+};
 
 /**
  * Componente do Editor de Posts
@@ -782,9 +819,12 @@ function PostEditor({ theme, toggleTheme }) {
               onReady={editor => {
                 // Armazenar referência ao editor
                 editorRef.current = editor;
-                
+
                 // Configurações adicionais
                 editor.ui.view.editable.element.style.minHeight = '500px';
+
+                // Habilitar compressão de imagem
+                uploadAdapterPlugin(editor);
               }}
               config={{
                 toolbar: [
@@ -804,17 +844,45 @@ function PostEditor({ theme, toggleTheme }) {
                   '|',
                   'fontSize', 'fontFamily',
                   '|',
-                  'alignment',
+                  'alignment:left', 'alignment:center', 'alignment:right', 'alignment:justify',
                   '|',
                   'horizontalLine'
                 ],
                 image: {
-                  // Configuração para upload de imagens
+                  // Configuração para edição de imagens
                   toolbar: [
                     'imageTextAlternative',
+                    'imageStyle:alignLeft',
+                    'imageStyle:alignCenter',
+                    'imageStyle:alignRight',
+                    '|',
                     'imageStyle:full',
-                    'imageStyle:side'
-                  ]
+                    'imageStyle:side',
+                    '|',
+                    'resizeImage'
+                  ],
+                  styles: [ 'alignLeft', 'alignCenter', 'alignRight', 'full', 'side' ],
+                  resizeOptions: [
+                    {
+                      name: 'resizeImage:original',
+                      label: 'Original',
+                      value: null
+                    },
+                    {
+                      name: 'resizeImage:50',
+                      label: '50%',
+                      value: '50'
+                    },
+                    {
+                      name: 'resizeImage:75',
+                      label: '75%',
+                      value: '75'
+                    }
+                  ],
+                  resizeUnit: '%'
+                },
+                alignment: {
+                  options: [ 'left', 'center', 'right', 'justify' ]
                 },
                 table: {
                   contentToolbar: [
