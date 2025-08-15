@@ -218,7 +218,7 @@ function Dashboard() {
     for (let i = 5; i >= 0; i--) {
       const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
       last6Months.push({
-        label: month.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }),
+        label: `${month.toLocaleString(i18n.getLocale(), { month: 'short' })} ${month.getFullYear()}`,
         count: 0,
         month: month.getMonth(),
         year: month.getFullYear()
