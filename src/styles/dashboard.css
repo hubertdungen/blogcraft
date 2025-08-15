@@ -158,7 +158,48 @@
   .dark .posts-section h2 {
     border-color: var(--border-dark);
   }
-  
+
+  .posts-controls {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .posts-controls label {
+    margin-right: 8px;
+    font-weight: 500;
+  }
+
+  .posts-controls .sort-control {
+    display: flex;
+    align-items: center;
+  }
+
+  .posts-controls .filter-control,
+  .posts-controls .tag-filter-control {
+    display: flex;
+    align-items: center;
+  }
+
+  .posts-controls .order-toggle {
+    margin-left: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    height: 32px;
+  }
+
+  .posts-controls .order-toggle:hover {
+    opacity: 0.8;
+  }
+
   .no-posts {
     padding: 40px;
     text-align: center;

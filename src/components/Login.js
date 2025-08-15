@@ -69,7 +69,7 @@ function Login() {
           {t('app.name')}
         </h1>
         <p>{t('app.slogan')}</p>
-        
+
         {error && (
           <Feedback 
             type="error" 
