@@ -28,7 +28,8 @@ function Settings({ theme, toggleTheme }) {
     autoSaveInterval: 5,
     autoBackup: true,
     confirmBeforeDelete: true,
-    defaultPublishStatus: 'draft'
+    defaultPublishStatus: 'draft',
+    showDebugger: false
   });
   const [error, setError] = useState(null);
   
@@ -52,7 +53,8 @@ function Settings({ theme, toggleTheme }) {
         autoSaveInterval: savedSettings.autoSaveInterval || 5,
         autoBackup: savedSettings.autoBackup !== undefined ? savedSettings.autoBackup : true,
         confirmBeforeDelete: savedSettings.confirmBeforeDelete !== undefined ? savedSettings.confirmBeforeDelete : true,
-        defaultPublishStatus: savedSettings.defaultPublishStatus || 'draft'
+        defaultPublishStatus: savedSettings.defaultPublishStatus || 'draft',
+        showDebugger: savedSettings.showDebugger !== undefined ? savedSettings.showDebugger : false
       });
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
@@ -97,9 +99,9 @@ function Settings({ theme, toggleTheme }) {
    * Atualiza uma configuração
    */
   const handleSettingChange = (e, setting) => {
-    const value = 
-      setting === 'autoBackup' || setting === 'confirmBeforeDelete'
-        ? e.target.checked 
+    const value =
+      setting === 'autoBackup' || setting === 'confirmBeforeDelete' || setting === 'showDebugger'
+        ? e.target.checked
         : setting === 'autoSaveInterval'
           ? parseInt(e.target.value, 10)
           : e.target.value;
@@ -125,10 +127,13 @@ function Settings({ theme, toggleTheme }) {
     try {
       // Salvar configurações gerais
       localStorage.setItem('blogcraft_settings', JSON.stringify(settings));
-      
+
       // Salvar idioma
       i18n.setLocale(language);
-      
+
+      // Notify application about settings update
+      window.dispatchEvent(new Event('blogcraft_settings_updated'));
+
       alert(t('settings.confirmations.saveSuccess'));
     } catch (error) {
       console.error('Erro ao salvar configurações:', error);
@@ -147,11 +152,13 @@ function Settings({ theme, toggleTheme }) {
         autoSaveInterval: 5,
         autoBackup: true,
         confirmBeforeDelete: true,
-        defaultPublishStatus: 'draft'
+        defaultPublishStatus: 'draft',
+        showDebugger: false
       };
-      
+
       setSettings(defaultSettings);
       localStorage.setItem('blogcraft_settings', JSON.stringify(defaultSettings));
+      window.dispatchEvent(new Event('blogcraft_settings_updated'));
       alert(t('settings.confirmations.resetSuccess'));
     }
   };
@@ -329,15 +336,30 @@ function Settings({ theme, toggleTheme }) {
                 <p className="setting-description">{t('settings.fields.languageDesc')}</p>
               </div>
             </div>
-            
+            <div className="setting-group">
+              <h2>{t('settings.sections.debug')}</h2>
+
+              <div className="setting-item">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={settings.showDebugger}
+                    onChange={(e) => handleSettingChange(e, 'showDebugger')}
+                  />
+                  {t('settings.fields.showDebugger')}
+                </label>
+                <p className="setting-description">{t('settings.fields.showDebuggerDesc')}</p>
+              </div>
+            </div>
+
             <div className="setting-group">
               <h2>{t('settings.sections.dataManagement')}</h2>
-              
+
               <div className="data-actions">
                 <button className="reset-settings-button" onClick={handleResetSettings}>
                   {t('settings.buttons.reset')}
                 </button>
-                
+
                 <button className="clear-data-button" onClick={handleClearData}>
                   {t('settings.buttons.clearData')}
                 </button>

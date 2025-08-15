@@ -6,8 +6,8 @@ Abaixo está a estrutura de arquivos recomendada para o projeto BlogCraft:
 blogcraft/
 ├── node_modules/
 ├── public/
-│   ├── favicon.ico
 │   ├── index.html
+│   ├── logo.svg
 │   ├── logo192.png
 │   ├── logo512.png
 │   ├── manifest.json

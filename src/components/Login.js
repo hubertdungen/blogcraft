@@ -5,6 +5,7 @@ import AuthService from '../services/AuthService';
 import Feedback from './Feedback';
 import LanguageSelector from './LanguageSelector';
 import i18n, { t } from '../services/I18nService';
+import logo from '../logo.svg';
 
 function Login() {
   const navigate = useNavigate();
@@ -63,7 +64,10 @@ function Login() {
   return (
     <div className="login-container">
       <div className="login-card">
-        <h1>{t('app.name')}</h1>
+        <h1>
+          <img src={logo} alt="BlogCraft logo" className="logo-icon" />
+          {t('app.name')}
+        </h1>
         <p>{t('app.slogan')}</p>
         
         {error && (

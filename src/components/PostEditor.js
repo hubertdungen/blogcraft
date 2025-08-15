@@ -3,6 +3,9 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import DateTimePicker from 'react-datetime-picker';
+import 'react-datetime-picker/dist/DateTimePicker.css';
+import 'react-calendar/dist/Calendar.css';
+import 'react-clock/dist/Clock.css';
 import { saveAs } from 'file-saver';
 import BloggerService from '../services/BloggerService';
 import AuthService from '../services/AuthService';
@@ -429,30 +432,36 @@ function PostEditor({ theme, toggleTheme }) {
         content: finalContent,
         labels: postData.labels
       };
-      
-      if (postData.scheduledPublish && publish) {
-        postPayload.published = postData.scheduledPublish.toISOString();
-      }
-      
+
+      // Sempre salvar como rascunho para controlar publicação
+      const saveOptions = { params: { isDraft: true } };
       let savedPost;
-      
+
       // Determinar se estamos criando ou atualizando um post
       if (postId) {
         // Atualizar post existente
         savedPost = await BloggerService.updatePost(selectedBlog, postId, postPayload);
       } else {
-        // Criar novo post
-        savedPost = await BloggerService.createPost(selectedBlog, postPayload);
+        // Criar novo post como rascunho
+        savedPost = await BloggerService.createPost(selectedBlog, postPayload, saveOptions);
       }
-      
-      // Se pediu para publicar e não está agendado, publicar imediatamente
-      if (publish && !postData.scheduledPublish) {
-        await BloggerService.publishPost(selectedBlog, savedPost.id);
+
+      // Publicar imediatamente ou agendar
+      if (publish) {
+        await BloggerService.publishPost(
+          selectedBlog,
+          savedPost.id,
+          postData.scheduledPublish || undefined
+        );
       }
-      
+
       setFeedback({
         type: 'success',
-        message: publish ? 'Post publicado com sucesso!' : 'Rascunho salvo com sucesso!',
+        message: postData.scheduledPublish
+          ? 'Post agendado com sucesso!'
+          : publish
+            ? 'Post publicado com sucesso!'
+            : 'Rascunho salvo com sucesso!',
         duration: 3000
       });
       
@@ -689,6 +698,10 @@ function PostEditor({ theme, toggleTheme }) {
                     value={postData.scheduledPublish}
                     minDate={new Date()}
                     format="dd/MM/yyyy HH:mm"
+                    locale="pt-BR"
+                    formatShortWeekday={(locale, date) =>
+                      ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'][date.getDay()]
+                    }
                   />
                 )}
               </div>
