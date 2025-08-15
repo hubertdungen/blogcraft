@@ -20,6 +20,7 @@ function Dashboard() {
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [posts, setPosts] = useState([]);
   const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [stats, setStats] = useState({
     totalPosts: 0,
@@ -383,14 +384,16 @@ function Dashboard() {
 
     return [...filtered].sort((a, b) => {
       if (sortBy === 'title') {
-        return a.title.localeCompare(b.title);
+        return sortOrder === 'asc'
+          ? a.title.localeCompare(b.title)
+          : b.title.localeCompare(a.title);
       }
 
       const dateA = new Date(a.published || a.scheduled || a.updated || 0);
       const dateB = new Date(b.published || b.scheduled || b.updated || 0);
-      return dateB - dateA;
+      return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
     });
-  }, [posts, sortBy, statusFilter]);
+  }, [posts, sortBy, statusFilter, sortOrder]);
 
   /**
    * Retry loading blogs after error
@@ -588,6 +591,16 @@ function Dashboard() {
                         <option value="date">Data</option>
                         <option value="title">Título</option>
                       </select>
+                      <button
+                        type="button"
+                        className="order-toggle"
+                        onClick={() =>
+                          setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'))
+                        }
+                        title="Inverter ordem"
+                      >
+                        {sortOrder === 'asc' ? '↑' : '↓'}
+                      </button>
                     </div>
                     <div className="filter-control">
                       <label>Filtrar:</label>
