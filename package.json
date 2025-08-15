@@ -11,6 +11,7 @@
     "scheduler": "node scheduler.js"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-alignment": "^46.0.1",
     "@ckeditor/ckeditor5-build-classic": "^35.4.0",
     "@ckeditor/ckeditor5-react": "^5.0.6",
     "@ckeditor/ckeditor5-theme-lark": "^46.0.1",
