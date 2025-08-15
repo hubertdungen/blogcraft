@@ -6,6 +6,7 @@ import DateTimePicker from 'react-datetime-picker';
 import { GoogleLogin } from '@react-oauth/google';
 import { saveAs } from 'file-saver';
 import './App.css';
+import logo from './logo.svg';
 
 // Componente principal da aplicação
 function App() {
@@ -56,7 +57,10 @@ function Login() {
   return (
     <div className="login-container">
       <div className="login-card">
-        <h1>BlogCraft</h1>
+        <h1>
+          <img src={logo} alt="BlogCraft logo" className="logo-icon" />
+          BlogCraft
+        </h1>
         <p>Editor Avançado para Blogger</p>
         
         <div className="login-form">
@@ -1101,7 +1105,10 @@ function Sidebar({ theme, toggleTheme }) {
   return (
     <div className="sidebar">
       <div className="logo">
-        <h2>BlogCraft</h2>
+        <h2>
+          <img src={logo} alt="BlogCraft logo" className="logo-icon" />
+          BlogCraft
+        </h2>
       </div>
       
       <nav className="nav-menu">

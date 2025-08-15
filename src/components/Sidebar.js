@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import logo from '../logo.svg';
 
 /**
  * Componente Sidebar - Barra lateral de navegação
@@ -31,7 +32,10 @@ function Sidebar({ theme, toggleTheme }) {
   return (
     <div className="sidebar">
       <div className="logo">
-        <h2>BlogCraft</h2>
+        <h2>
+          <img src={logo} alt="BlogCraft logo" className="logo-icon" />
+          BlogCraft
+        </h2>
       </div>
       
       <nav className="nav-menu">
