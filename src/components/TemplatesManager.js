@@ -4,6 +4,7 @@ import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { saveAs } from 'file-saver';
 import Feedback from './Feedback';
+import i18n, { t } from '../services/I18nService';
 
 /**
  * Componente de Gerenciamento de Templates
@@ -23,6 +24,12 @@ function TemplatesManager({ theme }) {
   const [isEditing, setIsEditing] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const editorRef = useRef(null);
+  const [_locale, setLocale] = useState(i18n.getLocale());
+
+  useEffect(() => {
+    const remove = i18n.addListener(setLocale);
+    return remove;
+  }, []);
   
   // Carregar templates salvos no localStorage ao montar o componente
   useEffect(() => {
@@ -366,7 +373,7 @@ function TemplatesManager({ theme }) {
   return (
     <div className="templates-content">
       <div className="templates-header">
-        <h1>Gerenciador de Templates</h1>
+        <h1>{t('templates.title')}</h1>
         
         <div className="templates-actions">
           <button 

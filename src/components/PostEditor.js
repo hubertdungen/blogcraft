@@ -10,6 +10,7 @@ import { saveAs } from 'file-saver';
 import BloggerService from '../services/BloggerService';
 import AuthService from '../services/AuthService';
 import Feedback from './Feedback';
+import i18n, { t } from '../services/I18nService';
 
 /**
  * Componente do Editor de Posts
@@ -27,6 +28,12 @@ function PostEditor({ theme, toggleTheme }) {
   const location = useLocation();
   const { postId } = useParams();
   const editorRef = useRef(null);
+  const [_locale, setLocale] = useState(i18n.getLocale());
+
+  useEffect(() => {
+    const remove = i18n.addListener(setLocale);
+    return remove;
+  }, []);
   
   // Estados do editor
   const [loading, setLoading] = useState(false);
@@ -598,7 +605,7 @@ function PostEditor({ theme, toggleTheme }) {
   return (
     <div className="editor-content">
       <div className="editor-header">
-        <h1>Editor de Post</h1>
+        <h1>{t('editor.title')}</h1>
         
         <div className="editor-actions">
           <button 
