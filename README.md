@@ -127,6 +127,18 @@ npm test
 
 The production build will be created in `build/`.
 
+## 🕒 Background Scheduler Service
+
+BlogCraft includes an optional Node.js scheduler that can publish posts at a later time even when the main UI is closed.
+
+1. Add scheduled posts to `scheduled-posts.json` (see `scheduled-posts.example.json` for the structure).
+2. Export a Blogger access token in `BLOGGER_TOKEN` and optionally set `SCHEDULED_POSTS_FILE`.
+3. Run the service:
+   ```bash
+   npm run scheduler
+   ```
+The process will stay running and publish each post at its configured `publishDate`.
+
 ## 📚 More Help
 - [Blogger API Documentation](https://developers.google.com/blogger/docs/3.0/getting_started)
 - [Google OAuth Guide](https://developers.google.com/identity/protocols/oauth2)
