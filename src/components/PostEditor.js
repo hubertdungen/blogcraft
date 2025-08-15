@@ -2,6 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import DateTimePicker from 'react-datetime-picker';
+import 'react-datetime-picker/dist/DateTimePicker.css';
+import 'react-calendar/dist/Calendar.css';
+import 'react-clock/dist/Clock.css';
+import { saveAs } from 'file-saver';
+import BloggerService from '../services/BloggerService';
+import AuthService from '../services/AuthService';
+import Feedback from './Feedback';
 
 // Extende o build padrão para suportar edição de links em imagens
 if (process.env.NODE_ENV !== 'test') {
@@ -12,14 +20,6 @@ if (process.env.NODE_ENV !== 'test') {
     LinkImage
   ];
 }
-import DateTimePicker from 'react-datetime-picker';
-import 'react-datetime-picker/dist/DateTimePicker.css';
-import 'react-calendar/dist/Calendar.css';
-import 'react-clock/dist/Clock.css';
-import { saveAs } from 'file-saver';
-import BloggerService from '../services/BloggerService';
-import AuthService from '../services/AuthService';
-import Feedback from './Feedback';
 
 // Utilitário para comprimir imagens antes do upload sem dependências externas
 const compressImage = (file) =>
