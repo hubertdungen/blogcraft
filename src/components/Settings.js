@@ -29,7 +29,8 @@ function Settings({ theme, toggleTheme }) {
     autoBackup: true,
     confirmBeforeDelete: true,
     defaultPublishStatus: 'draft',
-    wideLayout: false
+    wideLayout: false,
+    showDebugger: false
   });
   const [error, setError] = useState(null);
   
@@ -54,7 +55,8 @@ function Settings({ theme, toggleTheme }) {
         autoBackup: savedSettings.autoBackup !== undefined ? savedSettings.autoBackup : true,
         confirmBeforeDelete: savedSettings.confirmBeforeDelete !== undefined ? savedSettings.confirmBeforeDelete : true,
         defaultPublishStatus: savedSettings.defaultPublishStatus || 'draft',
-        wideLayout: savedSettings.wideLayout !== undefined ? savedSettings.wideLayout : false
+        wideLayout: savedSettings.wideLayout !== undefined ? savedSettings.wideLayout : false,
+        showDebugger: savedSettings.showDebugger !== undefined ? savedSettings.showDebugger : false
       });
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
@@ -100,7 +102,7 @@ function Settings({ theme, toggleTheme }) {
    */
   const handleSettingChange = (e, setting) => {
     const value =
-      setting === 'autoBackup' || setting === 'confirmBeforeDelete' || setting === 'wideLayout'
+      setting === 'autoBackup' || setting === 'confirmBeforeDelete' || setting === 'wideLayout' || setting === 'showDebugger'
         ? e.target.checked
         : setting === 'autoSaveInterval'
           ? parseInt(e.target.value, 10)
@@ -131,7 +133,7 @@ function Settings({ theme, toggleTheme }) {
       // Notificar outros componentes sobre a atualização das configurações
       window.dispatchEvent(
         new CustomEvent('blogcraft_settings_update', {
-          detail: { wideLayout: settings.wideLayout }
+          detail: { wideLayout: settings.wideLayout, showDebugger: settings.showDebugger }
         })
       );
 
@@ -157,7 +159,8 @@ function Settings({ theme, toggleTheme }) {
         autoBackup: true,
         confirmBeforeDelete: true,
         defaultPublishStatus: 'draft',
-        wideLayout: false
+        wideLayout: false,
+        showDebugger: false
       };
       
       setSettings(defaultSettings);
