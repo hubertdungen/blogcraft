@@ -109,7 +109,17 @@
     background-color: transparent;
     border: 1px solid;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: color 0.2s, background-color 0.2s, border-color 0.2s;
+  }
+
+  .light .theme-button:not(.active),
+  .light .alignment-button:not(.active) {
+    color: var(--text-dark);
+  }
+
+  .dark .theme-button:not(.active),
+  .dark .alignment-button:not(.active) {
+    color: #bbb;
   }
 
   .light .theme-button,
@@ -120,6 +130,12 @@
   .dark .theme-button,
   .dark .alignment-button {
     border-color: var(--border-dark);
+  }
+
+  .theme-button:not(.active):hover,
+  .alignment-button:not(.active):hover {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
   }
 
   .theme-button.active,
