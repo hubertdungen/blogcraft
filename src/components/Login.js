@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';  // MUDANÇA AQUI
 import AuthService from '../services/AuthService';
 import Feedback from './Feedback';
+import LanguageSelector from './LanguageSelector';
+import i18n, { t } from '../services/I18nService';
 import logo from '../logo.svg';
 
 function Login() {
@@ -10,6 +12,7 @@ function Login() {
   const location = useLocation();
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [_locale, setLocale] = useState(i18n.getLocale());
 
   // Check for existing token on mount
   useEffect(() => {
@@ -21,6 +24,8 @@ function Login() {
     if (location.state?.authError) {
       setError(`${location.state.authError}`);
     }
+    const removeListener = i18n.addListener(setLocale);
+    return () => removeListener();
   }, [navigate, location.state]);
 
   // MUDANÇA PRINCIPAL: Usar useGoogleLogin ao invés de GoogleLogin
@@ -44,13 +49,13 @@ function Login() {
         }, 500);
       } catch (err) {
         console.error('Error during login process:', err);
-        setError(`Authentication failed: ${err.message}`);
+        setError(t('auth.loginError', { message: err.message }));
         setIsLoading(false);
       }
     },
     onError: (err) => {
       console.error('Google OAuth error:', err);
-      setError('Authentication failed. Please check your connection and try again.');
+      setError(t('auth.loginError', { message: err.error || 'Please check your connection and try again.' }));
       setIsLoading(false);
     },
     scope: 'https://www.googleapis.com/auth/blogger',  // IMPORTANTE: Definir o scope
@@ -61,10 +66,11 @@ function Login() {
       <div className="login-card">
         <h1>
           <img src={logo} alt="BlogCraft logo" className="logo-icon" />
-          BlogCraft
+          {t('app.name')}
         </h1>
-        <p>Editor Avançado para Blogger</p>
-        
+        <p>{t('app.slogan')}</p>
+
+
         {error && (
           <Feedback 
             type="error" 
@@ -75,9 +81,9 @@ function Login() {
         
         <div className="login-form">
           {isLoading ? (
-            <div className="auth-loading">Autenticando...</div>
+            <div className="auth-loading">{t('auth.loggingIn')}</div>
           ) : (
-            <button 
+            <button
               onClick={() => login()}
               className="google-login-button"
               style={{
@@ -93,16 +99,17 @@ function Login() {
                 gap: '10px'
               }}
             >
-              <img 
-                src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
-                alt="Google" 
+              <img
+                src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                alt="Google"
                 style={{ width: '20px', height: '20px' }}
               />
-              Continuar com o Google
+              {t('auth.loginWithGoogle')}
             </button>
           )}
         </div>
       </div>
+      <LanguageSelector />
     </div>
   );
 }

@@ -138,6 +138,7 @@ input:focus, select:focus, textarea:focus {
 /* Login */
 .login-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
@@ -151,6 +152,7 @@ input:focus, select:focus, textarea:focus {
   border-radius: 8px;
   text-align: center;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
 .light .login-card {
@@ -179,6 +181,17 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.language-selector {
+  margin-top: 20px;
+}
+
+.language-selector select {
+  font-weight: normal;
+  background: transparent;
+  border: none;
+  cursor: pointer;
 }
 
 .error-message {

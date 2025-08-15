@@ -28,13 +28,13 @@ function LanguageSelector() {
   
   return (
     <div className="language-selector">
-      <select 
-        value={currentLocale} 
+      <select
+        value={currentLocale}
         onChange={handleLanguageChange}
         aria-label={t('settings.fields.language')}
       >
-        <option value={LOCALES.PT_PT}>Português</option>
-        <option value={LOCALES.EN_US}>English</option>
+        <option value={LOCALES.EN_US} aria-label="English">🇺🇸</option>
+        <option value={LOCALES.PT_PT} aria-label="Português">🇵🇹</option>
       </select>
     </div>
   );
