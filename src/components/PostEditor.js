@@ -7,26 +7,51 @@ import 'react-datetime-picker/dist/DateTimePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import 'react-clock/dist/Clock.css';
 import { saveAs } from 'file-saver';
-import imageCompression from 'browser-image-compression';
 import BloggerService from '../services/BloggerService';
 import AuthService from '../services/AuthService';
 import Feedback from './Feedback';
 
-// Utilitário para comprimir imagens antes do upload
-const compressImage = async (file) => {
-  const options = {
-    maxSizeMB: 1,
-    maxWidthOrHeight: 1024,
-    useWebWorker: true
-  };
+// Utilitário para comprimir imagens antes do upload sem dependências externas
+const compressImage = (file) =>
+  new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let { width, height } = img;
+      const maxSize = 1024;
 
-  try {
-    return await imageCompression(file, options);
-  } catch (error) {
-    console.error('Erro ao comprimir imagem:', error);
-    return file;
-  }
-};
+      if (width > height && width > maxSize) {
+        height = (height * maxSize) / width;
+        width = maxSize;
+      } else if (height > maxSize) {
+        width = (width * maxSize) / height;
+        height = maxSize;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(new File([blob], file.name, { type: file.type }));
+          } else {
+            resolve(file);
+          }
+        },
+        file.type,
+        0.8
+      );
+    };
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
 
 // Plugin para substituir o adaptador de upload do CKEditor
 const uploadAdapterPlugin = (editor) => {
