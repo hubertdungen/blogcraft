@@ -21,7 +21,7 @@ const translations = {
 };
 
 // Idioma padrão
-const DEFAULT_LOCALE = LOCALES.PT_PT;
+const DEFAULT_LOCALE = LOCALES.EN_US;
 
 /**
  * Classe de serviço de internacionalização

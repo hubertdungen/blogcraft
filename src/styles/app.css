@@ -151,6 +151,7 @@ input:focus, select:focus, textarea:focus {
   border-radius: 8px;
   text-align: center;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
 .light .login-card {
@@ -175,6 +176,16 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.language-selector {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.language-selector select {
+  font-weight: normal;
 }
 
 .error-message {
