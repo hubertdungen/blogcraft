@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BloggerService from '../services/BloggerService';
 import AuthService from '../services/AuthService';
@@ -19,6 +19,8 @@ function Dashboard() {
   const [blogs, setBlogs] = useState([]);
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [sortBy, setSortBy] = useState('date');
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const [stats, setStats] = useState({
     totalPosts: 0,
     draftPosts: 0,
@@ -367,11 +369,28 @@ function Dashboard() {
   const handleChangeBlog = useCallback((e) => {
     const blogId = e.target.value;
     const blog = blogs.find(blog => blog.id === blogId);
-    
+
     if (blog) {
       setSelectedBlog(blog);
     }
   }, [blogs]);
+
+  const displayedPosts = useMemo(() => {
+    const filtered =
+      statusFilter === 'ALL'
+        ? posts
+        : posts.filter(post => post.status === statusFilter);
+
+    return [...filtered].sort((a, b) => {
+      if (sortBy === 'title') {
+        return a.title.localeCompare(b.title);
+      }
+
+      const dateA = new Date(a.published || a.scheduled || a.updated || 0);
+      const dateB = new Date(b.published || b.scheduled || b.updated || 0);
+      return dateB - dateA;
+    });
+  }, [posts, sortBy, statusFilter]);
 
   /**
    * Retry loading blogs after error
@@ -560,14 +579,35 @@ function Dashboard() {
               {/* Posts list */}
               <div className="posts-section">
                 <h2>Posts Recentes</h2>
-                
+
+                {!loadingStats && (
+                  <div className="posts-controls">
+                    <div className="sort-control">
+                      <label>Ordenar por:</label>
+                      <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                        <option value="date">Data</option>
+                        <option value="title">Título</option>
+                      </select>
+                    </div>
+                    <div className="filter-control">
+                      <label>Filtrar:</label>
+                      <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                        <option value="ALL">Todos</option>
+                        <option value="LIVE">Publicado</option>
+                        <option value="DRAFT">Rascunho</option>
+                        <option value="SCHEDULED">Agendado</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
                 {loadingStats ? (
                   renderLoading()
-                ) : posts.length === 0 ? (
+                ) : displayedPosts.length === 0 ? (
                   renderEmptyState()
                 ) : (
                   <div className="posts-list">
-                    {posts.map(post => (
+                    {displayedPosts.map(post => (
                       <div key={post.id} className="post-item">
                         <div className="post-info">
                           <h3>{post.title}</h3>
