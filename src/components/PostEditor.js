@@ -2,6 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+
+// Extende o build padrão para suportar edição de links em imagens
+if (process.env.NODE_ENV !== 'test') {
+  // eslint-disable-next-line global-require
+  const LinkImage = require('@ckeditor/ckeditor5-link/src/linkimage').default;
+  ClassicEditor.builtinPlugins = [
+    ...ClassicEditor.builtinPlugins,
+    LinkImage
+  ];
+}
 import DateTimePicker from 'react-datetime-picker';
 import 'react-datetime-picker/dist/DateTimePicker.css';
 import 'react-calendar/dist/Calendar.css';
@@ -877,6 +887,7 @@ function PostEditor({ theme, toggleTheme }) {
                   // Configuração para edição de imagens
                   toolbar: [
                     'imageTextAlternative',
+                    'linkImage',
                     'imageStyle:alignLeft',
                     'imageStyle:alignCenter',
                     'imageStyle:alignRight',
