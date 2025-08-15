@@ -4,9 +4,9 @@
   "description": "Um editor avançado para o Blogger com recursos modernos e integração completa",
   "private": true,
   "scripts": {
-    "start": "set NODE_OPTIONS=--openssl-legacy-provider && react-scripts start",
-    "build": "set NODE_OPTIONS=--openssl-legacy-provider && react-scripts build",
-    "test": "set NODE_OPTIONS=--openssl-legacy-provider && react-scripts test",
+    "start": "set NODE_OPTIONS=--openssl-legacy-provider && react-app-rewired start",
+    "build": "set NODE_OPTIONS=--openssl-legacy-provider && react-app-rewired build",
+    "test": "set NODE_OPTIONS=--openssl-legacy-provider && react-app-rewired test",
     "eject": "set NODE_OPTIONS=--openssl-legacy-provider && react-scripts eject"
   },
   "dependencies": {
@@ -26,7 +26,10 @@
     "@testing-library/react": "^16.3.0",
     "@types/file-saver": "^2.0.5",
     "@types/react": "^18.2.45",
-    "@types/react-dom": "^18.2.18"
+    "@types/react-dom": "^18.2.18",
+    "@ckeditor/ckeditor5-dev-utils": "^35.0.6",
+    "postcss-import": "^15.1.0",
+    "react-app-rewired": "^2.2.1"
   },
   "browserslist": {
     "production": [
