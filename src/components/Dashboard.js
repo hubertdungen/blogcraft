@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import BloggerService from '../services/BloggerService';
 import AuthService from '../services/AuthService';
 import Feedback from './Feedback';
+import i18n, { t } from '../services/I18nService';
 
 /**
  * Dashboard Component - Main application interface after login
@@ -12,6 +13,12 @@ import Feedback from './Feedback';
  */
 function Dashboard() {
   const navigate = useNavigate();
+  const [_locale, setLocale] = useState(i18n.getLocale());
+
+  useEffect(() => {
+    const remove = i18n.addListener(setLocale);
+    return remove;
+  }, []);
   
   // State
   const [loading, setLoading] = useState(true);
@@ -320,7 +327,7 @@ function Dashboard() {
     if (!selectedBlog) return;
     
     // Confirm deletion
-    if (!window.confirm('Tem certeza que deseja excluir este post? Esta ação não pode ser desfeita.')) {
+    if (!window.confirm(t('dashboard.posts.actions.confirmDelete'))) {
       return;
     }
     
@@ -467,13 +474,13 @@ function Dashboard() {
   // Render empty state when no posts
   const renderEmptyState = () => (
     <div className="no-posts">
-      <h3>Nenhum post encontrado</h3>
-      <p>Comece criando seu primeiro post ou verifique os critérios de busca.</p>
-      <button 
-        className="create-button small" 
+      <h3>{t('dashboard.posts.noPosts')}</h3>
+      <p>{t('dashboard.posts.createFirst')}</p>
+      <button
+        className="create-button small"
         onClick={handleCreateNewPost}
       >
-        Criar Primeiro Post
+        {t('dashboard.posts.createFirst')}
       </button>
     </div>
   );
@@ -482,18 +489,18 @@ function Dashboard() {
   const renderLoading = () => (
     <div className="loading-container">
       <div className="loading-spinner"></div>
-      <p>Carregando...</p>
+      <p>{t('common.loading')}</p>
     </div>
   );
 
   return (
     <div className="main-content">
       <div className="dashboard-header">
-        <h1>Dashboard</h1>
+        <h1>{t('nav.dashboard')}</h1>
         
         {blogs.length > 0 && (
           <div className="blog-selector">
-            <label>Blog:</label>
+            <label>{t('dashboard.selectBlog')}</label>
             <select 
               value={selectedBlog?.id || ''} 
               onChange={handleChangeBlog}
@@ -537,12 +544,12 @@ function Dashboard() {
                   </a>
                 </div>
                 
-                <button 
-                  className="create-button" 
+                <button
+                  className="create-button"
                   onClick={handleCreateNewPost}
                   disabled={loadingStats}
                 >
-                  Criar Novo Post
+                  {t('dashboard.createNew')}
                 </button>
               </div>
               
@@ -573,7 +580,7 @@ function Dashboard() {
                 <div className="stat-card stat-chart">
                   <h3>Publicações por Mês</h3>
                   {loadingStats ? (
-                    <div className="chart-loading">Carregando estatísticas...</div>
+                    <div className="chart-loading">{t('common.loading')}</div>
                   ) : (
                     <div className="month-chart">
                       {stats.postsByMonth.map((month, index) => (
@@ -596,7 +603,7 @@ function Dashboard() {
               
               {/* Posts list */}
               <div className="posts-section">
-                <h2>Posts Recentes</h2>
+                <h2>{t('dashboard.posts.recentPosts')}</h2>
 
                 {!loadingStats && (
                   <div className="posts-controls">
@@ -661,12 +668,12 @@ function Dashboard() {
                           <div className="post-meta">
                             <StatusBadge status={post.status} />
                             
-                            <span className="post-date">
-                              {post.status === 'SCHEDULED' 
-                                ? `Agendado para: ${formatDate(post.scheduled || post.updated)}`
+                        <span className="post-date">
+                              {post.status === 'SCHEDULED'
+                                ? t('dashboard.posts.dates.scheduledFor', { date: formatDate(post.scheduled || post.updated) })
                                 : post.status === 'LIVE'
-                                  ? `Publicado em: ${formatDate(post.published)}`
-                                  : `Atualizado em: ${formatDate(post.updated)}`
+                                  ? t('dashboard.posts.dates.publishedOn', { date: formatDate(post.published) })
+                                  : t('dashboard.posts.dates.updatedOn', { date: formatDate(post.updated) })
                               }
                             </span>
                             
@@ -685,28 +692,28 @@ function Dashboard() {
                         
                         {/* Post actions */}
                         <div className="post-actions">
-                          <button 
+                          <button
                             className="edit-button"
                             onClick={() => handleEditPost(post.id)}
-                            title="Editar este post"
+                            title={t('dashboard.posts.actions.edit')}
                           >
-                            Editar
+                            {t('dashboard.posts.actions.edit')}
                           </button>
                           
-                          <button 
+                          <button
                             className="duplicate-button"
                             onClick={() => handleDuplicatePost(post.id)}
-                            title="Criar uma cópia deste post"
+                            title={t('dashboard.posts.actions.duplicate')}
                           >
-                            Duplicar
+                            {t('dashboard.posts.actions.duplicate')}
                           </button>
                           
-                          <button 
+                          <button
                             className="delete-button"
                             onClick={() => handleDeletePost(post.id)}
-                            title="Excluir este post"
+                            title={t('dashboard.posts.actions.delete')}
                           >
-                            Excluir
+                            {t('dashboard.posts.actions.delete')}
                           </button>
                         </div>
                       </div>

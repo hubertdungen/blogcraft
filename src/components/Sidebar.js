@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../logo.svg';
+import i18n, { t } from '../services/I18nService';
 
 /**
  * Componente Sidebar - Barra lateral de navegação
@@ -11,6 +12,12 @@ import logo from '../logo.svg';
 function Sidebar({ theme, toggleTheme }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const [_locale, setLocale] = useState(i18n.getLocale());
+
+  useEffect(() => {
+    const remove = i18n.addListener(setLocale);
+    return remove;
+  }, []);
   
   /**
    * Verifica se o link está ativo
@@ -23,7 +30,7 @@ function Sidebar({ theme, toggleTheme }) {
    * Realiza o logout
    */
   const handleLogout = () => {
-    if (window.confirm('Tem certeza que deseja sair? Seus dados locais serão mantidos.')) {
+    if (window.confirm(t('auth.confirmLogout'))) {
       localStorage.removeItem('blogcraft_token');
       navigate('/');
     }
@@ -39,44 +46,46 @@ function Sidebar({ theme, toggleTheme }) {
       </div>
       
       <nav className="nav-menu">
-        <Link 
-          to="/dashboard" 
+        <Link
+          to="/dashboard"
           className={`nav-item ${isActive('/dashboard') ? 'active' : ''}`}
         >
-          Dashboard
+          {t('nav.dashboard')}
         </Link>
-        
-        <Link 
-          to="/editor" 
+
+        <Link
+          to="/editor"
           className={`nav-item ${isActive('/editor') ? 'active' : ''}`}
         >
-          Novo Post
+          {t('nav.editor')}
         </Link>
-        
-        <Link 
-          to="/templates" 
+
+        <Link
+          to="/templates"
           className={`nav-item ${isActive('/templates') ? 'active' : ''}`}
         >
-          Templates
+          {t('nav.templates')}
         </Link>
-        
-        <Link 
-          to="/settings" 
+
+        <Link
+          to="/settings"
           className={`nav-item ${isActive('/settings') ? 'active' : ''}`}
         >
-          Configurações
+          {t('nav.settings')}
         </Link>
       </nav>
       
       <div className="theme-switch">
         <button onClick={toggleTheme}>
-          {theme === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Escuro'}
+          {theme === 'dark'
+            ? `☀️ ${t('settings.fields.themeLight')}`
+            : `🌙 ${t('settings.fields.themeDark')}`}
         </button>
       </div>
-      
+
       <div className="logout">
         <button onClick={handleLogout}>
-          Sair
+          {t('auth.logout')}
         </button>
       </div>
     </div>
