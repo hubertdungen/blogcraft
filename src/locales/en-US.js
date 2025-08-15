@@ -60,6 +60,23 @@ const translations = {
           delete: 'Delete',
           view: 'View',
           confirmDelete: 'Are you sure you want to delete this post? This action cannot be undone.'
+        },
+        controls: {
+          sortBy: 'Sort by:',
+          sortOptions: {
+            date: 'Date',
+            title: 'Title'
+          },
+          invertOrder: 'Invert order',
+          filter: 'Filter:',
+          status: {
+            all: 'All',
+            published: 'Published',
+            draft: 'Draft',
+            scheduled: 'Scheduled'
+          },
+          category: 'Category:',
+          allTags: 'All tags'
         }
       }
     },

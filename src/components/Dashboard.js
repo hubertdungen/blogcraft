@@ -556,39 +556,39 @@ function Dashboard() {
               {/* Statistics cards */}
               <div className="dashboard-stats">
                 <div className="stat-card">
-                  <h3>Posts Publicados</h3>
+                  <h3>{t('dashboard.stats.publishedPosts')}</h3>
                   <div className="stat-number">
                     {loadingStats ? '...' : stats.totalPosts}
                   </div>
                 </div>
-                
+
                 <div className="stat-card">
-                  <h3>Rascunhos</h3>
+                  <h3>{t('dashboard.stats.drafts')}</h3>
                   <div className="stat-number">
                     {loadingStats ? '...' : stats.draftPosts}
                   </div>
                 </div>
-                
+
                 <div className="stat-card">
-                  <h3>Agendados</h3>
+                  <h3>{t('dashboard.stats.scheduled')}</h3>
                   <div className="stat-number">
                     {loadingStats ? '...' : stats.scheduledPosts}
                   </div>
                 </div>
-                
+
                 {/* Posts by month chart */}
                 <div className="stat-card stat-chart">
-                  <h3>Publicações por Mês</h3>
+                  <h3>{t('dashboard.stats.postsByMonth')}</h3>
                   {loadingStats ? (
                     <div className="chart-loading">{t('common.loading')}</div>
                   ) : (
                     <div className="month-chart">
                       {stats.postsByMonth.map((month, index) => (
                         <div key={index} className="month-bar">
-                          <div 
-                            className="bar" 
-                            style={{ 
-                              height: `${Math.max(5, month.count * 20)}px` 
+                          <div
+                            className="bar"
+                            style={{
+                              height: `${Math.max(5, month.count * 20)}px`
                             }}
                           >
                             <span className="bar-count">{month.count}</span>
@@ -608,10 +608,10 @@ function Dashboard() {
                 {!loadingStats && (
                   <div className="posts-controls">
                     <div className="sort-control">
-                      <label>Ordenar por:</label>
+                      <label>{t('dashboard.posts.controls.sortBy')}</label>
                       <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                        <option value="date">Data</option>
-                        <option value="title">Título</option>
+                        <option value="date">{t('dashboard.posts.controls.sortOptions.date')}</option>
+                        <option value="title">{t('dashboard.posts.controls.sortOptions.title')}</option>
                       </select>
                       <button
                         type="button"
@@ -619,24 +619,24 @@ function Dashboard() {
                         onClick={() =>
                           setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'))
                         }
-                        title="Inverter ordem"
+                        title={t('dashboard.posts.controls.invertOrder')}
                       >
                         {sortOrder === 'asc' ? '↑' : '↓'}
                       </button>
                     </div>
                     <div className="filter-control">
-                      <label>Filtrar:</label>
+                      <label>{t('dashboard.posts.controls.filter')}</label>
                       <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                        <option value="ALL">Todos</option>
-                        <option value="LIVE">Publicado</option>
-                        <option value="DRAFT">Rascunho</option>
-                        <option value="SCHEDULED">Agendado</option>
+                        <option value="ALL">{t('dashboard.posts.controls.status.all')}</option>
+                        <option value="LIVE">{t('dashboard.posts.status.published')}</option>
+                        <option value="DRAFT">{t('dashboard.posts.status.draft')}</option>
+                        <option value="SCHEDULED">{t('dashboard.posts.status.scheduled')}</option>
                       </select>
                     </div>
                     <div className="tag-filter-control">
-                      <label>Categoria:</label>
+                      <label>{t('dashboard.posts.controls.category')}</label>
                       <select value={tagFilter} onChange={(e) => setTagFilter(e.target.value)}>
-                        <option value="ALL">Todas as tags</option>
+                        <option value="ALL">{t('dashboard.posts.controls.allTags')}</option>
                         {availableTags.map(tag => (
                           <option key={tag} value={tag}>{tag}</option>
                         ))}

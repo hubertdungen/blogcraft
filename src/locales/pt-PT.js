@@ -60,6 +60,23 @@ const translations = {
           delete: 'Eliminar',
           view: 'Visualizar',
           confirmDelete: 'Tem a certeza que deseja eliminar este artigo? Esta ação não pode ser desfeita.'
+        },
+        controls: {
+          sortBy: 'Ordenar por:',
+          sortOptions: {
+            date: 'Data',
+            title: 'Título'
+          },
+          invertOrder: 'Inverter ordem',
+          filter: 'Filtrar:',
+          status: {
+            all: 'Todos',
+            published: 'Publicado',
+            draft: 'Rascunho',
+            scheduled: 'Agendado'
+          },
+          category: 'Categoria:',
+          allTags: 'Todas as tags'
         }
       }
     },
