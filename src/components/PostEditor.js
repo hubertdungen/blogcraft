@@ -11,6 +11,38 @@ import BloggerService from '../services/BloggerService';
 import AuthService from '../services/AuthService';
 import Feedback from './Feedback';
 import i18n, { t } from '../services/I18nService';
+import imageCompression from 'browser-image-compression';
+
+// Upload adapter que comprime imagens antes de inseri-las no editor
+class CompressedUploadAdapter {
+  constructor(loader) {
+    this.loader = loader;
+  }
+
+  async upload() {
+    const file = await this.loader.file;
+
+    const compressed = await imageCompression(file, {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1600,
+      useWebWorker: true
+    });
+
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve({ default: reader.result });
+      reader.onerror = reject;
+      reader.readAsDataURL(compressed);
+    });
+  }
+
+  abort() {}
+}
+
+function CustomUploadAdapterPlugin(editor) {
+  editor.plugins.get('FileRepository').createUploadAdapter = loader =>
+    new CompressedUploadAdapter(loader);
+}
 
 /**
  * Componente do Editor de Posts
@@ -789,11 +821,12 @@ function PostEditor({ theme, toggleTheme }) {
               onReady={editor => {
                 // Armazenar referência ao editor
                 editorRef.current = editor;
-                
+
                 // Configurações adicionais
                 editor.ui.view.editable.element.style.minHeight = '500px';
               }}
               config={{
+                extraPlugins: [CustomUploadAdapterPlugin],
                 toolbar: [
                   'heading',
                   '|',
@@ -815,13 +848,52 @@ function PostEditor({ theme, toggleTheme }) {
                   '|',
                   'horizontalLine'
                 ],
+                balloonToolbar: [
+                  'bold', 'italic', 'link',
+                  '|',
+                  'alignment:left',
+                  'alignment:center',
+                  'alignment:right',
+                  'alignment:justify'
+                ],
+                alignment: {
+                  options: ['left', 'center', 'right', 'justify']
+                },
                 image: {
-                  // Configuração para upload de imagens
                   toolbar: [
                     'imageTextAlternative',
+                    '|',
+                    'imageStyle:alignLeft',
+                    'imageStyle:alignCenter',
+                    'imageStyle:alignRight',
                     'imageStyle:full',
-                    'imageStyle:side'
-                  ]
+                    '|',
+                    'resizeImage'
+                  ],
+                  styles: ['alignLeft', 'alignCenter', 'alignRight', 'full'],
+                  resizeOptions: [
+                    {
+                      name: 'resizeImage:original',
+                      label: 'Original',
+                      value: null
+                    },
+                    {
+                      name: 'resizeImage:25',
+                      label: '25%',
+                      value: '25'
+                    },
+                    {
+                      name: 'resizeImage:50',
+                      label: '50%',
+                      value: '50'
+                    },
+                    {
+                      name: 'resizeImage:75',
+                      label: '75%',
+                      value: '75'
+                    }
+                  ],
+                  resizeUnit: '%'
                 },
                 table: {
                   contentToolbar: [
