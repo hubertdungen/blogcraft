@@ -377,6 +377,20 @@ input:focus, select:focus, textarea:focus {
   background-color: var(--primary-hover);
 }
 
+/* Avoid styling buttons from react-datetime-picker and react-calendar */
+.post-actions .react-datetime-picker__button,
+.post-actions .react-calendar button {
+  background: none;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+}
+
+.post-actions .react-calendar__tile {
+  padding: 10px 6.6667px;
+  line-height: 16px;
+}
+
 /* Editor de Post */
 .editor-container {
   display: flex;
@@ -469,6 +483,16 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.schedule-input label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.schedule-input .react-datetime-picker {
+  width: 100%;
 }
 
 .metadata-editor {
@@ -796,6 +820,7 @@ body.dark .tox-statusbar {
 
 .dark .react-datetime-picker__wrapper {
   border-color: var(--border-dark);
+  background-color: #444;
 }
 
 .dark .react-calendar,
@@ -805,8 +830,22 @@ body.dark .tox-statusbar {
   color: white;
 }
 
+.react-datetime-picker__calendar,
+.react-datetime-picker__clock {
+  z-index: 1000;
+}
+
 .dark .react-calendar button {
   color: white;
+}
+
+.dark .react-calendar__tile:enabled:hover,
+.dark .react-calendar__navigation button:enabled:hover {
+  background-color: #555;
+}
+
+.dark .react-calendar__navigation button:disabled {
+  background-color: #444;
 }
 
 .dark .react-calendar__tile--active,
