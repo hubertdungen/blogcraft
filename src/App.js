@@ -35,8 +35,28 @@ const ProtectedRoute = ({ children }) => {
 
 // Layout component for authenticated pages
 const AuthenticatedLayout = ({ children, theme, toggleTheme }) => {
+  const [wideLayout, setWideLayout] = useState(false);
+
+  useEffect(() => {
+    const savedSettings = JSON.parse(localStorage.getItem('blogcraft_settings') || '{}');
+    setWideLayout(!!savedSettings.wideLayout);
+
+    const handleStorageChange = (e) => {
+      if (e.key === 'blogcraft_settings') {
+        try {
+          const newSettings = JSON.parse(e.newValue || '{}');
+          setWideLayout(!!newSettings.wideLayout);
+        } catch {
+          setWideLayout(false);
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   return (
-    <div className="dashboard-container">
+    <div className={`dashboard-container ${wideLayout ? 'wide' : ''}`}>
       <Sidebar theme={theme} toggleTheme={toggleTheme} />
       {children}
     </div>

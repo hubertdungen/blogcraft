@@ -28,7 +28,8 @@ function Settings({ theme, toggleTheme }) {
     autoSaveInterval: 5,
     autoBackup: true,
     confirmBeforeDelete: true,
-    defaultPublishStatus: 'draft'
+    defaultPublishStatus: 'draft',
+    wideLayout: false
   });
   const [error, setError] = useState(null);
   
@@ -52,7 +53,8 @@ function Settings({ theme, toggleTheme }) {
         autoSaveInterval: savedSettings.autoSaveInterval || 5,
         autoBackup: savedSettings.autoBackup !== undefined ? savedSettings.autoBackup : true,
         confirmBeforeDelete: savedSettings.confirmBeforeDelete !== undefined ? savedSettings.confirmBeforeDelete : true,
-        defaultPublishStatus: savedSettings.defaultPublishStatus || 'draft'
+        defaultPublishStatus: savedSettings.defaultPublishStatus || 'draft',
+        wideLayout: savedSettings.wideLayout !== undefined ? savedSettings.wideLayout : false
       });
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
@@ -97,9 +99,9 @@ function Settings({ theme, toggleTheme }) {
    * Atualiza uma configuração
    */
   const handleSettingChange = (e, setting) => {
-    const value = 
-      setting === 'autoBackup' || setting === 'confirmBeforeDelete'
-        ? e.target.checked 
+    const value =
+      setting === 'autoBackup' || setting === 'confirmBeforeDelete' || setting === 'wideLayout'
+        ? e.target.checked
         : setting === 'autoSaveInterval'
           ? parseInt(e.target.value, 10)
           : e.target.value;
@@ -147,7 +149,8 @@ function Settings({ theme, toggleTheme }) {
         autoSaveInterval: 5,
         autoBackup: true,
         confirmBeforeDelete: true,
-        defaultPublishStatus: 'draft'
+        defaultPublishStatus: 'draft',
+        wideLayout: false
       };
       
       setSettings(defaultSettings);
@@ -295,11 +298,23 @@ function Settings({ theme, toggleTheme }) {
             
             <div className="setting-group">
               <h2>{t('settings.sections.appearance')}</h2>
-              
+
+              <div className="setting-item">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={settings.wideLayout}
+                    onChange={(e) => handleSettingChange(e, 'wideLayout')}
+                  />
+                  {t('settings.fields.wideLayout')}
+                </label>
+                <p className="setting-description">{t('settings.fields.wideLayoutDesc')}</p>
+              </div>
+
               <div className="setting-item">
                 <label>{t('settings.fields.theme')}</label>
                 <div className="theme-toggle">
-                  <button 
+                  <button
                     className={`theme-button ${theme === 'light' ? 'active' : ''}`}
                     onClick={() => toggleTheme('light')}
                   >

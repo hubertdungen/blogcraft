@@ -845,9 +845,13 @@ body.dark .tox-statusbar {
 
 .dashboard-container {
   padding: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dashboard-container.wide {
   max-width: 1600px;
   width: 100%;
-  margin: 0 auto;
 }
 
 .dashboard-container button {
