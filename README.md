@@ -127,6 +127,16 @@ npm test
 
 The production build will be created in `build/`.
 
+## 📦 Build Windows Executable
+
+To package BlogCraft as a standalone Windows executable run:
+
+```
+node build-release.js
+```
+
+The resulting `blogcraft-x.y.z.exe` will be placed in the `dist/` directory (version taken from `package.json`). On Windows you can use the helper batch file `build-release.bat`.
+
 ## 🕒 Background Scheduler Service
 
 BlogCraft includes an optional Node.js scheduler that can publish posts at a later time even when the main UI is closed.
