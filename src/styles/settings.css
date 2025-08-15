@@ -1,15 +1,4 @@
 /* Estilos para a página de Configurações */
-.settings-container {
-    display: flex;
-    min-height: 100vh;
-  }
-  
-  .settings-content {
-    flex: 1;
-    padding: 30px;
-    margin-left: var(--sidebar-width);
-  }
-  
   .settings-content h1 {
     margin-bottom: 30px;
     padding-bottom: 15px;
@@ -105,31 +94,52 @@
     margin-right: 10px;
   }
   
-  .theme-toggle {
+  .theme-toggle,
+  .alignment-toggle {
     display: flex;
     gap: 10px;
     max-width: 400px;
   }
-  
-  .theme-button {
+
+  .theme-button,
+  .alignment-button {
     flex: 1;
     padding: 10px;
     border-radius: 4px;
     background-color: transparent;
     border: 1px solid;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: color 0.2s, background-color 0.2s, border-color 0.2s;
   }
-  
-  .light .theme-button {
+
+  .light .theme-button:not(.active),
+  .light .alignment-button:not(.active) {
+    color: var(--text-dark);
+  }
+
+  .dark .theme-button:not(.active),
+  .dark .alignment-button:not(.active) {
+    color: #bbb;
+  }
+
+  .light .theme-button,
+  .light .alignment-button {
     border-color: var(--border-light);
   }
-  
-  .dark .theme-button {
+
+  .dark .theme-button,
+  .dark .alignment-button {
     border-color: var(--border-dark);
   }
-  
-  .theme-button.active {
+
+  .theme-button:not(.active):hover,
+  .alignment-button:not(.active):hover {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+
+  .theme-button.active,
+  .alignment-button.active {
     background-color: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
