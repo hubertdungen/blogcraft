@@ -127,7 +127,14 @@ function Settings({ theme, toggleTheme }) {
     try {
       // Salvar configurações gerais
       localStorage.setItem('blogcraft_settings', JSON.stringify(settings));
-      
+
+      // Notificar outros componentes sobre a atualização das configurações
+      window.dispatchEvent(
+        new CustomEvent('blogcraft_settings_update', {
+          detail: { wideLayout: settings.wideLayout }
+        })
+      );
+
       // Salvar idioma
       i18n.setLocale(language);
       

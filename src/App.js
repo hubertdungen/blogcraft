@@ -51,8 +51,17 @@ const AuthenticatedLayout = ({ children, theme, toggleTheme }) => {
         }
       }
     };
+    const handleSettingsUpdate = (e) => {
+      if (e.detail && typeof e.detail.wideLayout !== 'undefined') {
+        setWideLayout(!!e.detail.wideLayout);
+      }
+    };
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('blogcraft_settings_update', handleSettingsUpdate);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('blogcraft_settings_update', handleSettingsUpdate);
+    };
   }, []);
 
   return (
