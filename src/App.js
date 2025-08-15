@@ -35,8 +35,37 @@ const ProtectedRoute = ({ children }) => {
 
 // Layout component for authenticated pages
 const AuthenticatedLayout = ({ children, theme, toggleTheme }) => {
+  const [wideLayout, setWideLayout] = useState(false);
+
+  useEffect(() => {
+    const savedSettings = JSON.parse(localStorage.getItem('blogcraft_settings') || '{}');
+    setWideLayout(!!savedSettings.wideLayout);
+
+    const handleStorageChange = (e) => {
+      if (e.key === 'blogcraft_settings') {
+        try {
+          const newSettings = JSON.parse(e.newValue || '{}');
+          setWideLayout(!!newSettings.wideLayout);
+        } catch {
+          setWideLayout(false);
+        }
+      }
+    };
+    const handleSettingsUpdate = (e) => {
+      if (e.detail && typeof e.detail.wideLayout !== 'undefined') {
+        setWideLayout(!!e.detail.wideLayout);
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('blogcraft_settings_update', handleSettingsUpdate);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('blogcraft_settings_update', handleSettingsUpdate);
+    };
+  }, []);
+
   return (
-    <div className="dashboard-container">
+    <div className={`dashboard-container ${wideLayout ? 'wide' : ''}`}>
       <Sidebar theme={theme} toggleTheme={toggleTheme} />
       {children}
     </div>

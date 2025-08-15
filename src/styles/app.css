@@ -314,11 +314,20 @@ input:focus, select:focus, textarea:focus {
   margin-left: var(--sidebar-width);
   padding: 30px;
   min-height: 100vh;
+  max-width: 1200px;
+}
+
+.dashboard-container.wide .main-content,
+.dashboard-container.wide .editor-content,
+.dashboard-container.wide .templates-content,
+.dashboard-container.wide .settings-content {
+  max-width: 1600px;
 }
 
 /* Dashboard */
 .dashboard-container {
   display: flex;
+  width: 100%;
 }
 
 .blog-selector {
@@ -905,12 +914,6 @@ body.dark .tox-statusbar {
 .dark input:focus, .dark select:focus, .dark textarea:focus {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(74, 109, 167, 0.4);
-}
-
-.dashboard-container {
-  padding: 30px;
-  max-width: 1200px;
-  margin: 0 auto;
 }
 
 .dashboard-container button {

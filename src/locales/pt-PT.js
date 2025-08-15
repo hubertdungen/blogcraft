@@ -186,6 +186,8 @@ const translations = {
         themeLight: 'Claro',
         themeDark: 'Escuro',
         themeDesc: 'Escolha entre tema claro ou escuro para a interface.',
+        wideLayout: 'Área de conteúdo ampla',
+        wideLayoutDesc: 'Expande a largura do conteúdo para mais espaço de edição.',
         language: 'Idioma:',
         languageDesc: 'Idioma da interface da aplicação.',
         customClientId: 'Usar ID de Cliente personalizado',

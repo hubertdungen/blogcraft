@@ -186,6 +186,8 @@ const translations = {
         themeLight: 'Light',
         themeDark: 'Dark',
         themeDesc: 'Choose between light or dark theme for the interface.',
+        wideLayout: 'Enable wide content area',
+        wideLayoutDesc: 'Expands content width for more editing space.',
         language: 'Language:',
         languageDesc: 'Application interface language.',
         customClientId: 'Use custom Client ID',

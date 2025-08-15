@@ -9,6 +9,7 @@ BlogCraft is a modern web application designed to replace discontinued tools lik
 - **Beta v0.4.21** – the application is now runnable with essential features.
 - Fixed theme toggle to seamlessly switch between light and dark modes.
 - Updated test suite to ensure core functionality works as expected.
+- Added optional wide content layout expanding editing area to 1600px.
 
 ## 🚀 Quick Start
 

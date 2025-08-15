@@ -29,6 +29,7 @@ function Settings({ theme, toggleTheme }) {
     autoBackup: true,
     confirmBeforeDelete: true,
     defaultPublishStatus: 'draft',
+    wideLayout: false,
     showDebugger: false
   });
   const [error, setError] = useState(null);
@@ -54,6 +55,7 @@ function Settings({ theme, toggleTheme }) {
         autoBackup: savedSettings.autoBackup !== undefined ? savedSettings.autoBackup : true,
         confirmBeforeDelete: savedSettings.confirmBeforeDelete !== undefined ? savedSettings.confirmBeforeDelete : true,
         defaultPublishStatus: savedSettings.defaultPublishStatus || 'draft',
+        wideLayout: savedSettings.wideLayout !== undefined ? savedSettings.wideLayout : false,
         showDebugger: savedSettings.showDebugger !== undefined ? savedSettings.showDebugger : false
       });
     } catch (error) {
@@ -100,7 +102,7 @@ function Settings({ theme, toggleTheme }) {
    */
   const handleSettingChange = (e, setting) => {
     const value =
-      setting === 'autoBackup' || setting === 'confirmBeforeDelete' || setting === 'showDebugger'
+      setting === 'autoBackup' || setting === 'confirmBeforeDelete' || setting === 'wideLayout' || setting === 'showDebugger'
         ? e.target.checked
         : setting === 'autoSaveInterval'
           ? parseInt(e.target.value, 10)
@@ -127,6 +129,12 @@ function Settings({ theme, toggleTheme }) {
     try {
       // Salvar configurações gerais
       localStorage.setItem('blogcraft_settings', JSON.stringify(settings));
+      // Notificar outros componentes sobre a atualização das configurações
+      window.dispatchEvent(
+        new CustomEvent('blogcraft_settings_update', {
+          detail: { wideLayout: settings.wideLayout, showDebugger: settings.showDebugger }
+        })
+      );
 
       // Salvar idioma
       i18n.setLocale(language);
@@ -153,6 +161,7 @@ function Settings({ theme, toggleTheme }) {
         autoBackup: true,
         confirmBeforeDelete: true,
         defaultPublishStatus: 'draft',
+        wideLayout: false,
         showDebugger: false
       };
 
@@ -302,11 +311,23 @@ function Settings({ theme, toggleTheme }) {
             
             <div className="setting-group">
               <h2>{t('settings.sections.appearance')}</h2>
-              
+
+              <div className="setting-item">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={settings.wideLayout}
+                    onChange={(e) => handleSettingChange(e, 'wideLayout')}
+                  />
+                  {t('settings.fields.wideLayout')}
+                </label>
+                <p className="setting-description">{t('settings.fields.wideLayoutDesc')}</p>
+              </div>
+
               <div className="setting-item">
                 <label>{t('settings.fields.theme')}</label>
                 <div className="theme-toggle">
-                  <button 
+                  <button
                     className={`theme-button ${theme === 'light' ? 'active' : ''}`}
                     onClick={() => toggleTheme('light')}
                   >
