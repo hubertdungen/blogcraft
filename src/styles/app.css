@@ -927,7 +927,7 @@ body.dark .tox-statusbar {
   box-shadow: 0 0 0 2px rgba(74, 109, 167, 0.4);
 }
 
-.dashboard-container button {
+.dashboard-container button:not(.theme-button):not(.alignment-button) {
   background-color: #4a6da7;
   color: white;
   padding: 10px 20px;
@@ -937,7 +937,7 @@ body.dark .tox-statusbar {
   margin-top: 20px;
 }
 
-.dashboard-container button:hover {
+.dashboard-container button:not(.theme-button):not(.alignment-button):hover {
   background-color: #3a5d97;
 }
 
