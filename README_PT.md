@@ -2,6 +2,8 @@
 
 O BlogCraft é uma aplicação web moderna concebida para substituir ferramentas descontinuadas como o Open Live Writer, oferecendo uma solução abrangente para edição e publicação no Blogger com uma interface avançada e recursos poderosos.
 
+Estado: Alpha/Preview — executável localmente. Fluxos principais (login com Google, listar blogs e posts, criar/atualizar/publicar, templates e definições) já implementados.
+
 ## 🚀 Início Rápido
 
 ### Pré-requisitos
@@ -46,12 +48,28 @@ O BlogCraft é uma aplicação web moderna concebida para substituir ferramentas
 
 5. Executar a aplicação
    ```bash
+   # No macOS/Linux
+   ./run.sh
+
+   # No Windows
+   run.bat
+
+   # Ou iniciar manualmente
    npm start
-   # ou
-   yarn start
    ```
 
 6. Aceder à aplicação em `http://localhost:3000`
+
+## ✨ Novidades
+
+- Login Google via `@react-oauth/google` com escopo do Blogger
+- Melhorias no manuseio de token em `AuthService` e `TokenManager` (verificações de sessão, armazenamento mais seguro)
+- `BloggerService` com cache, timeouts e mensagens de erro mais claras (401/403/429)
+- Dashboard: seleção de blog, posts recentes e estatísticas mensais básicas
+- Editor (TinyMCE): rascunho/publicar, agendamento, etiquetas, injeção de metadados, importação (TXT/HTML/Word) e exportação para Word
+- Gestor de Templates: criar, editar, apagar e reutilizar templates de conteúdo
+- Definições: tema (escuro/claro), predefinições, opções de autosave/backup
+- Fundações de i18n (`en-US`, `pt-PT`) e melhorias de estilo
 
 ## 🔑 Guia de Autenticação
 
@@ -64,7 +82,6 @@ O BlogCraft é uma aplicação web moderna concebida para substituir ferramentas
 2. **Ativar APIs**
    - Navegar para "APIs e Serviços"
    - Ativar "API do Blogger"
-   - Ativar "API do Google+"
 
 3. **Criar Credenciais OAuth**
    - Ir para "Credenciais"
@@ -77,9 +94,9 @@ O BlogCraft é uma aplicação web moderna concebida para substituir ferramentas
 4. **Configurar Ecrã de Consentimento**
    - Configurar ecrã de consentimento OAuth
    - Adicionar âmbitos necessários:
-     * `.../auth/blogger` (API do Blogger)
-     * `email`
-     * `perfil`
+      * `.../auth/blogger` (API do Blogger)
+      * `email`
+      * `perfil`
 
 5. **Considerações de Segurança**
    - Manter o ID de Cliente e credenciais confidenciais
@@ -91,6 +108,17 @@ O BlogCraft é uma aplicação web moderna concebida para substituir ferramentas
 - Verificar se o ID de Cliente e âmbitos correspondem à aplicação
 - Verificar conectividade de rede
 - Garantir que o navegador suporta fluxos OAuth modernos
+- Se receber 401/403, remova o token local (chave no `localStorage`: `blogcraft_token`) e inicie sessão novamente
+- O projeto usa `react-scripts` com `--openssl-legacy-provider` nos scripts `npm` para compatibilidade no Node 18
+
+## 🧪 Build & Testes
+
+```bash
+npm run build
+npm test
+```
+
+O build de produção será criado em `build/`.
 
 ## 📚 Mais Ajuda
 - [Documentação da API do Blogger](https://developers.google.com/blogger/docs/3.0/getting_started)
@@ -106,6 +134,11 @@ O BlogCraft requer permissões mínimas para:
 - Ler os seus blogues do Blogger
 - Criar, editar e gerir artigos de blogue
 - Aceder a informações básicas de perfil
+
+## 🗺️ Roadmap (curto prazo)
+- Upload de imagens e gestão de media aprimorados
+- Variáveis/snippets de template mais poderosos
+- Experiência offline/autosalvamento melhorada
 
 ---
 

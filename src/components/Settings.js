@@ -129,7 +129,6 @@ function Settings({ theme, toggleTheme }) {
     try {
       // Salvar configurações gerais
       localStorage.setItem('blogcraft_settings', JSON.stringify(settings));
-
       // Notificar outros componentes sobre a atualização das configurações
       window.dispatchEvent(
         new CustomEvent('blogcraft_settings_update', {
@@ -139,7 +138,10 @@ function Settings({ theme, toggleTheme }) {
 
       // Salvar idioma
       i18n.setLocale(language);
-      
+
+      // Notify application about settings update
+      window.dispatchEvent(new Event('blogcraft_settings_updated'));
+
       alert(t('settings.confirmations.saveSuccess'));
     } catch (error) {
       console.error('Erro ao salvar configurações:', error);
@@ -162,9 +164,10 @@ function Settings({ theme, toggleTheme }) {
         wideLayout: false,
         showDebugger: false
       };
-      
+
       setSettings(defaultSettings);
       localStorage.setItem('blogcraft_settings', JSON.stringify(defaultSettings));
+      window.dispatchEvent(new Event('blogcraft_settings_updated'));
       alert(t('settings.confirmations.resetSuccess'));
     }
   };
@@ -354,15 +357,30 @@ function Settings({ theme, toggleTheme }) {
                 <p className="setting-description">{t('settings.fields.languageDesc')}</p>
               </div>
             </div>
-            
+            <div className="setting-group">
+              <h2>{t('settings.sections.debug')}</h2>
+
+              <div className="setting-item">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={settings.showDebugger}
+                    onChange={(e) => handleSettingChange(e, 'showDebugger')}
+                  />
+                  {t('settings.fields.showDebugger')}
+                </label>
+                <p className="setting-description">{t('settings.fields.showDebuggerDesc')}</p>
+              </div>
+            </div>
+
             <div className="setting-group">
               <h2>{t('settings.sections.dataManagement')}</h2>
-              
+
               <div className="data-actions">
                 <button className="reset-settings-button" onClick={handleResetSettings}>
                   {t('settings.buttons.reset')}
                 </button>
-                
+
                 <button className="clear-data-button" onClick={handleClearData}>
                   {t('settings.buttons.clearData')}
                 </button>

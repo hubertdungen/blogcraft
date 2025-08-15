@@ -164,11 +164,12 @@ const translations = {
         general: 'General Preferences',
         autoSave: 'Auto-Save',
         security: 'Security',
-        appearance: 'Appearance',
-        api: 'API Settings',
-        dataManagement: 'Data Management'
-      },
-      fields: {
+          appearance: 'Appearance',
+          api: 'API Settings',
+          dataManagement: 'Data Management',
+          debug: 'Debugging'
+        },
+        fields: {
         defaultBlog: 'Default Blog:',
         defaultBlogDesc: 'Blog selected by default when creating a new post.',
         defaultTemplate: 'Default Template:',
@@ -192,8 +193,10 @@ const translations = {
         customClientId: 'Use custom Client ID',
         customClientIdDesc: 'Enable this option to use a custom Google Client ID instead of the default one.',
         clientId: 'Google Client ID:',
-        clientIdDesc: 'Enter the Client ID obtained from Google Cloud Console.'
-      },
+        clientIdDesc: 'Enter the Client ID obtained from Google Cloud Console.',
+        showDebugger: 'Show Debugger Window',
+        showDebuggerDesc: 'Display authentication debugger overlay.'
+        },
       buttons: {
         save: 'Save Settings',
         reset: 'Restore Default Settings',

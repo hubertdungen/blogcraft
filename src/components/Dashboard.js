@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BloggerService from '../services/BloggerService';
 import AuthService from '../services/AuthService';
@@ -19,6 +19,10 @@ function Dashboard() {
   const [blogs, setBlogs] = useState([]);
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [tagFilter, setTagFilter] = useState('ALL');
   const [stats, setStats] = useState({
     totalPosts: 0,
     draftPosts: 0,
@@ -123,24 +127,27 @@ function Dashboard() {
       // Fetch different post types in parallel
       const [publishedData, draftData, scheduledData] = await Promise.all([
         // Published posts
-        BloggerService.getPosts(blogId, { 
+        BloggerService.getPosts(blogId, {
           status: 'live',
           maxResults: 10,
-          fetchBodies: false
+          fetchBodies: false,
+          fetchImages: true
         }),
         
         // Draft posts
         BloggerService.getPosts(blogId, {
           status: 'draft',
           maxResults: 10,
-          fetchBodies: false
+          fetchBodies: false,
+          fetchImages: true
         }),
         
         // Scheduled posts
         BloggerService.getPosts(blogId, {
           status: 'scheduled',
           maxResults: 10,
-          fetchBodies: false
+          fetchBodies: false,
+          fetchImages: true
         })
       ]);
       
@@ -367,11 +374,41 @@ function Dashboard() {
   const handleChangeBlog = useCallback((e) => {
     const blogId = e.target.value;
     const blog = blogs.find(blog => blog.id === blogId);
-    
+
     if (blog) {
       setSelectedBlog(blog);
     }
   }, [blogs]);
+
+  const displayedPosts = useMemo(() => {
+    const filtered = posts.filter(post => {
+      const statusMatch =
+        statusFilter === 'ALL' || post.status === statusFilter;
+      const tagMatch =
+        tagFilter === 'ALL' || (post.labels && post.labels.includes(tagFilter));
+      return statusMatch && tagMatch;
+    });
+
+    return [...filtered].sort((a, b) => {
+      if (sortBy === 'title') {
+        return sortOrder === 'asc'
+          ? a.title.localeCompare(b.title)
+          : b.title.localeCompare(a.title);
+      }
+
+      const dateA = new Date(a.published || a.scheduled || a.updated || 0);
+      const dateB = new Date(b.published || b.scheduled || b.updated || 0);
+      return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+    });
+  }, [posts, sortBy, statusFilter, sortOrder, tagFilter]);
+
+  const availableTags = useMemo(() => {
+    const tagSet = new Set();
+    posts.forEach(post => {
+      (post.labels || []).forEach(label => tagSet.add(label));
+    });
+    return Array.from(tagSet).sort((a, b) => a.localeCompare(b));
+  }, [posts]);
 
   /**
    * Retry loading blogs after error
@@ -560,15 +597,65 @@ function Dashboard() {
               {/* Posts list */}
               <div className="posts-section">
                 <h2>Posts Recentes</h2>
-                
+
+                {!loadingStats && (
+                  <div className="posts-controls">
+                    <div className="sort-control">
+                      <label>Ordenar por:</label>
+                      <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                        <option value="date">Data</option>
+                        <option value="title">Título</option>
+                      </select>
+                      <button
+                        type="button"
+                        className="order-toggle"
+                        onClick={() =>
+                          setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'))
+                        }
+                        title="Inverter ordem"
+                      >
+                        {sortOrder === 'asc' ? '↑' : '↓'}
+                      </button>
+                    </div>
+                    <div className="filter-control">
+                      <label>Filtrar:</label>
+                      <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                        <option value="ALL">Todos</option>
+                        <option value="LIVE">Publicado</option>
+                        <option value="DRAFT">Rascunho</option>
+                        <option value="SCHEDULED">Agendado</option>
+                      </select>
+                    </div>
+                    <div className="tag-filter-control">
+                      <label>Categoria:</label>
+                      <select value={tagFilter} onChange={(e) => setTagFilter(e.target.value)}>
+                        <option value="ALL">Todas as tags</option>
+                        {availableTags.map(tag => (
+                          <option key={tag} value={tag}>{tag}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+
                 {loadingStats ? (
                   renderLoading()
-                ) : posts.length === 0 ? (
+                ) : displayedPosts.length === 0 ? (
                   renderEmptyState()
                 ) : (
                   <div className="posts-list">
-                    {posts.map(post => (
+                    {displayedPosts.map(post => (
                       <div key={post.id} className="post-item">
+                        {post.images && post.images.length > 0 ? (
+                          <img
+                            src={post.images[0].url}
+                            alt={post.title}
+                            className="post-thumbnail"
+                          />
+                        ) : (
+                          <div className="post-thumbnail no-image" />
+                        )}
+
                         <div className="post-info">
                           <h3>{post.title}</h3>
                           <div className="post-meta">

@@ -55,12 +55,28 @@ BlogCraft is a modern web application designed to replace discontinued tools lik
 
 5. Run the application
    ```bash
+   # On macOS/Linux
+   ./run.sh
+
+   # On Windows
+   run.bat
+
+   # Or start manually
    npm start
-   # or
-   yarn start
    ```
 
 6. Access the application at `http://localhost:3000`
+
+## ✨ What's new
+
+- Robust Google Sign-In via `@react-oauth/google` with Blogger scope
+- Token handling improvements in `AuthService` and `TokenManager` (session checks, safer storage)
+- `BloggerService` with caching, timeouts, and clearer error messages (401/403/429)
+- Dashboard: blog selector, recent posts, and basic monthly stats
+- Post Editor (TinyMCE): draft/publish, scheduling, labels, metadata injection, import (TXT/HTML/Word) and export to Word
+- Templates Manager: create, edit, delete, and reuse content templates
+- Settings: theme (dark/light), defaults, autosave/backup options
+- i18n foundations (`en-US`, `pt-PT`) and improved styling
 
 ## 🔑 Authentication Guide
 
@@ -73,7 +89,6 @@ BlogCraft is a modern web application designed to replace discontinued tools lik
 2. **Enable APIs**
    - Navigate to "APIs & Services"
    - Enable "Blogger API"
-   - Enable "Google+ API"
 
 3. **Create OAuth Credentials**
    - Go to "Credentials"
@@ -86,9 +101,9 @@ BlogCraft is a modern web application designed to replace discontinued tools lik
 4. **Configure Consent Screen**
    - Set up OAuth consent screen
    - Add required scopes:
-     * `.../auth/blogger` (Blogger API)
-     * `email`
-     * `profile`
+      * `.../auth/blogger` (Blogger API)
+      * `email`
+      * `profile`
 
 5. **Security Considerations**
    - Keep your Client ID and credentials confidential
@@ -100,6 +115,17 @@ BlogCraft is a modern web application designed to replace discontinued tools lik
 - Verify Client ID and scopes match your application
 - Check network connectivity
 - Ensure browser supports modern OAuth flows
+- If you receive 401/403 errors, remove the local token (`localStorage` key: `blogcraft_token`) and sign in again
+- The project uses `react-scripts` with `--openssl-legacy-provider` set in `npm` scripts for compatibility on Node 18
+
+## 🧪 Build & Test
+
+```bash
+npm run build
+npm test
+```
+
+The production build will be created in `build/`.
 
 ## 📚 More Help
 - [Blogger API Documentation](https://developers.google.com/blogger/docs/3.0/getting_started)
@@ -115,6 +141,11 @@ BlogCraft requires minimal permissions to:
 - Read your Blogger blogs
 - Create, edit, and manage blog posts
 - Access basic profile information
+
+## 🗺️ Roadmap (short-term)
+- Image upload conveniences and media management
+- More powerful template variables and snippets
+- Improved offline/auto-save experience
 
 ---
 
