@@ -12,12 +12,16 @@ import AuthService from '../services/AuthService';
 import Feedback from './Feedback';
 
 // Extende o build padrão para suportar edição de links em imagens
+// e habilitar a barra flutuante de formatação
 if (process.env.NODE_ENV !== 'test') {
   // eslint-disable-next-line global-require
   const LinkImage = require('@ckeditor/ckeditor5-link/src/linkimage').default;
+  // eslint-disable-next-line global-require
+  const BalloonToolbar = require('@ckeditor/ckeditor5-ui/src/toolbar/balloon/balloontoolbar').default;
   ClassicEditor.builtinPlugins = [
     ...ClassicEditor.builtinPlugins,
-    LinkImage
+    LinkImage,
+    BalloonToolbar
   ];
 }
 
@@ -920,6 +924,12 @@ function PostEditor({ theme, toggleTheme }) {
                 alignment: {
                   options: [ 'left', 'center', 'right', 'justify' ]
                 },
+                balloonToolbar: [
+                  'alignment:left',
+                  'alignment:center',
+                  'alignment:right',
+                  'alignment:justify'
+                ],
                 table: {
                   contentToolbar: [
                     'tableColumn', 'tableRow', 'mergeTableCells',
