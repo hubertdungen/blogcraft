@@ -164,11 +164,12 @@ const translations = {
         general: 'Preferências Gerais',
         autoSave: 'Guardamento Automático',
         security: 'Segurança',
-        appearance: 'Aparência',
-        api: 'Configurações de API',
-        dataManagement: 'Gestão de Dados'
-      },
-      fields: {
+          appearance: 'Aparência',
+          api: 'Configurações de API',
+          dataManagement: 'Gestão de Dados',
+          debug: 'Depuração'
+        },
+        fields: {
         defaultBlog: 'Blogue Predefinido:',
         defaultBlogDesc: 'Blogue selecionado por predefinição ao criar um novo artigo.',
         defaultTemplate: 'Modelo Predefinido:',
@@ -190,8 +191,10 @@ const translations = {
         customClientId: 'Usar ID de Cliente personalizado',
         customClientIdDesc: 'Ative esta opção para usar um ID de Cliente do Google personalizado em vez do predefinido.',
         clientId: 'ID de Cliente do Google:',
-        clientIdDesc: 'Insira o ID de Cliente obtido na Google Cloud Console.'
-      },
+        clientIdDesc: 'Insira o ID de Cliente obtido na Google Cloud Console.',
+        showDebugger: 'Mostrar janela de depuração',
+        showDebuggerDesc: 'Exibe a janela de depuração de autenticação.'
+        },
       buttons: {
         save: 'Guardar Definições',
         reset: 'Restaurar Definições Predefinidas',
