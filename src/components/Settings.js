@@ -30,6 +30,7 @@ function Settings({ theme, toggleTheme }) {
     confirmBeforeDelete: true,
     defaultPublishStatus: 'draft',
     wideLayout: false,
+    contentAlignment: 'center',
     showDebugger: false
   });
   const [error, setError] = useState(null);
@@ -56,6 +57,7 @@ function Settings({ theme, toggleTheme }) {
         confirmBeforeDelete: savedSettings.confirmBeforeDelete !== undefined ? savedSettings.confirmBeforeDelete : true,
         defaultPublishStatus: savedSettings.defaultPublishStatus || 'draft',
         wideLayout: savedSettings.wideLayout !== undefined ? savedSettings.wideLayout : false,
+        contentAlignment: savedSettings.contentAlignment || 'center',
         showDebugger: savedSettings.showDebugger !== undefined ? savedSettings.showDebugger : false
       });
     } catch (error) {
@@ -114,6 +116,13 @@ function Settings({ theme, toggleTheme }) {
     }));
   };
 
+  const handleAlignmentChange = (alignment) => {
+    setSettings(prev => ({
+      ...prev,
+      contentAlignment: alignment
+    }));
+  };
+
   /**
    * Manipula a mudança de idioma
    */
@@ -132,7 +141,11 @@ function Settings({ theme, toggleTheme }) {
       // Notificar outros componentes sobre a atualização das configurações
       window.dispatchEvent(
         new CustomEvent('blogcraft_settings_update', {
-          detail: { wideLayout: settings.wideLayout, showDebugger: settings.showDebugger }
+          detail: {
+            wideLayout: settings.wideLayout,
+            contentAlignment: settings.contentAlignment,
+            showDebugger: settings.showDebugger
+          }
         })
       );
 
@@ -162,11 +175,21 @@ function Settings({ theme, toggleTheme }) {
         confirmBeforeDelete: true,
         defaultPublishStatus: 'draft',
         wideLayout: false,
+        contentAlignment: 'center',
         showDebugger: false
       };
 
       setSettings(defaultSettings);
       localStorage.setItem('blogcraft_settings', JSON.stringify(defaultSettings));
+      window.dispatchEvent(
+        new CustomEvent('blogcraft_settings_update', {
+          detail: {
+            wideLayout: defaultSettings.wideLayout,
+            contentAlignment: defaultSettings.contentAlignment,
+            showDebugger: defaultSettings.showDebugger
+          }
+        })
+      );
       window.dispatchEvent(new Event('blogcraft_settings_updated'));
       alert(t('settings.confirmations.resetSuccess'));
     }
@@ -206,16 +229,15 @@ function Settings({ theme, toggleTheme }) {
   };
 
   return (
-    <div className="settings-container">
-      <div className="settings-content">
-        <h1>{t('settings.title')}</h1>
-        
-        {loading ? (
-          <div className="loading">{t('common.loading')}</div>
-        ) : error ? (
-          <div className="error-message">{t('common.error', { message: error })}</div>
-        ) : (
-          <div className="settings-form">
+    <div className="settings-content">
+      <h1>{t('settings.title')}</h1>
+
+      {loading ? (
+        <div className="loading">{t('common.loading')}</div>
+      ) : error ? (
+        <div className="error-message">{t('common.error', { message: error })}</div>
+      ) : (
+        <div className="settings-form">
             <div className="setting-group">
               <h2>{t('settings.sections.general')}</h2>
               
@@ -325,6 +347,31 @@ function Settings({ theme, toggleTheme }) {
               </div>
 
               <div className="setting-item">
+                <label>{t('settings.fields.alignment')}</label>
+                <div className="alignment-toggle">
+                  <button
+                    className={`alignment-button ${settings.contentAlignment === 'left' ? 'active' : ''}`}
+                    onClick={() => handleAlignmentChange('left')}
+                  >
+                    {t('settings.fields.alignLeft')}
+                  </button>
+                  <button
+                    className={`alignment-button ${settings.contentAlignment === 'center' ? 'active' : ''}`}
+                    onClick={() => handleAlignmentChange('center')}
+                  >
+                    {t('settings.fields.alignCenter')}
+                  </button>
+                  <button
+                    className={`alignment-button ${settings.contentAlignment === 'right' ? 'active' : ''}`}
+                    onClick={() => handleAlignmentChange('right')}
+                  >
+                    {t('settings.fields.alignRight')}
+                  </button>
+                </div>
+                <p className="setting-description">{t('settings.fields.alignmentDesc')}</p>
+              </div>
+
+              <div className="setting-item">
                 <label>{t('settings.fields.theme')}</label>
                 <div className="theme-toggle">
                   <button
@@ -398,7 +445,6 @@ function Settings({ theme, toggleTheme }) {
             </div>
           </div>
         )}
-      </div>
     </div>
   );
 }

@@ -1,15 +1,4 @@
 /* Estilos para a página de Configurações */
-.settings-container {
-    display: flex;
-    min-height: 100vh;
-  }
-  
-  .settings-content {
-    flex: 1;
-    padding: 30px;
-    margin-left: var(--sidebar-width);
-  }
-  
   .settings-content h1 {
     margin-bottom: 30px;
     padding-bottom: 15px;
@@ -105,13 +94,15 @@
     margin-right: 10px;
   }
   
-  .theme-toggle {
+  .theme-toggle,
+  .alignment-toggle {
     display: flex;
     gap: 10px;
     max-width: 400px;
   }
-  
-  .theme-button {
+
+  .theme-button,
+  .alignment-button {
     flex: 1;
     padding: 10px;
     border-radius: 4px;
@@ -120,16 +111,19 @@
     cursor: pointer;
     transition: all 0.2s;
   }
-  
-  .light .theme-button {
+
+  .light .theme-button,
+  .light .alignment-button {
     border-color: var(--border-light);
   }
-  
-  .dark .theme-button {
+
+  .dark .theme-button,
+  .dark .alignment-button {
     border-color: var(--border-dark);
   }
-  
-  .theme-button.active {
+
+  .theme-button.active,
+  .alignment-button.active {
     background-color: var(--primary-color);
     color: white;
     border-color: var(--primary-color);

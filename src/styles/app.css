@@ -311,10 +311,10 @@ input:focus, select:focus, textarea:focus {
 .editor-content,
 .templates-content,
 .settings-content {
-  margin-left: var(--sidebar-width);
   padding: 30px;
   min-height: 100vh;
   max-width: 1200px;
+  width: 100%;
 }
 
 .dashboard-container.wide .main-content,
@@ -328,6 +328,19 @@ input:focus, select:focus, textarea:focus {
 .dashboard-container {
   display: flex;
   width: 100%;
+  padding-left: var(--sidebar-width);
+}
+
+.dashboard-container.align-left {
+  justify-content: flex-start;
+}
+
+.dashboard-container.align-center {
+  justify-content: center;
+}
+
+.dashboard-container.align-right {
+  justify-content: flex-end;
 }
 
 .blog-selector {
@@ -656,11 +669,6 @@ input:focus, select:focus, textarea:focus {
   background-color: var(--primary-hover);
 }
 
-/* Configurações */
-.settings-container {
-  display: flex;
-}
-
 .settings-form {
   margin-top: 30px;
 }
@@ -690,17 +698,20 @@ input:focus, select:focus, textarea:focus {
   gap: 8px;
 }
 
-.theme-toggle {
+.theme-toggle,
+.alignment-toggle {
   display: flex;
   gap: 10px;
 }
 
-.theme-button {
+.theme-button,
+.alignment-button {
   padding: 10px 20px;
   flex: 1;
 }
 
-.theme-button.active {
+.theme-button.active,
+.alignment-button.active {
   background-color: var(--primary-color);
   color: white;
 }
