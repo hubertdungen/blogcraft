@@ -1,15 +1,4 @@
 /* Estilos para o Editor de Posts */
-.editor-container {
-    display: flex;
-    min-height: 100vh;
-  }
-  
-  .editor-content {
-    flex: 1;
-    padding: 30px;
-    margin-left: var(--sidebar-width);
-  }
-  
   .editor-header {
     display: flex;
     justify-content: space-between;

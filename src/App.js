@@ -36,24 +36,33 @@ const ProtectedRoute = ({ children }) => {
 // Layout component for authenticated pages
 const AuthenticatedLayout = ({ children, theme, toggleTheme }) => {
   const [wideLayout, setWideLayout] = useState(false);
+  const [contentAlignment, setContentAlignment] = useState('center');
 
   useEffect(() => {
     const savedSettings = JSON.parse(localStorage.getItem('blogcraft_settings') || '{}');
     setWideLayout(!!savedSettings.wideLayout);
+    setContentAlignment(savedSettings.contentAlignment || 'center');
 
     const handleStorageChange = (e) => {
       if (e.key === 'blogcraft_settings') {
         try {
           const newSettings = JSON.parse(e.newValue || '{}');
           setWideLayout(!!newSettings.wideLayout);
+          setContentAlignment(newSettings.contentAlignment || 'center');
         } catch {
           setWideLayout(false);
+          setContentAlignment('center');
         }
       }
     };
     const handleSettingsUpdate = (e) => {
-      if (e.detail && typeof e.detail.wideLayout !== 'undefined') {
-        setWideLayout(!!e.detail.wideLayout);
+      if (e.detail) {
+        if (typeof e.detail.wideLayout !== 'undefined') {
+          setWideLayout(!!e.detail.wideLayout);
+        }
+        if (typeof e.detail.contentAlignment !== 'undefined') {
+          setContentAlignment(e.detail.contentAlignment || 'center');
+        }
       }
     };
     window.addEventListener('storage', handleStorageChange);
@@ -65,7 +74,7 @@ const AuthenticatedLayout = ({ children, theme, toggleTheme }) => {
   }, []);
 
   return (
-    <div className={`dashboard-container ${wideLayout ? 'wide' : ''}`}>
+    <div className={`dashboard-container ${wideLayout ? 'wide' : ''} align-${contentAlignment}`}>
       <Sidebar theme={theme} toggleTheme={toggleTheme} />
       {children}
     </div>
