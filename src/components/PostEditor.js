@@ -698,6 +698,10 @@ function PostEditor({ theme, toggleTheme }) {
                     value={postData.scheduledPublish}
                     minDate={new Date()}
                     format="dd/MM/yyyy HH:mm"
+                    locale="pt-BR"
+                    formatShortWeekday={(locale, date) =>
+                      ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'][date.getDay()]
+                    }
                   />
                 )}
               </div>

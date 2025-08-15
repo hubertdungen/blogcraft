@@ -138,6 +138,19 @@
   .schedule-input .react-datetime-picker {
     width: 100%;
   }
+
+  .schedule-input .react-datetime-picker__button,
+  .schedule-input .react-calendar button {
+    background: none;
+    color: inherit;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  .schedule-input .react-calendar__tile {
+    padding: 10px 6.6667px;
+    line-height: 16px;
+  }
   
   .metadata-toggle button {
     background-color: var(--primary-color);
@@ -245,6 +258,10 @@
     border-color: var(--border-dark);
     color: white;
   }
+
+  .dark .react-datetime-picker__wrapper {
+    background-color: #444;
+  }
   
   .react-datetime-picker__wrapper {
     border: none !important;
@@ -274,6 +291,15 @@
 
   .dark .react-calendar button {
     color: white;
+  }
+
+  .dark .react-calendar__tile:enabled:hover,
+  .dark .react-calendar__navigation button:enabled:hover {
+    background-color: #555;
+  }
+
+  .dark .react-calendar__navigation button:disabled {
+    background-color: #444;
   }
 
   .react-datetime-picker__calendar,
