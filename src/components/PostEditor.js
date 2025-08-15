@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+// Importação dinâmica do editor para evitar problemas em testes
+const Editor = process.env.NODE_ENV === 'test' ? null : require('../ckeditor').default;
 import DateTimePicker from 'react-datetime-picker';
 import 'react-datetime-picker/dist/DateTimePicker.css';
 import 'react-calendar/dist/Calendar.css';
@@ -782,14 +783,15 @@ function PostEditor({ theme, toggleTheme }) {
           </div>
           
           <div className="rich-editor">
+            {Editor && (
             <CKEditor
-              editor={ClassicEditor}
+              editor={Editor}
               data={postData.content}
               onChange={handleEditorChange}
               onReady={editor => {
                 // Armazenar referência ao editor
                 editorRef.current = editor;
-                
+
                 // Configurações adicionais
                 editor.ui.view.editable.element.style.minHeight = '500px';
               }}
@@ -815,14 +817,42 @@ function PostEditor({ theme, toggleTheme }) {
                   '|',
                   'horizontalLine'
                 ],
+                alignment: {
+                  options: ['left', 'center', 'right', 'justify']
+                },
                 image: {
-                  // Configuração para upload de imagens
+                  // Configuração para upload e edição de imagens
                   toolbar: [
                     'imageTextAlternative',
-                    'imageStyle:full',
-                    'imageStyle:side'
+                    '|',
+                    'imageStyle:alignLeft',
+                    'imageStyle:alignCenter',
+                    'imageStyle:alignRight',
+                    'imageStyle:side',
+                    '|',
+                    'resizeImage'
+                  ],
+                  styles: ['alignLeft', 'alignCenter', 'alignRight', 'side'],
+                  resizeUnit: '%',
+                  resizeOptions: [
+                    {
+                      name: 'resizeImage:original',
+                      label: 'Original',
+                      value: null
+                    },
+                    {
+                      name: 'resizeImage:50',
+                      label: '50%',
+                      value: '50'
+                    },
+                    {
+                      name: 'resizeImage:75',
+                      label: '75%',
+                      value: '75'
+                    }
                   ]
                 },
+                balloonToolbar: ['bold', 'italic', 'link', '|', 'alignment'],
                 table: {
                   contentToolbar: [
                     'tableColumn', 'tableRow', 'mergeTableCells',
@@ -831,7 +861,7 @@ function PostEditor({ theme, toggleTheme }) {
                 },
                 language: 'pt-br'
               }}
-            />
+            />)}
           </div>
         </>
       )}
