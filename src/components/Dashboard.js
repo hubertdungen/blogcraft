@@ -22,6 +22,7 @@ function Dashboard() {
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [tagFilter, setTagFilter] = useState('ALL');
   const [stats, setStats] = useState({
     totalPosts: 0,
     draftPosts: 0,
@@ -377,10 +378,13 @@ function Dashboard() {
   }, [blogs]);
 
   const displayedPosts = useMemo(() => {
-    const filtered =
-      statusFilter === 'ALL'
-        ? posts
-        : posts.filter(post => post.status === statusFilter);
+    const filtered = posts.filter(post => {
+      const statusMatch =
+        statusFilter === 'ALL' || post.status === statusFilter;
+      const tagMatch =
+        tagFilter === 'ALL' || (post.labels && post.labels.includes(tagFilter));
+      return statusMatch && tagMatch;
+    });
 
     return [...filtered].sort((a, b) => {
       if (sortBy === 'title') {
@@ -393,7 +397,15 @@ function Dashboard() {
       const dateB = new Date(b.published || b.scheduled || b.updated || 0);
       return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
     });
-  }, [posts, sortBy, statusFilter, sortOrder]);
+  }, [posts, sortBy, statusFilter, sortOrder, tagFilter]);
+
+  const availableTags = useMemo(() => {
+    const tagSet = new Set();
+    posts.forEach(post => {
+      (post.labels || []).forEach(label => tagSet.add(label));
+    });
+    return Array.from(tagSet).sort((a, b) => a.localeCompare(b));
+  }, [posts]);
 
   /**
    * Retry loading blogs after error
@@ -609,6 +621,15 @@ function Dashboard() {
                         <option value="LIVE">Publicado</option>
                         <option value="DRAFT">Rascunho</option>
                         <option value="SCHEDULED">Agendado</option>
+                      </select>
+                    </div>
+                    <div className="tag-filter-control">
+                      <label>Categoria:</label>
+                      <select value={tagFilter} onChange={(e) => setTagFilter(e.target.value)}>
+                        <option value="ALL">Todas as tags</option>
+                        {availableTags.map(tag => (
+                          <option key={tag} value={tag}>{tag}</option>
+                        ))}
                       </select>
                     </div>
                   </div>

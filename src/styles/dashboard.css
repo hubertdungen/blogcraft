@@ -177,12 +177,23 @@
     align-items: center;
   }
 
+  .posts-controls .filter-control,
+  .posts-controls .tag-filter-control {
+    display: flex;
+    align-items: center;
+  }
+
   .posts-controls .order-toggle {
     margin-left: 8px;
     background: none;
     border: none;
     cursor: pointer;
     font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    height: 32px;
   }
 
   .posts-controls .order-toggle:hover {
