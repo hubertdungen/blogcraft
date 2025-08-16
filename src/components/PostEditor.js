@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import DateTimePicker from 'react-datetime-picker';
 import 'react-datetime-picker/dist/DateTimePicker.css';
 import 'react-calendar/dist/Calendar.css';
@@ -11,6 +10,8 @@ import BloggerService from '../services/BloggerService';
 import AuthService from '../services/AuthService';
 import Feedback from './Feedback';
 import i18n, { t } from '../services/I18nService';
+
+const Editor = process.env.NODE_ENV === 'test' ? null : require('../ckeditor').default;
 
 /**
  * Componente do Editor de Posts
@@ -783,7 +784,7 @@ function PostEditor({ theme, toggleTheme }) {
           
           <div className="rich-editor">
             <CKEditor
-              editor={ClassicEditor}
+              editor={Editor}
               data={postData.content}
               onChange={handleEditorChange}
               onReady={editor => {
