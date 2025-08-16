@@ -116,8 +116,9 @@ class I18nService {
     if (typeof value === 'string') {
       return this._interpolate(value, params);
     }
-    
-    return String(value);
+
+    // Retornar arrays ou objetos como estão
+    return value;
   }
   
   /**

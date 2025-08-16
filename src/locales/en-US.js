@@ -131,9 +131,15 @@ const translations = {
         published: 'Post published successfully!',
         scheduled: 'Post scheduled successfully!',
         error: 'An error occurred: {message}'
+      },
+      errors: {
+        selectBlog: 'Please select a blog before saving the post.',
+        enterTitle: 'Please enter a title for the post.',
+        loadBlogs: 'Unable to load your blogs. Please check your connection and try again.',
+        loadPost: 'Unable to load the post. Please check your connection and try again.'
       }
     },
-    
+
     templates: {
       title: 'Template Manager',
       createNew: 'Create New Template',
@@ -144,16 +150,23 @@ const translations = {
       createOrImport: 'Create a new template or import existing templates.',
       selectToEdit: 'Select a template to edit',
       orCreateNew: 'Or click "Create New Template" to start a new one.',
+      newTemplate: 'New Template',
+      editTemplate: 'Edit Template',
       templateName: 'Template Name:',
       templateDescription: 'Description (optional):',
       templateContent: 'Template Content:',
+      placeholders: {
+        name: 'Enter a name for the template',
+        description: 'A brief description of the template'
+      },
       actions: {
         save: 'Save Template',
         cancel: 'Cancel',
         use: 'Use',
         export: 'Export',
         delete: 'Delete',
-        confirmDelete: 'Are you sure you want to delete this template? This action cannot be undone.'
+        confirmDelete: 'Are you sure you want to delete this template? This action cannot be undone.',
+        cancelConfirm: 'There are unsaved changes. Do you really want to cancel?'
       },
       tips: {
         title: 'Template Tips',
@@ -164,6 +177,15 @@ const translations = {
           'Export your favorite templates to share with other users'
         ]
       },
+      notifications: {
+        saved: 'Template saved successfully!',
+        deleted: 'Template deleted successfully!',
+        nameRequired: 'Please enter a name for the template.',
+        contentRequired: 'The template content cannot be empty.',
+        editorNotReady: 'Editor not initialized. Please try again.',
+        noTemplatesExport: 'There are no templates to export.',
+        loadError: 'Error loading templates. Data may be corrupted.'
+      },
       importDialog: {
         importSuccess: 'Import completed! {count} templates imported.',
         importError: 'Error importing templates: {message}',
@@ -171,7 +193,9 @@ const translations = {
         replaceConfirm: 'OK to replace or Cancel to merge with existing templates.',
         conflictDetected: '{count} templates have conflicting IDs.',
         conflictAction: 'Do you want to overwrite existing templates with the same ID?',
-        conflictConfirm: 'OK to overwrite or Cancel to keep existing templates.'
+        conflictConfirm: 'OK to overwrite or Cancel to keep existing templates.',
+        noValidTemplates: 'No valid templates found in the file.',
+        invalidJson: 'Invalid JSON file.'
       }
     },
     
