@@ -142,7 +142,7 @@ function PostEditor({ theme, toggleTheme }) {
     
     setFeedback({
       type: 'info',
-      message: `Rascunho salvo automaticamente às ${new Date().toLocaleTimeString()}`,
+      message: t('editor.saving.autoSave', { time: new Date().toLocaleTimeString() }),
       duration: 3000
     });
   };
@@ -174,20 +174,20 @@ function PostEditor({ theme, toggleTheme }) {
       }
     } catch (error) {
       console.error('Erro ao buscar blogs:', error);
-      
+
       // Se for erro de autenticação, redirecionar para login
-      if (error.message.includes('autenticação') || 
-          error.message.includes('login') || 
+      if (error.message.includes('autenticação') ||
+          error.message.includes('login') ||
           error.message.includes('token')) {
-        
+
         AuthService.removeAuthToken();
         navigate('/', { replace: true });
         return;
       }
-      
+
       setFeedback({
         type: 'error',
-        message: 'Não foi possível carregar seus blogs. Por favor, verifique sua conexão e tente novamente.'
+        message: t('editor.errors.loadBlogs')
       });
     } finally {
       setLoading(false);
@@ -224,20 +224,20 @@ function PostEditor({ theme, toggleTheme }) {
       });
     } catch (error) {
       console.error('Erro ao buscar post:', error);
-      
+
       // Se for erro de autenticação, redirecionar para login
-      if (error.message.includes('autenticação') || 
-          error.message.includes('login') || 
+      if (error.message.includes('autenticação') ||
+          error.message.includes('login') ||
           error.message.includes('token')) {
-        
+
         AuthService.removeAuthToken();
         navigate('/', { replace: true });
         return;
       }
-      
+
       setFeedback({
         type: 'error',
-        message: 'Não foi possível carregar o post. Por favor, verifique sua conexão e tente novamente.'
+        message: t('editor.errors.loadPost')
       });
     } finally {
       setLoading(false);
@@ -322,7 +322,7 @@ function PostEditor({ theme, toggleTheme }) {
    * Salva o conteúdo atual como template
    */
   const handleSaveTemplate = () => {
-    const templateName = prompt('Nome do template:');
+    const templateName = prompt(t('editor.templates.templateName'));
     
     if (!templateName) return;
     
@@ -339,7 +339,7 @@ function PostEditor({ theme, toggleTheme }) {
     
     setFeedback({
       type: 'success',
-      message: 'Template salvo com sucesso!',
+      message: t('templates.notifications.saved'),
       duration: 3000
     });
   };
@@ -402,7 +402,7 @@ function PostEditor({ theme, toggleTheme }) {
     if (!selectedBlog) {
       setFeedback({
         type: 'error',
-        message: 'Por favor, selecione um blog antes de salvar o post.'
+        message: t('editor.errors.selectBlog')
       });
       return;
     }
@@ -410,7 +410,7 @@ function PostEditor({ theme, toggleTheme }) {
     if (!postData.title.trim()) {
       setFeedback({
         type: 'error',
-        message: 'Por favor, insira um título para o post.'
+        message: t('editor.errors.enterTitle')
       });
       return;
     }
@@ -465,10 +465,10 @@ function PostEditor({ theme, toggleTheme }) {
       setFeedback({
         type: 'success',
         message: postData.scheduledPublish
-          ? 'Post agendado com sucesso!'
+          ? t('editor.notifications.scheduled')
           : publish
-            ? 'Post publicado com sucesso!'
-            : 'Rascunho salvo com sucesso!',
+            ? t('editor.notifications.published')
+            : t('editor.notifications.draftSaved'),
         duration: 3000
       });
       
@@ -495,7 +495,7 @@ function PostEditor({ theme, toggleTheme }) {
       
       setFeedback({
         type: 'error',
-        message: `Ocorreu um erro ao salvar o post: ${error.message}`
+        message: t('editor.notifications.error', { message: error.message })
       });
     } finally {
       setSaving(false);
@@ -608,12 +608,12 @@ function PostEditor({ theme, toggleTheme }) {
         <h1>{t('editor.title')}</h1>
         
         <div className="editor-actions">
-          <button 
-            className="save-draft-button" 
+          <button
+            className="save-draft-button"
             onClick={handleSaveAsDraft}
             disabled={saving}
           >
-            {saving ? 'Salvando...' : 'Salvar Rascunho'}
+            {saving ? t('editor.saving.saving') : t('editor.buttons.saveDraft')}
           </button>
           
           <button 
@@ -621,7 +621,7 @@ function PostEditor({ theme, toggleTheme }) {
             onClick={handlePublish}
             disabled={saving}
           >
-            {saving ? 'Processando...' : (postData.scheduledPublish ? 'Agendar' : 'Publicar')}
+            {saving ? t('editor.saving.saving') : (postData.scheduledPublish ? t('editor.buttons.schedule') : t('editor.buttons.publish'))}
           </button>
         </div>
       </div>
@@ -635,18 +635,18 @@ function PostEditor({ theme, toggleTheme }) {
       )}
       
       {loading ? (
-        <div className="loading">Carregando...</div>
+        <div className="loading">{t('common.loading')}</div>
       ) : (
         <>
           <div className="blog-selector">
-            <label>Blog:</label>
-            <select 
-              value={selectedBlog} 
+            <label>{t('editor.labels.blog')}</label>
+            <select
+              value={selectedBlog}
               onChange={(e) => setSelectedBlog(e.target.value)}
               disabled={!!postId} // Não permitir trocar o blog ao editar um post existente
             >
               {blogs.length === 0 ? (
-                <option value="">Carregando blogs...</option>
+                <option value="">{t('dashboard.loadingBlogs')}</option>
               ) : (
                 blogs.map(blog => (
                   <option key={blog.id} value={blog.id}>{blog.name}</option>
@@ -659,7 +659,7 @@ function PostEditor({ theme, toggleTheme }) {
             <div className="title-input">
               <input
                 type="text"
-                placeholder="Título do post"
+                placeholder={t('editor.placeholders.title')}
                 value={postData.title}
                 onChange={handleTitleChange}
               />
@@ -667,26 +667,26 @@ function PostEditor({ theme, toggleTheme }) {
             
             <div className="post-actions">
               <div className="labels-input">
-                <label>Tags (separadas por vírgula):</label>
+                <label>{t('editor.labels.tags')}</label>
                 <input
                   type="text"
                   value={postData.labels.join(', ')}
                   onChange={handleLabelsChange}
-                  placeholder="Exemplo: tecnologia, tutorial, dicas"
+                  placeholder={t('editor.placeholders.tags')}
                 />
               </div>
               
               <div className="template-select">
-                <label>Template:</label>
+                <label>{t('editor.labels.template')}</label>
                 <select onChange={handleTemplateSelect} value={selectedTemplate?.id || 0}>
-                  <option value={0}>Selecionar template...</option>
+                  <option value={0}>{t('editor.templates.select')}</option>
                   {templates.map(template => (
                     <option key={template.id} value={template.id}>
                       {template.name}
                     </option>
                   ))}
                 </select>
-                <button onClick={handleSaveTemplate}>Salvar como Template</button>
+                <button onClick={handleSaveTemplate}>{t('editor.buttons.saveTemplate')}</button>
               </div>
               
               <div className="schedule-input">
@@ -696,7 +696,7 @@ function PostEditor({ theme, toggleTheme }) {
                     checked={!!postData.scheduledPublish}
                     onChange={() => handleScheduleChange(postData.scheduledPublish ? null : new Date())}
                   />
-                  Agendar publicação
+                  {t('editor.labels.schedule')}
                 </label>
                 
                 {postData.scheduledPublish && (
@@ -705,10 +705,7 @@ function PostEditor({ theme, toggleTheme }) {
                     value={postData.scheduledPublish}
                     minDate={new Date()}
                     format="dd/MM/yyyy HH:mm"
-                    locale="pt-BR"
-                    formatShortWeekday={(locale, date) =>
-                      ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'][date.getDay()]
-                    }
+                    locale={i18n.getLocale()}
                   />
                 )}
               </div>
@@ -720,64 +717,64 @@ function PostEditor({ theme, toggleTheme }) {
                     checked={postData.isDraft}
                     onChange={handleDraftToggle}
                   />
-                  Salvar como rascunho
+                  {t('editor.labels.draft')}
                 </label>
               </div>
               
               <div className="metadata-toggle">
-                <button onClick={() => setShowMetadataEditor(!showMetadataEditor)}>
-                  {showMetadataEditor ? 'Esconder Metadados' : 'Editar Metadados'}
-                </button>
+                  <button onClick={() => setShowMetadataEditor(!showMetadataEditor)}>
+                    {showMetadataEditor ? t('editor.buttons.hideMetadata') : t('editor.buttons.showMetadata')}
+                  </button>
               </div>
               
               <div className="import-export">
-                <button onClick={handleExportWord}>Exportar como Word</button>
-                <label className="file-input-label">
-                  Importar Arquivo
-                  <input
-                    type="file"
-                    accept=".txt,.doc,.docx,.html"
-                    onChange={handleFileImport}
-                    style={{ display: 'none' }}
-                  />
-                </label>
+                  <button onClick={handleExportWord}>{t('editor.buttons.exportWord')}</button>
+                  <label className="file-input-label">
+                    {t('editor.buttons.importFile')}
+                    <input
+                      type="file"
+                      accept=".txt,.doc,.docx,.html"
+                      onChange={handleFileImport}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                </div>
               </div>
-            </div>
             
             {showMetadataEditor && (
-              <div className="metadata-editor">
-                <h3>Metadados</h3>
+                <div className="metadata-editor">
+                  <h3>{t('editor.metadata.title')}</h3>
+
+                  <div className="metadata-field">
+                    <label>{t('editor.metadata.description')}</label>
+                    <input
+                      type="text"
+                      value={metadata.description}
+                      onChange={(e) => handleMetadataChange(e, 'description')}
+                      placeholder={t('editor.metadata.descriptionPlaceholder')}
+                    />
+                  </div>
                 
                 <div className="metadata-field">
-                  <label>Descrição (SEO):</label>
-                  <input
-                    type="text"
-                    value={metadata.description}
-                    onChange={(e) => handleMetadataChange(e, 'description')}
-                    placeholder="Breve descrição do post para motores de busca"
-                  />
-                </div>
+                    <label>{t('editor.metadata.author')}</label>
+                    <input
+                      type="text"
+                      value={metadata.author}
+                      onChange={(e) => handleMetadataChange(e, 'author')}
+                      placeholder={t('editor.metadata.authorPlaceholder')}
+                    />
+                  </div>
                 
                 <div className="metadata-field">
-                  <label>Autor:</label>
-                  <input
-                    type="text"
-                    value={metadata.author}
-                    onChange={(e) => handleMetadataChange(e, 'author')}
-                    placeholder="Nome do autor"
-                  />
+                    <label>{t('editor.metadata.keywords')}</label>
+                    <input
+                      type="text"
+                      value={metadata.keywords}
+                      onChange={(e) => handleMetadataChange(e, 'keywords')}
+                      placeholder={t('editor.metadata.keywordsPlaceholder')}
+                    />
+                  </div>
                 </div>
-                
-                <div className="metadata-field">
-                  <label>Palavras-chave (SEO):</label>
-                  <input
-                    type="text"
-                    value={metadata.keywords}
-                    onChange={(e) => handleMetadataChange(e, 'keywords')}
-                    placeholder="Palavras-chave separadas por vírgula"
-                  />
-                </div>
-              </div>
             )}
           </div>
           
@@ -829,9 +826,9 @@ function PostEditor({ theme, toggleTheme }) {
                     'tableCellProperties', 'tableProperties'
                   ]
                 },
-                language: 'pt-br'
-              }}
-            />
+                  language: i18n.getLocale().split('-')[0]
+                }}
+              />
           </div>
         </>
       )}
@@ -839,10 +836,10 @@ function PostEditor({ theme, toggleTheme }) {
       {/* Indicador de salvamento */}
       {saving && (
         <div className="save-indicator show saving">
-          Salvando...
-        </div>
-      )}
-    </div>
+            {t('editor.saving.saving')}
+          </div>
+        )}
+      </div>
   );
 }
 

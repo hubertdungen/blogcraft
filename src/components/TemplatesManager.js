@@ -46,10 +46,10 @@ function TemplatesManager({ theme }) {
     } catch (error) {
       console.error('Erro ao carregar templates:', error);
       setTemplates([]);
-      setFeedback({
-        type: 'error',
-        message: 'Erro ao carregar templates. Os dados podem estar corrompidos.'
-      });
+        setFeedback({
+          type: 'error',
+          message: t('templates.notifications.loadError')
+        });
     }
   };
   
@@ -67,18 +67,18 @@ function TemplatesManager({ theme }) {
    * Inicia a criação de um novo template
    */
   const handleCreateTemplate = () => {
-    const newTemplate = {
-      id: Date.now(),
-      name: 'Novo Template',
-      description: '',
-      content: '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    setSelectedTemplate(newTemplate);
-    setTemplateName('Novo Template');
-    setTemplateDescription('');
+      const newTemplate = {
+        id: Date.now(),
+        name: t('templates.newTemplate'),
+        description: '',
+        content: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      setSelectedTemplate(newTemplate);
+      setTemplateName(t('templates.newTemplate'));
+      setTemplateDescription('');
     setIsEditing(true);
   };
   
@@ -89,7 +89,7 @@ function TemplatesManager({ theme }) {
     if (!templateName.trim()) {
       setFeedback({
         type: 'error',
-        message: 'Por favor, informe um nome para o template.'
+        message: t('templates.notifications.nameRequired')
       });
       return;
     }
@@ -97,7 +97,7 @@ function TemplatesManager({ theme }) {
     if (!editorRef.current || !editorRef.current.getData) {
       setFeedback({
         type: 'error',
-        message: 'Editor não inicializado. Por favor, tente novamente.'
+        message: t('templates.notifications.editorNotReady')
       });
       return;
     }
@@ -107,7 +107,7 @@ function TemplatesManager({ theme }) {
     if (!content.trim()) {
       setFeedback({
         type: 'error',
-        message: 'O conteúdo do template não pode estar vazio.'
+        message: t('templates.notifications.contentRequired')
       });
       return;
     }
@@ -141,7 +141,7 @@ function TemplatesManager({ theme }) {
     
     setFeedback({
       type: 'success',
-      message: 'Template salvo com sucesso!',
+      message: t('templates.notifications.saved'),
       duration: 3000
     });
   };
@@ -150,7 +150,7 @@ function TemplatesManager({ theme }) {
    * Exclui um template
    */
   const handleDeleteTemplate = (templateId) => {
-    if (!window.confirm('Tem certeza que deseja excluir este template? Esta ação não pode ser desfeita.')) {
+    if (!window.confirm(t('templates.actions.confirmDelete'))) {
       return;
     }
     
@@ -171,7 +171,7 @@ function TemplatesManager({ theme }) {
     
     setFeedback({
       type: 'success',
-      message: 'Template excluído com sucesso!',
+      message: t('templates.notifications.deleted'),
       duration: 3000
     });
   };
@@ -192,7 +192,7 @@ function TemplatesManager({ theme }) {
     if (templates.length === 0) {
       setFeedback({
         type: 'error',
-        message: 'Não há templates para exportar.'
+        message: t('templates.notifications.noTemplatesExport')
       });
       return;
     }
@@ -226,15 +226,15 @@ function TemplatesManager({ theme }) {
           if (validTemplates.length === 0) {
             setFeedback({
               type: 'error',
-              message: 'Nenhum template válido encontrado no arquivo.'
+              message: t('templates.importDialog.noValidTemplates')
             });
             return;
           }
           
           // Perguntar se deseja substituir ou mesclar
           const shouldReplace = window.confirm(
-            `Importar ${validTemplates.length} templates. Deseja substituir todos os templates existentes? ` +
-            `Escolha "OK" para substituir ou "Cancelar" para mesclar com os templates existentes.`
+            t('templates.importDialog.replaceOrMerge', { count: validTemplates.length }) + ' ' +
+            t('templates.importDialog.replaceConfirm')
           );
           
           let updatedTemplates;
@@ -258,9 +258,9 @@ function TemplatesManager({ theme }) {
             
             if (conflictingTemplates.length > 0) {
               const shouldOverwrite = window.confirm(
-                `${conflictingTemplates.length} templates têm IDs conflitantes. ` +
-                `Deseja sobrescrever os templates existentes com o mesmo ID? ` +
-                `Escolha "OK" para sobrescrever ou "Cancelar" para manter os templates existentes.`
+                t('templates.importDialog.conflictDetected', { count: conflictingTemplates.length }) + ' ' +
+                t('templates.importDialog.conflictAction') + ' ' +
+                t('templates.importDialog.conflictConfirm')
               );
               
               if (shouldOverwrite) {
@@ -292,7 +292,7 @@ function TemplatesManager({ theme }) {
           
           setFeedback({
             type: 'success',
-            message: `Importação concluída! ${validTemplates.length} templates importados.`,
+        message: t('templates.importDialog.importSuccess', { count: validTemplates.length }),
             duration: 3000
           });
         } else if (importedData.id && importedData.name && importedData.content) {
@@ -314,20 +314,20 @@ function TemplatesManager({ theme }) {
           
           setFeedback({
             type: 'success',
-            message: `Template "${newTemplate.name}" importado com sucesso!`,
+          message: t('templates.notifications.saved'),
             duration: 3000
           });
         } else {
-          setFeedback({
-            type: 'error',
-            message: 'O arquivo não contém templates válidos.'
-          });
+        setFeedback({
+          type: 'error',
+          message: t('templates.importDialog.noValidTemplates')
+        });
         }
       } catch (error) {
         console.error('Erro ao importar templates:', error);
         setFeedback({
           type: 'error',
-          message: 'Erro ao processar o arquivo. Verifique se é um arquivo JSON válido.'
+          message: t('templates.importDialog.importError', { message: t('templates.importDialog.invalidJson') })
         });
       }
     };
@@ -339,7 +339,7 @@ function TemplatesManager({ theme }) {
    * Cancela a edição do template atual
    */
   const handleCancelEdit = () => {
-    if (window.confirm('Há alterações não salvas. Deseja realmente cancelar?')) {
+    if (window.confirm(t('templates.actions.cancelConfirm'))) {
       setSelectedTemplate(null);
       setTemplateName('');
       setTemplateDescription('');
@@ -361,7 +361,7 @@ function TemplatesManager({ theme }) {
    * Formata a data para exibição
    */
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
+    return new Date(dateString).toLocaleDateString(i18n.getLocale(), {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -376,24 +376,24 @@ function TemplatesManager({ theme }) {
         <h1>{t('templates.title')}</h1>
         
         <div className="templates-actions">
-          <button 
-            className="create-template-button" 
+          <button
+            className="create-template-button"
             onClick={handleCreateTemplate}
             disabled={isEditing}
           >
-            Criar Novo Template
+            {t('templates.createNew')}
           </button>
           
-          <button 
-            className="export-all-button" 
+          <button
+            className="export-all-button"
             onClick={handleExportAllTemplates}
             disabled={templates.length === 0}
           >
-            Exportar Todos
+            {t('templates.exportAll')}
           </button>
           
           <label className="import-button">
-            Importar Templates
+            {t('templates.importTemplates')}
             <input
               type="file"
               accept=".json"
@@ -414,12 +414,12 @@ function TemplatesManager({ theme }) {
       
       <div className="templates-layout">
         <div className="templates-list">
-          <h2>Templates Disponíveis ({templates.length})</h2>
+          <h2>{t('templates.availableTemplates', { count: templates.length })}</h2>
           
           {templates.length === 0 ? (
             <div className="templates-empty">
-              <p>Nenhum template disponível.</p>
-              <p>Crie um novo template ou importe templates existentes.</p>
+              <p>{t('templates.noTemplates')}</p>
+              <p>{t('templates.createOrImport')}</p>
             </div>
           ) : (
             templates.map(template => (
@@ -441,25 +441,25 @@ function TemplatesManager({ theme }) {
                   <button
                     className="use-template-button"
                     onClick={() => handleUseTemplate(template)}
-                    title="Usar este template para criar um novo post"
+                    title={t('templates.actions.use')}
                   >
-                    Usar
+                    {t('templates.actions.use')}
                   </button>
                   
                   <button
                     className="export-template-button"
                     onClick={() => handleExportTemplate(template)}
-                    title="Exportar este template como arquivo JSON"
+                    title={t('templates.actions.export')}
                   >
-                    Exportar
+                    {t('templates.actions.export')}
                   </button>
                   
                   <button 
                     className="delete-template-button"
                     onClick={() => handleDeleteTemplate(template.id)}
-                    title="Excluir este template"
+                    title={t('templates.actions.delete')}
                   >
-                    Excluir
+                    {t('templates.actions.delete')}
                   </button>
                 </div>
               </div>
@@ -470,51 +470,51 @@ function TemplatesManager({ theme }) {
         {isEditing && selectedTemplate && (
           <div className="template-editor">
             <div className="template-editor-header">
-              <h2>{selectedTemplate.id ? 'Editar Template' : 'Novo Template'}</h2>
+              <h2>{selectedTemplate.id ? t('templates.editTemplate') : t('templates.newTemplate')}</h2>
               
               <div className="template-editor-actions">
                 <button 
-                  className="save-template-button" 
+                  className="save-template-button"
                   onClick={handleSaveTemplate}
                 >
-                  Salvar Template
+                  {t('templates.actions.save')}
                 </button>
                 
                 <button
                   className="cancel-edit-button"
                   onClick={handleCancelEdit}
                 >
-                  Cancelar
+                  {t('templates.actions.cancel')}
                 </button>
               </div>
             </div>
             
             <div className="template-form">
               <div className="template-form-field">
-                <label htmlFor="template-name">Nome do Template:</label>
+                <label htmlFor="template-name">{t('templates.templateName')}</label>
                 <input
                   id="template-name"
                   type="text"
                   value={templateName}
                   onChange={(e) => setTemplateName(e.target.value)}
-                  placeholder="Digite um nome para o template"
+                  placeholder={t('templates.placeholders.name')}
                   required
                 />
               </div>
               
               <div className="template-form-field">
-                <label htmlFor="template-description">Descrição (opcional):</label>
+                <label htmlFor="template-description">{t('templates.templateDescription')}</label>
                 <input
                   id="template-description"
                   type="text"
                   value={templateDescription}
                   onChange={(e) => setTemplateDescription(e.target.value)}
-                  placeholder="Uma breve descrição do template"
+                  placeholder={t('templates.placeholders.description')}
                 />
               </div>
               
               <div className="template-editor-content">
-                <label>Conteúdo do Template:</label>
+                <label>{t('templates.templateContent')}</label>
                 <CKEditor
                   editor={ClassicEditor}
                   data={selectedTemplate.content}
@@ -542,7 +542,7 @@ function TemplatesManager({ theme }) {
                       '|',
                       'undo', 'redo'
                     ],
-                    language: 'pt-br'
+                    language: i18n.getLocale().split('-')[0]
                   }}
                 />
               </div>
@@ -552,16 +552,15 @@ function TemplatesManager({ theme }) {
         
         {!isEditing && (
           <div className="template-preview">
-            <h2>Selecione um template para editar</h2>
-            <p>Ou clique em "Criar Novo Template" para começar um novo.</p>
+            <h2>{t('templates.selectToEdit')}</h2>
+            <p>{t('templates.orCreateNew')}</p>
             
             <div className="template-tips">
-              <h3>Dicas para Templates</h3>
+              <h3>{t('templates.tips.title')}</h3>
               <ul>
-                <li>Crie templates para tipos específicos de posts (revisões, tutoriais, notícias, etc.)</li>
-                <li>Inclua espaços reservados para o conteúdo que você normalmente adiciona</li>
-                <li>Use estilos consistentes para manter a identidade visual do seu blog</li>
-                <li>Exporte seus templates favoritos para compartilhar com outros usuários</li>
+                {t('templates.tips.items').map((tip, idx) => (
+                  <li key={idx}>{tip}</li>
+                ))}
               </ul>
             </div>
           </div>

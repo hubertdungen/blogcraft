@@ -131,9 +131,15 @@ const translations = {
         published: 'Artigo publicado com sucesso!',
         scheduled: 'Artigo agendado com sucesso!',
         error: 'Ocorreu um erro: {message}'
+      },
+      errors: {
+        selectBlog: 'Por favor, selecione um blogue antes de guardar o artigo.',
+        enterTitle: 'Por favor, insira um título para o artigo.',
+        loadBlogs: 'Não foi possível carregar os seus blogues. Por favor, verifique a sua conexão e tente novamente.',
+        loadPost: 'Não foi possível carregar o artigo. Por favor, verifique a sua conexão e tente novamente.'
       }
     },
-    
+
     templates: {
       title: 'Gestor de Modelos',
       createNew: 'Criar Novo Modelo',
@@ -144,16 +150,23 @@ const translations = {
       createOrImport: 'Crie um novo modelo ou importe modelos existentes.',
       selectToEdit: 'Selecione um modelo para editar',
       orCreateNew: 'Ou clique em "Criar Novo Modelo" para começar um novo.',
+      newTemplate: 'Novo Modelo',
+      editTemplate: 'Editar Modelo',
       templateName: 'Nome do Modelo:',
       templateDescription: 'Descrição (opcional):',
       templateContent: 'Conteúdo do Modelo:',
+      placeholders: {
+        name: 'Digite um nome para o modelo',
+        description: 'Uma breve descrição do modelo'
+      },
       actions: {
         save: 'Guardar Modelo',
         cancel: 'Cancelar',
         use: 'Usar',
         export: 'Exportar',
         delete: 'Eliminar',
-        confirmDelete: 'Tem a certeza que deseja eliminar este modelo? Esta ação não pode ser desfeita.'
+        confirmDelete: 'Tem a certeza que deseja eliminar este modelo? Esta ação não pode ser desfeita.',
+        cancelConfirm: 'Há alterações não guardadas. Deseja realmente cancelar?'
       },
       tips: {
         title: 'Dicas para Modelos',
@@ -164,6 +177,15 @@ const translations = {
           'Exporte os seus modelos favoritos para partilhar com outros utilizadores'
         ]
       },
+      notifications: {
+        saved: 'Modelo guardado com sucesso!',
+        deleted: 'Modelo eliminado com sucesso!',
+        nameRequired: 'Por favor, informe um nome para o modelo.',
+        contentRequired: 'O conteúdo do modelo não pode estar vazio.',
+        editorNotReady: 'Editor não inicializado. Por favor, tente novamente.',
+        noTemplatesExport: 'Não há modelos para exportar.',
+        loadError: 'Erro ao carregar modelos. Os dados podem estar corrompidos.'
+      },
       importDialog: {
         importSuccess: 'Importação concluída! {count} modelos importados.',
         importError: 'Erro ao importar modelos: {message}',
@@ -171,7 +193,9 @@ const translations = {
         replaceConfirm: 'OK para substituir ou Cancelar para mesclar com os modelos existentes.',
         conflictDetected: '{count} modelos têm IDs conflitantes.',
         conflictAction: 'Deseja sobrescrever os modelos existentes com o mesmo ID?',
-        conflictConfirm: 'OK para sobrescrever ou Cancelar para manter os modelos existentes.'
+        conflictConfirm: 'OK para sobrescrever ou Cancelar para manter os modelos existentes.',
+        noValidTemplates: 'Nenhum modelo válido encontrado no ficheiro.',
+        invalidJson: 'Ficheiro JSON inválido.'
       }
     },
     
