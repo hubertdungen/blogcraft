@@ -117,6 +117,7 @@ BlogCraft is a modern web application designed to replace discontinued tools lik
 - Ensure browser supports modern OAuth flows
 - If you receive 401/403 errors, remove the local token (`localStorage` key: `blogcraft_token`) and sign in again
 - The project uses `react-scripts` with `--openssl-legacy-provider` set in `npm` scripts for compatibility on Node 18
+- On Windows, if the dev server fails due to a locked `C:\\DumpStack.log.tmp` file or similar watch errors, start it with `CHOKIDAR_USEPOLLING=true npm start` or run the project from a directory outside the root `C:\` drive. For custom watchers, ignore `C:\\DumpStack.log.tmp`.
 
 ## 🧪 Build & Test
 

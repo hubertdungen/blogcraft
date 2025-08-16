@@ -9,4 +9,5 @@ if [ ! -d node_modules ]; then
 fi
 
 export NODE_OPTIONS=--openssl-legacy-provider
+export CHOKIDAR_USEPOLLING=true
 npx react-scripts start

@@ -7,4 +7,5 @@ IF NOT EXIST node_modules (
 )
 
 set NODE_OPTIONS=--openssl-legacy-provider
+set CHOKIDAR_USEPOLLING=true
 npx react-scripts start
