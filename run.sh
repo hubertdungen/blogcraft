@@ -8,5 +8,4 @@ if [ ! -d node_modules ]; then
   npm install
 fi
 
-export NODE_OPTIONS=--openssl-legacy-provider
-npx react-scripts start
+npm start

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import PostEditor from './components/PostEditor';
@@ -9,6 +9,7 @@ import Sidebar from './components/Sidebar';
 import AuthDebugger from './components/AuthDebugger'; // Import the new debugger component
 import AuthService from './services/AuthService';
 import LoginDebugger from './components/LoginDebugger';
+import { getStoredJson, getStoredValue, setStoredValue } from './utils/storage';
 
 // Import all necessary styles
 import './styles/app.css';
@@ -39,7 +40,7 @@ const AuthenticatedLayout = ({ children, theme, toggleTheme }) => {
   const [contentAlignment, setContentAlignment] = useState('center');
 
   useEffect(() => {
-    const savedSettings = JSON.parse(localStorage.getItem('blogcraft_settings') || '{}');
+    const savedSettings = getStoredJson('blogcraft_settings', {});
     setWideLayout(!!savedSettings.wideLayout);
     setContentAlignment(savedSettings.contentAlignment || 'center');
 
@@ -84,40 +85,25 @@ const AuthenticatedLayout = ({ children, theme, toggleTheme }) => {
 // Main App component
 function App() {
   const [theme, setTheme] = useState(() => {
-    const savedTheme = localStorage.getItem('theme');
+    const savedTheme = getStoredValue('theme');
     return savedTheme || 'dark'; // Default to dark theme
   });
 
   const [showDebugger, setShowDebugger] = useState(() => {
-    const savedSettings = JSON.parse(localStorage.getItem('blogcraft_settings') || '{}');
+    const savedSettings = getStoredJson('blogcraft_settings', {});
     return savedSettings.showDebugger || false;
   });
 
-  // Tracking authentication state
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  // Check authentication status on mount and when localStorage changes
+  // Keep debugger visibility synchronized with settings changes.
   useEffect(() => {
-    const checkAuth = () => {
-      const token = AuthService.getAuthToken();
-      const validated = token && !AuthService.isTokenExpired();
-      setIsAuthenticated(validated);
-    };
-
     const updateDebugger = () => {
-      const savedSettings = JSON.parse(localStorage.getItem('blogcraft_settings') || '{}');
+      const savedSettings = getStoredJson('blogcraft_settings', {});
       setShowDebugger(savedSettings.showDebugger || false);
     };
 
-    // Check immediately
-    checkAuth();
     updateDebugger();
 
-    // Setup localStorage event listener to detect changes
     const handleStorageChange = (e) => {
-      if (e.key === 'blogcraft_token') {
-        checkAuth();
-      }
       if (e.key === 'blogcraft_settings') {
         updateDebugger();
       }
@@ -147,11 +133,11 @@ function App() {
 
   useEffect(() => {
     document.body.className = theme;
-    localStorage.setItem('theme', theme);
+    setStoredValue('theme', theme);
   }, [theme]);
 
   return (
-    <BrowserRouter>
+    <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className={`app-container ${theme}`}>
 
           {/* Add the debugger here, before Routes */}
@@ -234,7 +220,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

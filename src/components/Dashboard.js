@@ -13,7 +13,7 @@ import i18n, { t } from '../services/I18nService';
  */
 function Dashboard() {
   const navigate = useNavigate();
-  const [_locale, setLocale] = useState(i18n.getLocale());
+  const [, setLocale] = useState(i18n.getLocale());
 
   useEffect(() => {
     const remove = i18n.addListener(setLocale);
@@ -122,6 +122,48 @@ function Dashboard() {
   }, [navigate]);
 
   /**
+   * Calculate statistics from posts data
+   */
+  const calculateStats = useCallback((published, drafts, scheduled) => {
+    const totalPosts = published.length;
+    const draftPosts = drafts.length;
+    const scheduledPosts = scheduled.length;
+    const now = new Date();
+    const last6Months = [];
+
+    for (let i = 5; i >= 0; i--) {
+      const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      last6Months.push({
+        label: `${month.toLocaleString(i18n.getLocale(), { month: 'short' })} ${month.getFullYear()}`,
+        count: 0,
+        month: month.getMonth(),
+        year: month.getFullYear()
+      });
+    }
+
+    for (const post of published) {
+      if (!post.published) continue;
+
+      const publishedDate = new Date(post.published);
+      const monthIndex = last6Months.findIndex(month =>
+        month.month === publishedDate.getMonth() &&
+        month.year === publishedDate.getFullYear()
+      );
+
+      if (monthIndex !== -1) {
+        last6Months[monthIndex].count++;
+      }
+    }
+
+    setStats({
+      totalPosts,
+      draftPosts,
+      scheduledPosts,
+      postsByMonth: last6Months
+    });
+  }, []);
+
+  /**
    * Fetch posts for the selected blog
    */
   const fetchBlogPosts = useCallback(async (blogId) => {
@@ -200,54 +242,7 @@ function Dashboard() {
     } finally {
       setLoadingStats(false);
     }
-  }, [navigate]);
-
-  /**
-   * Calculate statistics from posts data
-   */
-  const calculateStats = useCallback((published, drafts, scheduled) => {
-    // Count posts by status
-    const totalPosts = published.length;
-    const draftPosts = drafts.length;
-    const scheduledPosts = scheduled.length;
-    
-    // Group posts by month (last 6 months)
-    const now = new Date();
-    const last6Months = [];
-    
-    for (let i = 5; i >= 0; i--) {
-      const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      last6Months.push({
-        label: `${month.toLocaleString(i18n.getLocale(), { month: 'short' })} ${month.getFullYear()}`,
-        count: 0,
-        month: month.getMonth(),
-        year: month.getFullYear()
-      });
-    }
-    
-    // Count posts per month
-    for (const post of published) {
-      if (!post.published) continue;
-      
-      const publishedDate = new Date(post.published);
-      const monthIndex = last6Months.findIndex(m => 
-        m.month === publishedDate.getMonth() && 
-        m.year === publishedDate.getFullYear()
-      );
-      
-      if (monthIndex !== -1) {
-        last6Months[monthIndex].count++;
-      }
-    }
-    
-    // Update stats state
-    setStats({
-      totalPosts,
-      draftPosts,
-      scheduledPosts,
-      postsByMonth: last6Months
-    });
-  }, []);
+  }, [calculateStats, navigate]);
 
   /**
    * Navigate to create new post

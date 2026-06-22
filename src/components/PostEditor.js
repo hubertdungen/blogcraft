@@ -11,6 +11,7 @@ import BloggerService from '../services/BloggerService';
 import AuthService from '../services/AuthService';
 import Feedback from './Feedback';
 import i18n, { t } from '../services/I18nService';
+import { getStoredJson, setStoredValue } from '../utils/storage';
 
 /**
  * Componente do Editor de Posts
@@ -28,7 +29,7 @@ function PostEditor({ theme, toggleTheme }) {
   const location = useLocation();
   const { postId } = useParams();
   const editorRef = useRef(null);
-  const [_locale, setLocale] = useState(i18n.getLocale());
+  const [, setLocale] = useState(i18n.getLocale());
 
   useEffect(() => {
     const remove = i18n.addListener(setLocale);
@@ -62,12 +63,16 @@ function PostEditor({ theme, toggleTheme }) {
   
   // Estado para mensagens de feedback
   const [feedback, setFeedback] = useState(null);
-  const [autoSaveTimer, setAutoSaveTimer] = useState(null);
+  const autoSaveDataRef = useRef({ postData, metadata, selectedBlog, postId });
+
+  useEffect(() => {
+    autoSaveDataRef.current = { postData, metadata, selectedBlog, postId };
+  }, [metadata, postData, postId, selectedBlog]);
 
   // Efeito para carregar dados iniciais
   useEffect(() => {
     // Carregar templates salvos localmente
-    const savedTemplates = JSON.parse(localStorage.getItem('blogcraft_templates') || '[]');
+    const savedTemplates = getStoredJson('blogcraft_templates', []);
     setTemplates(savedTemplates);
     
     // Carregar lista de blogs do usuário
@@ -97,14 +102,12 @@ function PostEditor({ theme, toggleTheme }) {
     }
     
     // Configurar autosalvamento
-    const settings = JSON.parse(localStorage.getItem('blogcraft_settings') || '{}');
+    const settings = getStoredJson('blogcraft_settings', {});
     const autoSaveInterval = settings.autoSaveInterval || 5; // 5 minutos padrão
     
     const timer = setInterval(() => {
       handleAutoSave();
     }, autoSaveInterval * 60 * 1000);
-    
-    setAutoSaveTimer(timer);
     
     // Limpar timer ao desmontar componente
     return () => {
@@ -128,17 +131,24 @@ function PostEditor({ theme, toggleTheme }) {
    * Auto-salva o post atual como rascunho
    */
   const handleAutoSave = () => {
-    if (!postData.title || !selectedBlog) return;
+    const current = autoSaveDataRef.current;
+    if (!current.postData.title || !current.selectedBlog) return;
     
     // Salvar como rascunho local
-    const key = `blogcraft_draft_${selectedBlog}_${postId || 'new'}`;
+    const key = `blogcraft_draft_${current.selectedBlog}_${current.postId || 'new'}`;
     const draftData = {
-      ...postData,
-      metadata,
+      ...current.postData,
+      metadata: current.metadata,
       savedAt: new Date().toISOString()
     };
     
-    localStorage.setItem(key, JSON.stringify(draftData));
+    if (!setStoredValue(key, JSON.stringify(draftData))) {
+      setFeedback({
+        type: 'error',
+        message: t('editor.saving.autoSaveError')
+      });
+      return;
+    }
     
     setFeedback({
       type: 'info',

@@ -12,7 +12,7 @@ import i18n, { t } from '../services/I18nService';
 function Sidebar({ theme, toggleTheme }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [_locale, setLocale] = useState(i18n.getLocale());
+  const [, setLocale] = useState(i18n.getLocale());
 
   useEffect(() => {
     const remove = i18n.addListener(setLocale);

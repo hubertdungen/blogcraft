@@ -7,6 +7,7 @@
 // Importar arquivos de tradução
 import ptPT from '../locales/pt-PT';
 import enUS from '../locales/en-US';
+import { getStoredValue, setStoredValue } from '../utils/storage';
 
 // Constantes para os códigos de idioma
 export const LOCALES = {
@@ -29,7 +30,8 @@ const DEFAULT_LOCALE = LOCALES.EN_US;
 class I18nService {
   constructor() {
     // Obter o idioma salvo ou usar o padrão
-    this.currentLocale = localStorage.getItem('blogcraft_locale') || DEFAULT_LOCALE;
+    const savedLocale = getStoredValue('blogcraft_locale', DEFAULT_LOCALE);
+    this.currentLocale = translations[savedLocale] ? savedLocale : DEFAULT_LOCALE;
     
     // Registrar listeners para eventos de mudança de idioma
     this.listeners = [];
@@ -54,7 +56,7 @@ class I18nService {
     }
     
     this.currentLocale = locale;
-    localStorage.setItem('blogcraft_locale', locale);
+    setStoredValue('blogcraft_locale', locale);
     
     // Notificar listeners sobre a mudança de idioma
     this.notifyListeners();

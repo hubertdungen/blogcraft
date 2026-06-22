@@ -124,7 +124,8 @@ const translations = {
         saving: 'A guardar...',
         saved: 'Guardado com sucesso!',
         error: 'Erro ao guardar: {message}',
-        autoSave: 'Guardado automaticamente às {time}'
+        autoSave: 'Guardado automaticamente às {time}',
+        autoSaveError: 'Não foi possível guardar o rascunho localmente.'
       },
       notifications: {
         draftSaved: 'Rascunho guardado com sucesso!',

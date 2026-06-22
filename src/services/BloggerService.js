@@ -11,7 +11,7 @@ import AuthService from './AuthService';
 const API_BASE_URL = 'https://www.googleapis.com/blogger/v3';
 
 // Debug flag (enable for troubleshooting)
-const DEBUG = true;
+const DEBUG = process.env.NODE_ENV === 'development';
 
 // Cache configuration
 const CACHE_ENABLED = true;

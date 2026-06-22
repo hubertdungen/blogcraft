@@ -124,7 +124,8 @@ const translations = {
         saving: 'Saving...',
         saved: 'Saved successfully!',
         error: 'Error saving: {message}',
-        autoSave: 'Auto-saved at {time}'
+        autoSave: 'Auto-saved at {time}',
+        autoSaveError: 'The draft could not be saved locally.'
       },
       notifications: {
         draftSaved: 'Draft saved successfully!',

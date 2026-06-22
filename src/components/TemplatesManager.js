@@ -5,6 +5,7 @@ import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { saveAs } from 'file-saver';
 import Feedback from './Feedback';
 import i18n, { t } from '../services/I18nService';
+import { getStoredJson } from '../utils/storage';
 
 /**
  * Componente de Gerenciamento de Templates
@@ -24,7 +25,7 @@ function TemplatesManager({ theme }) {
   const [isEditing, setIsEditing] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const editorRef = useRef(null);
-  const [_locale, setLocale] = useState(i18n.getLocale());
+  const [, setLocale] = useState(i18n.getLocale());
 
   useEffect(() => {
     const remove = i18n.addListener(setLocale);
@@ -41,7 +42,7 @@ function TemplatesManager({ theme }) {
    */
   const loadTemplates = () => {
     try {
-      const savedTemplates = JSON.parse(localStorage.getItem('blogcraft_templates') || '[]');
+      const savedTemplates = getStoredJson('blogcraft_templates', []);
       setTemplates(savedTemplates);
     } catch (error) {
       console.error('Erro ao carregar templates:', error);

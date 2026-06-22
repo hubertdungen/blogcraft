@@ -4,6 +4,7 @@ import BloggerService from '../services/BloggerService';
 
 // Importar o serviço de internacionalização
 import i18n, { LOCALES, t } from '../services/I18nService';
+import { getStoredJson } from '../utils/storage';
 
 /**
  * Componente Settings - Configurações da aplicação
@@ -47,7 +48,7 @@ function Settings({ theme, toggleTheme }) {
    */
   const loadSettings = () => {
     try {
-      const savedSettings = JSON.parse(localStorage.getItem('blogcraft_settings') || '{}');
+      const savedSettings = getStoredJson('blogcraft_settings', {});
       
       setSettings({
         defaultBlogId: savedSettings.defaultBlogId || '',
@@ -91,7 +92,7 @@ function Settings({ theme, toggleTheme }) {
    */
   const loadTemplates = () => {
     try {
-      const savedTemplates = JSON.parse(localStorage.getItem('blogcraft_templates') || '[]');
+      const savedTemplates = getStoredJson('blogcraft_templates', []);
       setTemplates(savedTemplates);
     } catch (error) {
       console.error('Erro ao carregar templates:', error);

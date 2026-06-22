@@ -12,3 +12,20 @@ test('renders login page heading', () => {
   const heading = screen.getByText(/blogcraft/i);
   expect(heading).toBeInTheDocument();
 });
+
+test('renders even when saved settings contain invalid JSON', () => {
+  const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  localStorage.setItem('blogcraft_settings', '{invalid');
+
+  try {
+    render(
+      <GoogleOAuthProvider clientId="test">
+        <App />
+      </GoogleOAuthProvider>
+    );
+
+    expect(screen.getByText(/blogcraft/i)).toBeInTheDocument();
+  } finally {
+    warn.mockRestore();
+  }
+});

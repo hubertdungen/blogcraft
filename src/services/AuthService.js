@@ -9,7 +9,7 @@ const BLOGGER_API_SCOPE = 'https://www.googleapis.com/auth/blogger';
 const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
 
 // Debug flag (enable for troubleshooting)
-const DEBUG = true;
+const DEBUG = process.env.NODE_ENV === 'development';
 
 /**
  * Log helper for consistent debugging

@@ -12,7 +12,7 @@ function Login() {
   const location = useLocation();
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [_locale, setLocale] = useState(i18n.getLocale());
+  const [, setLocale] = useState(i18n.getLocale());
 
   // Check for existing token on mount
   useEffect(() => {
@@ -36,7 +36,6 @@ function Login() {
       
       try {
         // IMPORTANTE: Usar tokenResponse.access_token, não credential
-        console.log('Received token response', tokenResponse);
         const tokenSaved = AuthService.setAuthToken(tokenResponse.access_token);
         
         if (!tokenSaved) {

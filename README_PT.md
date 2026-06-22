@@ -116,9 +116,13 @@ Estado: Alpha/Preview — executável localmente. Fluxos principais (login com G
 ```bash
 npm run build
 npm test
+npm run serve
 ```
 
-O build de produção será criado em `build/`.
+O build de produção será criado em `build/`. Pode abrir `build/index.html`
+diretamente para verificar a interface, mas o login Google OAuth deve ser usado
+através de `http://localhost:3000`, porque o Google não aceita origens `file://`.
+Para testar o build completo localmente, execute `npm run serve`.
 
 ## 📚 Mais Ajuda
 - [Documentação da API do Blogger](https://developers.google.com/blogger/docs/3.0/getting_started)

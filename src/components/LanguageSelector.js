@@ -33,8 +33,8 @@ function LanguageSelector() {
         onChange={handleLanguageChange}
         aria-label={t('settings.fields.language')}
       >
-        <option value={LOCALES.EN_US} aria-label="English">🇺🇸</option>
-        <option value={LOCALES.PT_PT} aria-label="Português">🇵🇹</option>
+        <option value={LOCALES.EN_US}>English</option>
+        <option value={LOCALES.PT_PT}>Português</option>
       </select>
     </div>
   );
