@@ -14,7 +14,8 @@ const translations = {
       logout: 'Logout',
       loggingIn: 'Logging in...',
       confirmLogout: 'Are you sure you want to log out? Your local data will be preserved.',
-      loginError: 'Authentication failed: {message}'
+      loginError: 'Authentication failed: {message}',
+      chooseBloggerAccount: 'Choose the Google account that has access to your Blogger blogs.'
     },
     
     nav: {
@@ -34,6 +35,20 @@ const translations = {
       loadingBlogs: 'Loading blogs...',
       noBlogs: 'No blogs found. Make sure you have access to blogs on Blogger.',
       selectBlog: 'Select Blog:',
+      account: {
+        label: 'Google account',
+        activeTitle: 'Google account used by BlogCraft',
+        signedInAs: 'Signed in as'
+      },
+      emptyBlogs: {
+        title: 'No blogs found',
+        warning: 'No blogs were found. Try switching to the Google account you use with Blogger.',
+        warningForAccount: 'No blogs were found for {email}. Try switching to the Google account you use with Blogger.',
+        body: 'BlogCraft can only show blogs where this Google account has author or admin permission. If your blogs appear in Blogger under another account, sign out here and choose that account.',
+        switchAccount: 'Switch Google Account',
+        retry: 'Try Again',
+        openBlogger: 'Open Blogger'
+      },
       stats: {
         publishedPosts: 'Published Posts',
         drafts: 'Drafts',

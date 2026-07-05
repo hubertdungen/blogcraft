@@ -5,8 +5,11 @@
 
 // Constants
 const TOKEN_KEY = 'blogcraft_token';
+const ACCOUNT_KEY = 'blogcraft_account';
 const BLOGGER_API_SCOPE = 'https://www.googleapis.com/auth/blogger';
 const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
+const USER_INFO_ENDPOINT = 'https://openidconnect.googleapis.com/v1/userinfo';
+const TOKEN_INFO_ENDPOINT = 'https://www.googleapis.com/oauth2/v3/tokeninfo';
 
 // Debug flag (enable for troubleshooting)
 const DEBUG = process.env.NODE_ENV === 'development';
@@ -43,6 +46,34 @@ const getAuthToken = () => {
   }
 };
 
+const getStoredAccount = () => {
+  try {
+    const account = localStorage.getItem(ACCOUNT_KEY);
+    return account ? JSON.parse(account) : null;
+  } catch (error) {
+    log.error('Error reading stored account', error);
+    return null;
+  }
+};
+
+const setStoredAccount = (account) => {
+  if (!account) return;
+
+  try {
+    localStorage.setItem(ACCOUNT_KEY, JSON.stringify(account));
+  } catch (error) {
+    log.error('Failed to store account details', error);
+  }
+};
+
+const removeStoredAccount = () => {
+  try {
+    localStorage.removeItem(ACCOUNT_KEY);
+  } catch (error) {
+    log.error('Failed to remove stored account details', error);
+  }
+};
+
 /**
  * Stores the authentication token
  * @param {string} token - The token to store
@@ -56,6 +87,7 @@ const setAuthToken = (token) => {
   
   try {
     localStorage.setItem(TOKEN_KEY, token);
+    removeStoredAccount();
     log.info('Token successfully stored');
     
     // Verify token after storage
@@ -80,6 +112,7 @@ const setAuthToken = (token) => {
 const removeAuthToken = (source = 'unknown') => {
   try {
     const hasToken = !!localStorage.getItem(TOKEN_KEY);
+    removeStoredAccount();
     
     if (!hasToken) {
       log.info(`No token found to remove (source: ${source})`);
@@ -101,6 +134,67 @@ const removeAuthToken = (source = 'unknown') => {
     log.error(`Failed to remove token (source: ${source})`, error);
     return false;
   }
+};
+
+const clearAuthSession = (source = 'unknown') => {
+  const removed = removeAuthToken(source);
+  removeStoredAccount();
+  return removed;
+};
+
+const fetchJson = async (url, options = {}) => {
+  const response = await fetch(url, options);
+
+  if (!response.ok) {
+    const message = `Request failed with status ${response.status}`;
+    throw new Error(message);
+  }
+
+  return response.json();
+};
+
+const fetchCurrentAccount = async () => {
+  const token = getAuthToken();
+  if (!token) return null;
+
+  const account = {};
+
+  try {
+    const profile = await fetchJson(USER_INFO_ENDPOINT, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json'
+      }
+    });
+
+    Object.assign(account, {
+      id: profile.sub || null,
+      email: profile.email || null,
+      name: profile.name || null,
+      picture: profile.picture || null
+    });
+  } catch (error) {
+    log.warn('Unable to fetch Google user profile', error);
+  }
+
+  try {
+    const tokenInfo = await fetchJson(`${TOKEN_INFO_ENDPOINT}?access_token=${encodeURIComponent(token)}`);
+    Object.assign(account, {
+      id: account.id || tokenInfo.sub || null,
+      email: account.email || tokenInfo.email || null,
+      scope: tokenInfo.scope || null,
+      expiresIn: tokenInfo.expires_in || null
+    });
+  } catch (error) {
+    log.warn('Unable to fetch token info', error);
+  }
+
+  if (!account.email && !account.id && !account.scope) {
+    return getStoredAccount();
+  }
+
+  setStoredAccount(account);
+  return account;
 };
 
 /**
@@ -217,7 +311,7 @@ const getUserInfo = () => {
   if (!token) return null;
   
   const payload = decodeToken(token);
-  if (!payload) return null;
+  if (!payload) return getStoredAccount();
   
   // Extract common user fields from token
   return {
@@ -292,6 +386,11 @@ const AuthService = {
   getAuthToken,
   setAuthToken,
   removeAuthToken,
+  clearAuthSession,
+  getStoredAccount,
+  setStoredAccount,
+  removeStoredAccount,
+  fetchCurrentAccount,
   decodeToken,
   isTokenExpired,
   getUserInfo,

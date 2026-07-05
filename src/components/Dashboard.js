@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { googleLogout } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
 import BloggerService from '../services/BloggerService';
 import AuthService from '../services/AuthService';
@@ -26,6 +27,7 @@ function Dashboard() {
   const [blogs, setBlogs] = useState([]);
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [account, setAccount] = useState(() => AuthService.getStoredAccount());
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -72,9 +74,18 @@ function Dashboard() {
         });
         return;
       }
-      
+
+      const currentAccount = await AuthService.fetchCurrentAccount();
+      if (currentAccount) {
+        setAccount(currentAccount);
+      }
+
       // Fetch blogs from API
-      const data = await BloggerService.getUserBlogs();
+      const data = await BloggerService.getUserBlogs({
+        params: {
+          fetchUserInfo: true
+        }
+      });
       
       if (data.items && data.items.length > 0) {
         setBlogs(data.items);
@@ -89,7 +100,9 @@ function Dashboard() {
         setBlogs([]);
         setFeedback({
           type: 'warning',
-          message: 'Nenhum blog encontrado. Verifique se você tem acesso a blogs no Blogger.'
+          message: currentAccount?.email
+            ? t('dashboard.emptyBlogs.warningForAccount', { email: currentAccount.email })
+            : t('dashboard.emptyBlogs.warning')
         });
       }
     } catch (error) {
@@ -419,6 +432,15 @@ function Dashboard() {
     setRetryAttempts(prev => prev + 1);
   }, []);
 
+  const handleSwitchAccount = useCallback(() => {
+    googleLogout();
+    AuthService.clearAuthSession('Dashboard-switch-account');
+    navigate('/', {
+      replace: true,
+      state: { authError: t('auth.chooseBloggerAccount') }
+    });
+  }, [navigate]);
+
   /**
    * Format date for display
    */
@@ -493,22 +515,31 @@ function Dashboard() {
       <div className="dashboard-header">
         <h1>{t('nav.dashboard')}</h1>
         
-        {blogs.length > 0 && (
-          <div className="blog-selector">
-            <label>{t('dashboard.selectBlog')}</label>
-            <select 
-              value={selectedBlog?.id || ''} 
-              onChange={handleChangeBlog}
-              disabled={loading}
-            >
-              {blogs.map(blog => (
-                <option key={blog.id} value={blog.id}>
-                  {blog.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        <div className="dashboard-header-actions">
+          {account?.email && (
+            <div className="account-pill" title={t('dashboard.account.activeTitle')}>
+              <span>{t('dashboard.account.label')}</span>
+              <strong>{account.email}</strong>
+            </div>
+          )}
+
+          {blogs.length > 0 && (
+            <div className="blog-selector">
+              <label>{t('dashboard.selectBlog')}</label>
+              <select
+                value={selectedBlog?.id || ''}
+                onChange={handleChangeBlog}
+                disabled={loading}
+              >
+                {blogs.map(blog => (
+                  <option key={blog.id} value={blog.id}>
+                    {blog.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
       </div>
       
       {/* Feedback component for errors, warnings, etc. */}
@@ -721,14 +752,35 @@ function Dashboard() {
           
           {!selectedBlog && !loading && (
             <div className="no-blogs-container">
-              <h2>Nenhum blog encontrado</h2>
-              <p>Você precisa ter acesso a pelo menos um blog no Blogger para usar este aplicativo.</p>
-              <button 
-                className="retry-button"
-                onClick={handleRetry}
-              >
-                Tentar Novamente
-              </button>
+              <h2>{t('dashboard.emptyBlogs.title')}</h2>
+              {account?.email && (
+                <p className="signed-in-account">
+                  {t('dashboard.account.signedInAs')} <strong>{account.email}</strong>
+                </p>
+              )}
+              <p>{t('dashboard.emptyBlogs.body')}</p>
+              <div className="no-blogs-actions">
+                <button
+                  className="switch-account-button"
+                  onClick={handleSwitchAccount}
+                >
+                  {t('dashboard.emptyBlogs.switchAccount')}
+                </button>
+                <button
+                  className="retry-button"
+                  onClick={handleRetry}
+                >
+                  {t('dashboard.emptyBlogs.retry')}
+                </button>
+                <a
+                  className="open-blogger-link"
+                  href="https://www.blogger.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t('dashboard.emptyBlogs.openBlogger')}
+                </a>
+              </div>
             </div>
           )}
         </>

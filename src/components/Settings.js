@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { googleLogout } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
+import AuthService from '../services/AuthService';
 import BloggerService from '../services/BloggerService';
 
 // Importar o serviço de internacionalização
@@ -224,7 +226,8 @@ function Settings({ theme, toggleTheme }) {
    */
   const handleLogout = () => {
     if (window.confirm(t('auth.confirmLogout'))) {
-      localStorage.removeItem('blogcraft_token');
+      googleLogout();
+      AuthService.clearAuthSession('Settings-logout');
       navigate('/');
     }
   };

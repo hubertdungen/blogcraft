@@ -14,7 +14,8 @@ const translations = {
       logout: 'Terminar Sessão',
       loggingIn: 'A iniciar sessão...',
       confirmLogout: 'Tem a certeza que deseja terminar a sessão? Os seus dados locais serão mantidos.',
-      loginError: 'Falha na autenticação: {message}'
+      loginError: 'Falha na autenticação: {message}',
+      chooseBloggerAccount: 'Escolha a conta Google que tem acesso aos seus blogues do Blogger.'
     },
     
     nav: {
@@ -34,6 +35,20 @@ const translations = {
       loadingBlogs: 'A carregar blogues...',
       noBlogs: 'Nenhum blogue encontrado. Verifique se tem acesso a blogues no Blogger.',
       selectBlog: 'Selecionar Blogue:',
+      account: {
+        label: 'Conta Google',
+        activeTitle: 'Conta Google usada pelo BlogCraft',
+        signedInAs: 'Sessão iniciada como'
+      },
+      emptyBlogs: {
+        title: 'Nenhum blogue encontrado',
+        warning: 'Nenhum blogue encontrado. Experimente trocar para a conta Google que usa no Blogger.',
+        warningForAccount: 'Nenhum blogue encontrado para {email}. Experimente trocar para a conta Google que usa no Blogger.',
+        body: 'O BlogCraft só consegue mostrar blogues onde esta conta Google tem permissões de autor ou administrador. Se os seus blogues aparecem no Blogger com outra conta, termine sessão aqui e escolha essa conta.',
+        switchAccount: 'Trocar Conta Google',
+        retry: 'Tentar Novamente',
+        openBlogger: 'Abrir Blogger'
+      },
       stats: {
         publishedPosts: 'Artigos Publicados',
         drafts: 'Rascunhos',

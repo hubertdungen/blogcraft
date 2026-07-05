@@ -20,6 +20,46 @@
   .dark .dashboard-header {
     border-color: var(--border-dark);
   }
+
+  .dashboard-header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .account-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    max-width: 360px;
+  }
+
+  .light .account-pill {
+    border-color: var(--border-light);
+    background-color: rgba(74, 109, 167, 0.06);
+  }
+
+  .dark .account-pill {
+    border-color: var(--border-dark);
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .account-pill span {
+    opacity: 0.75;
+    white-space: nowrap;
+  }
+
+  .account-pill strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   
   .dashboard-content {
     width: 100%;
@@ -214,6 +254,71 @@
     font-size: 1.1rem;
     opacity: 0.7;
   }
+
+  .no-blogs-container {
+    max-width: 720px;
+  }
+
+  .no-blogs-container h2 {
+    margin-bottom: 8px;
+  }
+
+  .no-blogs-container p {
+    margin-bottom: 14px;
+  }
+
+  .signed-in-account {
+    opacity: 0.85;
+  }
+
+  .no-blogs-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .switch-account-button,
+  .retry-button {
+    min-height: 40px;
+    padding: 0 16px;
+    font-weight: 500;
+  }
+
+  .switch-account-button {
+    background-color: var(--primary-color);
+    color: white;
+  }
+
+  .switch-account-button:hover {
+    background-color: var(--primary-hover);
+  }
+
+  .retry-button {
+    border: 1px solid var(--border-light);
+    background-color: transparent;
+    color: inherit;
+  }
+
+  .dark .retry-button {
+    border-color: var(--border-dark);
+  }
+
+  .open-blogger-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--primary-color);
+    border-radius: 4px;
+    color: var(--primary-color);
+    font-weight: 500;
+  }
+
+  .open-blogger-link:hover {
+    background-color: rgba(74, 109, 167, 0.1);
+  }
   
   .posts-list {
     display: flex;
@@ -383,6 +488,15 @@
       flex-direction: column;
       align-items: flex-start;
       gap: 15px;
+    }
+
+    .dashboard-header-actions {
+      justify-content: flex-start;
+      width: 100%;
+    }
+
+    .account-pill {
+      max-width: 100%;
     }
     
     .blog-info {

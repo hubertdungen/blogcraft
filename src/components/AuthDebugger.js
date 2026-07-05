@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { googleLogout } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
 import AuthService from '../services/AuthService';
 import BloggerService from '../services/BloggerService';
@@ -21,16 +22,12 @@ function AuthDebugger() {
   const [isLoading, setIsLoading] = useState(false);
   const [feedback, setFeedback] = useState(null);
   
-  // Load token information on component mount
-  useEffect(() => {
-    analyzeCurrentToken();
-  }, []);
-  
   /**
    * Analyze the current authentication token
    */
-  const analyzeCurrentToken = () => {
+  const analyzeCurrentToken = useCallback(async () => {
     try {
+      setIsLoading(true);
       const currentToken = AuthService.getAuthToken();
       setToken(currentToken || '');
       
@@ -42,30 +39,20 @@ function AuthDebugger() {
         return;
       }
       
-      // Decode and analyze token
       const decoded = AuthService.decodeToken(currentToken);
-      
-      if (!decoded) {
-        setFeedback({
-          type: 'error',
-          message: 'Token could not be decoded. It may be malformed.'
-        });
-        return;
-      }
-      
-      // Check token expiration
+      const currentAccount = await AuthService.fetchCurrentAccount();
       const isExpired = AuthService.isTokenExpired();
-      
-      // Check for Blogger API scope
-      const hasValidScope = decoded.scope && (
-        decoded.scope.includes('blogger') || 
-        decoded.scope.includes('https://www.googleapis.com/auth/blogger')
-      );
+      const scope = currentAccount?.scope || decoded?.scope || '';
+      const hasValidScope = scope
+        ? scope.includes('blogger') || scope.includes(AuthService.BLOGGER_API_SCOPE)
+        : null;
       
       setTokenDetails({
-        ...decoded,
+        ...(decoded || {}),
+        ...(currentAccount || {}),
         isExpired,
         hasValidScope,
+        tokenFormat: decoded ? 'JWT' : 'Opaque Google access token',
         tokenFirstChars: currentToken.substring(0, 15) + '...',
         tokenLength: currentToken.length
       });
@@ -76,15 +63,20 @@ function AuthDebugger() {
           type: 'error',
           message: 'Authentication token has expired. Please log in again.'
         });
-      } else if (!hasValidScope) {
+      } else if (hasValidScope === false) {
         setFeedback({
           type: 'error',
           message: 'Token lacks required Blogger API permissions. Check OAuth configuration.'
         });
-      } else {
+      } else if (currentAccount?.email) {
         setFeedback({
           type: 'info',
-          message: 'Token appears valid. Use "Test API Connection" to verify.'
+          message: `Signed in as ${currentAccount.email}. Use "Test API Connection" to verify Blogger access.`
+        });
+      } else {
+        setFeedback({
+          type: 'warning',
+          message: 'Token is present, but BlogCraft could not read the account profile. Use "Test API Connection" to verify Blogger access.'
         });
       }
     } catch (error) {
@@ -93,8 +85,15 @@ function AuthDebugger() {
         type: 'error',
         message: `Error analyzing token: ${error.message}`
       });
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, []);
+
+  // Load token information on component mount
+  useEffect(() => {
+    analyzeCurrentToken();
+  }, [analyzeCurrentToken]);
   
   /**
    * Test connection to Blogger API
@@ -148,7 +147,8 @@ function AuthDebugger() {
    */
   const handleClearToken = () => {
     if (window.confirm('Are you sure you want to clear the authentication token? You will need to log in again.')) {
-      AuthService.removeAuthToken('AuthDebugger-manual');
+      googleLogout();
+      AuthService.clearAuthSession('AuthDebugger-manual');
       navigate('/', { replace: true });
     }
   };
@@ -228,7 +228,7 @@ function AuthDebugger() {
               <div className="info-row">
                 <span className="info-label">Token Format:</span>
                 <span className="info-value">
-                  {tokenDetails?.tokenFirstChars || 'Invalid'}
+                  {tokenDetails?.tokenFormat || 'Unknown'} - {tokenDetails?.tokenFirstChars || 'Unavailable'}
                   <span className="token-length">
                     (Length: {tokenDetails?.tokenLength || 0} characters)
                   </span>
@@ -244,8 +244,8 @@ function AuthDebugger() {
               
               <div className="info-row">
                 <span className="info-label">Has Blogger Scope:</span>
-                <span className={`info-value ${tokenDetails?.hasValidScope ? 'success' : 'error'}`}>
-                  {tokenDetails?.hasValidScope ? 'Yes' : 'No'}
+                <span className={`info-value ${tokenDetails?.hasValidScope === false ? 'error' : 'success'}`}>
+                  {tokenDetails?.hasValidScope === null ? 'Unknown' : tokenDetails?.hasValidScope ? 'Yes' : 'No'}
                 </span>
               </div>
               
@@ -267,6 +267,13 @@ function AuthDebugger() {
                 <div className="info-row">
                   <span className="info-label">Account Email:</span>
                   <span className="info-value">{tokenDetails.email}</span>
+                </div>
+              )}
+
+              {tokenDetails?.scope && (
+                <div className="info-row">
+                  <span className="info-label">Scopes:</span>
+                  <span className="info-value">{tokenDetails.scope}</span>
                 </div>
               )}
             </div>
@@ -364,11 +371,10 @@ function AuthDebugger() {
             <div className="oauth-checks">
               <h3>Common Issues Checklist:</h3>
               <ul>
-                <li>☐ Client ID is correctly configured in Google Cloud Console</li>
-                <li>☐ Blogger API is enabled in your Google Cloud project</li>
-                <li>☐ Authorization URIs include http://localhost:3000 (for development)</li>
-                <li>☐ Proper scopes are configured in OAuth consent screen</li>
-                <li>☐ Your Google account has access to at least one Blogger blog</li>
+                <li>Check that BlogCraft is signed into the same Google account shown in Blogger</li>
+                <li>Check that the account has author or admin access to at least one Blogger blog</li>
+                <li>For custom OAuth clients, verify the Blogger API and localhost origins in Google Cloud Console</li>
+                <li>If access was denied before, log out and choose the account again</li>
               </ul>
             </div>
           </div>

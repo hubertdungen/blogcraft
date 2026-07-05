@@ -41,6 +41,8 @@ function Login() {
         if (!tokenSaved) {
           throw new Error('Failed to save authentication token');
         }
+
+        await AuthService.fetchCurrentAccount();
         
         // Redirect to dashboard
         setTimeout(() => {
@@ -57,7 +59,9 @@ function Login() {
       setError(t('auth.loginError', { message: err.error || 'Please check your connection and try again.' }));
       setIsLoading(false);
     },
-    scope: 'https://www.googleapis.com/auth/blogger',  // IMPORTANTE: Definir o scope
+    scope: AuthService.BLOGGER_API_SCOPE,
+    prompt: 'select_account',
+    include_granted_scopes: false,
   });
 
   return (
@@ -83,7 +87,7 @@ function Login() {
             <div className="auth-loading">{t('auth.loggingIn')}</div>
           ) : (
             <button
-              onClick={() => login()}
+              onClick={() => login({ prompt: 'select_account' })}
               className="google-login-button"
               style={{
                 padding: '10px 20px',

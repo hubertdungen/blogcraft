@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { googleLogout } from '@react-oauth/google';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../logo.svg';
+import AuthService from '../services/AuthService';
 import i18n, { t } from '../services/I18nService';
 
 /**
@@ -31,7 +33,8 @@ function Sidebar({ theme, toggleTheme }) {
    */
   const handleLogout = () => {
     if (window.confirm(t('auth.confirmLogout'))) {
-      localStorage.removeItem('blogcraft_token');
+      googleLogout();
+      AuthService.clearAuthSession('Sidebar-logout');
       navigate('/');
     }
   };

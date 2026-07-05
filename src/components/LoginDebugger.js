@@ -40,8 +40,17 @@ function LoginDebugger() {
         // Verificar escopo
         addLog(`Token tem escopo Blogger? ${decoded.scope && decoded.scope.includes('blogger') ? 'Sim' : 'Não'}`);
       } else {
-        addLog('Falha ao decodificar token');
+        addLog('Token de acesso opaco; a conta sera verificada pelo Google');
       }
+
+      AuthService.fetchCurrentAccount().then((account) => {
+        if (account?.email) {
+          addLog(`Conta Google: ${account.email}`);
+        }
+        if (account?.scope) {
+          addLog(`Token tem escopo Blogger? ${account.scope.includes('blogger') ? 'Sim' : 'Nao'}`);
+        }
+      });
     }
     
     // Monitorar redirecionamentos

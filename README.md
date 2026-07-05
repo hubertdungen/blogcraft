@@ -13,12 +13,27 @@ BlogCraft is a modern web application designed to replace discontinued tools lik
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### Downloaded portable release
+
+For normal Windows users, the easiest path is the no-install executable:
+
+1. Download the portable Windows `.exe` from the release.
+2. Run it.
+3. Open `http://localhost:3000` if the browser does not open automatically.
+4. Sign in with the Google account that owns or can edit your Blogger blogs.
+
+Normal users do not need to create a Google Cloud project, enable APIs, or edit
+`.env` files. They only need to approve Blogger access during Google sign-in.
+Google Authenticator is not a BlogCraft requirement; Google may still ask for
+the user's normal two-factor authentication if their account has it enabled.
+
+### Source/developer prerequisites
+
 - Node.js 18.x or higher (recommended)
 - npm (v9+) or Yarn (v1.22+)
 - Google Account with Blogger access
 
-### Installation
+### Run from source
 
 1. Clone the repository
    ```bash
@@ -33,22 +48,13 @@ BlogCraft is a modern web application designed to replace discontinued tools lik
    yarn install
    ```
 
-3. Configure environment variables
-   - Copy `.env.example` to `.env`
-   - Add your Google OAuth Client ID to `REACT_APP_GOOGLE_CLIENT_ID`
-   - Optionally add `REACT_APP_TINYMCE_API_KEY`
+3. Optional local configuration
+   - Copy `.env.example` to `.env` only if you want to override defaults.
+   - `REACT_APP_GOOGLE_CLIENT_ID` is optional for normal local use because
+     BlogCraft includes a default OAuth client ID.
+   - `REACT_APP_TINYMCE_API_KEY` is also optional.
 
-4. Set up Google OAuth
-   - Go to [Google Cloud Console](https://console.cloud.google.com/)
-   - Create a new project or select an existing one
-   - Enable the Blogger API
-   - Create OAuth 2.0 credentials:
-     * Application type: Web application
-     * Authorized JavaScript origins: `http://localhost:3000`
-     * Authorized redirect URIs: `http://localhost:3000`
-   - Copy the Client ID to your `.env` file
-
-5. Run the application
+4. Run the application
    ```bash
    # On macOS/Linux
    ./run.sh
@@ -60,7 +66,7 @@ BlogCraft is a modern web application designed to replace discontinued tools lik
    npm start
    ```
 
-6. Access the application at `http://localhost:3000`
+5. Access the application at `http://localhost:3000`
 
 ## ✨ What's new
 
@@ -75,7 +81,21 @@ BlogCraft is a modern web application designed to replace discontinued tools lik
 
 ## 🔑 Authentication Guide
 
-### Google OAuth Setup
+### Normal user login
+
+BlogCraft uses Google OAuth to ask for Blogger permission. During login, choose
+the same Google account shown in Blogger. If BlogCraft says "No blogs found",
+use **Switch Google Account** and choose the account that owns or has author/admin
+permission on the blogs.
+
+The Blogger API returns only blogs where the signed-in account has authorship or
+admin rights. If a blog appears in Blogger under a different Google account, it
+will not appear in BlogCraft until that account is selected.
+
+### Custom OAuth client setup
+
+Most users should not need this section. Use it only when maintaining a public
+release, running a fork, or replacing the bundled OAuth client ID.
 
 1. **Create Google Cloud Project**
    - Visit [Google Cloud Console](https://console.cloud.google.com/)
@@ -101,16 +121,20 @@ BlogCraft is a modern web application designed to replace discontinued tools lik
       * `profile`
 
 5. **Security Considerations**
-   - Keep your Client ID and credentials confidential
-   - Never commit sensitive information to version control
-   - Use environment variables for sensitive data
+   - OAuth Client IDs are public identifiers, but client secrets must never be
+     used in the browser app or committed to version control
+   - Keep the OAuth consent screen published/configured for the intended users
+   - If the OAuth app is left in testing mode, only configured test users can
+     sign in
 
 ### Troubleshooting
-- Ensure your Google account has Blogger access
+- Check the Google account shown at the top of the BlogCraft dashboard
+- Use **Switch Google Account** if Blogger shows the blogs under another account
+- Ensure your Google account has author/admin Blogger access
 - Verify Client ID and scopes match your application
 - Check network connectivity
 - Ensure browser supports modern OAuth flows
-- If you receive 401/403 errors, remove the local token (`localStorage` key: `blogcraft_token`) and sign in again
+- If you receive 401/403 errors, log out and sign in again
 - The project uses `react-scripts` with `--openssl-legacy-provider` set in `npm` scripts for compatibility on Node 18
 
 ## 🧪 Build & Test

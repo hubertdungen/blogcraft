@@ -17,6 +17,8 @@ const DEBUG = process.env.NODE_ENV === 'development';
 const CACHE_ENABLED = true;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const cache = new Map();
+const tokenCacheIds = new Map();
+let tokenCacheCounter = 0;
 
 // Log helper
 const log = {
@@ -34,8 +36,19 @@ const log = {
 /**
  * Generates a cache key from request parameters
  */
-const generateCacheKey = (endpoint, params) => {
-  return `${endpoint}:${JSON.stringify(params || {})}`;
+const getTokenCacheId = (token) => {
+  if (!token) return 'anonymous';
+
+  if (!tokenCacheIds.has(token)) {
+    tokenCacheCounter += 1;
+    tokenCacheIds.set(token, `token-${tokenCacheCounter}`);
+  }
+
+  return tokenCacheIds.get(token);
+};
+
+const generateCacheKey = (endpoint, params, token) => {
+  return `${getTokenCacheId(token)}:${endpoint}:${JSON.stringify(params || {})}`;
 };
 
 /**
@@ -91,7 +104,7 @@ const request = async (endpoint, options = {}) => {
   
   // Check cache for GET requests
   if (options.method === 'GET' || !options.method) {
-    const cacheKey = generateCacheKey(endpoint, options.params);
+    const cacheKey = generateCacheKey(endpoint, options.params, token);
     const cachedResponse = getCachedResponse(cacheKey);
     
     if (cachedResponse) {
@@ -214,7 +227,7 @@ const request = async (endpoint, options = {}) => {
       
       // Cache GET responses
       if (fetchOptions.method === 'GET' || !fetchOptions.method) {
-        const cacheKey = generateCacheKey(endpoint, options.params);
+        const cacheKey = generateCacheKey(endpoint, options.params, token);
         cacheResponse(cacheKey, data);
       }
       

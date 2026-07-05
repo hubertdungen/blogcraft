@@ -16,7 +16,8 @@ import './styles/debug.css';
 const container = document.getElementById('root');
 const root = createRoot(container);
 
-// Get Client ID from .env
+// Keep a bundled OAuth client for portable/noob-friendly local use.
+// Forks and maintainers can override it with REACT_APP_GOOGLE_CLIENT_ID.
 const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || 
                  "404858006833-oc18gv2u640a1s0nst9ndkbvcj4qn1j0.apps.googleusercontent.com";
 
