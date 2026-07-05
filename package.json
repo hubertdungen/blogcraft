@@ -6,8 +6,15 @@
   "homepage": ".",
   "scripts": {
     "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider react-app-rewired start",
+    "dev": "npm start",
     "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider react-app-rewired build",
     "serve": "node server.js",
+    "release": "node build-release.js --target win",
+    "release:win": "node build-release.js --target win",
+    "release:current": "node build-release.js --target current",
+    "release:linux": "node build-release.js --target linux",
+    "release:macos": "node build-release.js --target macos",
+    "release:all": "node build-release.js --target all",
     "test": "cross-env NODE_OPTIONS=--openssl-legacy-provider react-app-rewired test",
     "eject": "cross-env NODE_OPTIONS=--openssl-legacy-provider react-scripts eject",
     "scheduler": "node scheduler.js"
@@ -37,14 +44,6 @@
     "pkg": "^5.8.1",
     "postcss-import": "^16.1.1",
     "react-app-rewired": "^2.2.1"
-  },
-  "pkg": {
-    "assets": [
-      "build/**/*"
-    ],
-    "scripts": [
-      "server.js"
-    ]
   },
   "browserslist": {
     "production": [

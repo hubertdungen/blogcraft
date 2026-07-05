@@ -15,7 +15,7 @@ Estado: Alpha/Preview — executável localmente. Fluxos principais (login com G
 
 1. Clonar o repositório
    ```bash
-   git clone https://github.com/seu-utilizador/blogcraft.git
+   git clone https://github.com/hubertdungen/blogcraft.git
    cd blogcraft
    ```
 
@@ -27,14 +27,9 @@ Estado: Alpha/Preview — executável localmente. Fluxos principais (login com G
    ```
 
 3. Configurar variáveis de ambiente
-   - Criar um ficheiro `.env` na raiz do projeto com o seguinte:
-   ```
-   # ID de Cliente OAuth do Google (da Google Cloud Console)
-   REACT_APP_GOOGLE_CLIENT_ID=seu-id-cliente.apps.googleusercontent.com
-
-   # Chave API do TinyMCE (opcional mas recomendado)
-   REACT_APP_TINYMCE_API_KEY=sua-chave-tinymce
-   ```
+   - Copiar `.env.example` para `.env`
+   - Adicionar o ID de Cliente OAuth do Google em `REACT_APP_GOOGLE_CLIENT_ID`
+   - Opcionalmente adicionar `REACT_APP_TINYMCE_API_KEY`
 
 4. Configurar OAuth do Google
    - Aceder à [Google Cloud Console](https://console.cloud.google.com/)
@@ -115,7 +110,7 @@ Estado: Alpha/Preview — executável localmente. Fluxos principais (login com G
 
 ```bash
 npm run build
-npm test
+npm test -- --watchAll=false
 npm run serve
 ```
 
@@ -123,6 +118,45 @@ O build de produção será criado em `build/`. Pode abrir `build/index.html`
 diretamente para verificar a interface, mas o login Google OAuth deve ser usado
 através de `http://localhost:3000`, porque o Google não aceita origens `file://`.
 Para testar o build completo localmente, execute `npm run serve`.
+
+## 📦 Releases Portáteis
+
+No Windows, pode criar um executável portátil sem instalação:
+
+```bat
+build-release.bat
+```
+
+ou:
+
+```bash
+npm run release
+```
+
+O ficheiro Windows fica em `dist/blogcraft-x.y.z-windows-x64.exe`.
+
+No macOS e Linux, pode criar um binário portátil para o sistema atual:
+
+```bash
+./build-release.sh
+# ou
+npm run release:current
+```
+
+Outros alvos disponíveis:
+
+```bash
+npm run release:win
+npm run release:linux
+npm run release:macos
+npm run release:all
+```
+
+O binário de release inicia o servidor local do BlogCraft. Execute-o e abra
+`http://localhost:3000` no navegador. O primeiro build de release pode
+descarregar binários de runtime Node usados pelo `pkg`. Os binários macOS não
+são assinados, por isso utilizadores Apple podem ter de autorizar a aplicação
+nas definições de segurança do macOS ou executá-la pelo Terminal.
 
 ## 📚 Mais Ajuda
 - [Documentação da API do Blogger](https://developers.google.com/blogger/docs/3.0/getting_started)

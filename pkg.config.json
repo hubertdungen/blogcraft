@@ -1,0 +1,10 @@
+{
+  "pkg": {
+    "assets": [
+      "build/**/*"
+    ],
+    "scripts": [
+      "server.js"
+    ]
+  }
+}

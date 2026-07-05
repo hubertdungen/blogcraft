@@ -22,7 +22,7 @@ BlogCraft is a modern web application designed to replace discontinued tools lik
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/your-username/blogcraft.git
+   git clone https://github.com/hubertdungen/blogcraft.git
    cd blogcraft
    ```
 
@@ -34,14 +34,9 @@ BlogCraft is a modern web application designed to replace discontinued tools lik
    ```
 
 3. Configure environment variables
-   - Create a `.env` file in the project root with the following:
-   ```
-   # Google OAuth Client ID (from Google Cloud Console)
-   REACT_APP_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-
-   # TinyMCE API Key (optional but recommended)
-   REACT_APP_TINYMCE_API_KEY=your-tinymce-api-key
-   ```
+   - Copy `.env.example` to `.env`
+   - Add your Google OAuth Client ID to `REACT_APP_GOOGLE_CLIENT_ID`
+   - Optionally add `REACT_APP_TINYMCE_API_KEY`
 
 4. Set up Google OAuth
    - Go to [Google Cloud Console](https://console.cloud.google.com/)
@@ -122,20 +117,53 @@ BlogCraft is a modern web application designed to replace discontinued tools lik
 
 ```bash
 npm run build
-npm test
+npm test -- --watchAll=false
+npm run serve
 ```
 
-The production build will be created in `build/`.
+The production build will be created in `build/`. You can open
+`build/index.html` directly to inspect the UI, but Google OAuth must run from
+`http://localhost:3000` because Google does not accept `file://` as a web
+origin.
 
-## 📦 Build Windows Executable
+## 📦 Portable Releases
 
-To package BlogCraft as a standalone Windows executable run:
+Windows users can build a no-install portable executable:
 
+```bat
+build-release.bat
 ```
-node build-release.js
+
+or:
+
+```bash
+npm run release
 ```
 
-The resulting `blogcraft-x.y.z.exe` will be placed in the `dist/` directory (version taken from `package.json`). On Windows you can use the helper batch file `build-release.bat`.
+The Windows file is created at `dist/blogcraft-x.y.z-windows-x64.exe`.
+
+macOS and Linux users can build a portable binary for their current OS:
+
+```bash
+./build-release.sh
+# or
+npm run release:current
+```
+
+Other release targets:
+
+```bash
+npm run release:win
+npm run release:linux
+npm run release:macos
+npm run release:all
+```
+
+The release binary starts BlogCraft's local server. Run it, then open
+`http://localhost:3000` in a browser. The first release build may download
+Node runtime binaries used by `pkg`. macOS binaries are unsigned, so Apple
+users may need to allow the app in macOS security settings or run it from
+Terminal.
 
 ## 🕒 Background Scheduler Service
 

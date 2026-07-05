@@ -1,3 +1,3 @@
 @echo off
-REM Build BlogCraft into standalone Windows executable
-node build-release.js
+REM Build BlogCraft into a standalone portable Windows executable.
+node build-release.js --target win
