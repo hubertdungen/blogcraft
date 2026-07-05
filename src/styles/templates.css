@@ -3,9 +3,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
-    padding-bottom: 15px;
+    margin-bottom: 26px;
+    padding-bottom: 18px;
     border-bottom: 1px solid;
+  }
+
+  .templates-header h1 {
+    font-size: 2rem;
+    line-height: 1.1;
   }
   
   .light .templates-header {
@@ -19,15 +24,17 @@
   .templates-actions {
     display: flex;
     gap: 10px;
+    align-items: center;
   }
   
   .create-template-button,
   .export-all-button,
   .import-button {
     padding: 10px 15px;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     font-weight: 500;
+    min-height: 40px;
   }
   
   .create-template-button {
@@ -53,7 +60,7 @@
   .templates-layout {
     display: grid;
     grid-template-columns: minmax(300px, 1fr) 2fr;
-    gap: 30px;
+    gap: 28px;
   }
   
   .templates-list {
@@ -69,13 +76,15 @@
   
   .templates-empty {
     padding: 20px;
-    text-align: center;
+    text-align: left;
     background-color: rgba(0, 0, 0, 0.05);
     border-radius: 8px;
+    border: 1px dashed var(--border-light);
   }
   
   .dark .templates-empty {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--surface-dark);
+    border-color: var(--border-dark);
   }
   
   .template-item {
@@ -97,7 +106,7 @@
   }
   
   .template-item:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.12);
     transform: translateY(-2px);
   }
   
@@ -118,7 +127,7 @@
   
   .template-description {
     margin-bottom: 10px;
-    color: #666;
+    color: var(--muted-dark);
   }
   
   .dark .template-description {
@@ -181,6 +190,7 @@
     padding: 20px;
     border-radius: 8px;
     border: 1px solid;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
   }
   
   .light .template-editor {
@@ -189,7 +199,7 @@
   }
   
   .dark .template-editor {
-    background-color: #2a2a2a;
+    background-color: var(--card-dark);
     border-color: var(--border-dark);
   }
   
@@ -225,12 +235,18 @@
   }
   
   .cancel-edit-button {
-    background-color: #6c757d;
+    background-color: transparent;
+    border: 1px solid var(--border-dark);
     color: white;
+  }
+
+  .light .cancel-edit-button {
+    border-color: var(--border-light);
+    color: var(--text-dark);
   }
   
   .cancel-edit-button:hover {
-    background-color: #5a6268;
+    background-color: rgba(37, 99, 235, 0.1);
   }
   
   .template-form {
@@ -278,7 +294,7 @@
   }
   
   .dark .template-preview {
-    background-color: #2a2a2a;
+    background-color: var(--surface-dark);
     border-color: var(--border-dark);
   }
   
@@ -297,14 +313,17 @@
     margin-top: 30px;
     padding: 20px;
     border-radius: 8px;
+    border: 1px solid;
   }
   
   .light .template-tips {
     background-color: rgba(74, 109, 167, 0.1);
+    border-color: var(--border-light);
   }
   
   .dark .template-tips {
-    background-color: rgba(74, 109, 167, 0.2);
+    background-color: var(--card-dark);
+    border-color: var(--border-dark);
   }
   
   .template-tips h3 {

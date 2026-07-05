@@ -39,19 +39,26 @@
 
 /* Estilos gerais */
 :root {
-  --primary-color: #4a6da7;
-  --primary-hover: #3a5d97;
-  --secondary-color: #61b15a;
-  --secondary-hover: #51a14a;
-  --text-dark: #333;
-  --text-light: #f8f9fa;
-  --bg-light: #f8f9fa;
-  --bg-dark: #222;
-  --card-light: #fff;
-  --card-dark: #333;
-  --border-light: #ddd;
-  --border-dark: #444;
-  --sidebar-width: 250px;
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+  --secondary-color: #0f9f6e;
+  --secondary-hover: #0b7f59;
+  --accent-color: #f59e0b;
+  --danger-color: #dc2626;
+  --danger-hover: #b91c1c;
+  --text-dark: #172033;
+  --text-light: #f8fafc;
+  --muted-dark: #64748b;
+  --muted-light: #a8b3c7;
+  --bg-light: #f4f7fb;
+  --bg-dark: #1b1d21;
+  --card-light: #ffffff;
+  --card-dark: #272a30;
+  --surface-light: #eef3f8;
+  --surface-dark: #202329;
+  --border-light: #d8e0ec;
+  --border-dark: #3a3f49;
+  --sidebar-width: 260px;
   --header-height: 60px;
 }
 
@@ -87,10 +94,12 @@ button {
   cursor: pointer;
   font-family: inherit;
   font-size: 14px;
+  min-height: 38px;
   padding: 8px 16px;
-  border-radius: 4px;
+  border-radius: 6px;
   border: none;
-  transition: background-color 0.2s, transform 0.1s;
+  font-weight: 600;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s, transform 0.1s;
 }
 
 button:hover {
@@ -105,7 +114,7 @@ input, select, textarea {
   font-family: inherit;
   font-size: 14px;
   padding: 8px 12px;
-  border-radius: 4px;
+  border-radius: 6px;
   border: 1px solid;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -119,7 +128,7 @@ input, select, textarea {
 
 .dark input, .dark select, .dark textarea {
   border-color: var(--border-dark);
-  background-color: #444;
+  background-color: #30343b;
   color: var(--text-light);
 }
 
@@ -161,6 +170,7 @@ input:focus, select:focus, textarea:focus {
 
 .dark .login-card {
   background-color: var(--card-dark);
+  border: 1px solid var(--border-dark);
 }
 
 .login-card h1 {
@@ -208,9 +218,9 @@ input:focus, select:focus, textarea:focus {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 20px 0;
+  padding: 18px 0;
   z-index: 100;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 0 18px rgba(0, 0, 0, 0.12);
 }
 
 .light .sidebar {
@@ -219,13 +229,13 @@ input:focus, select:focus, textarea:focus {
 }
 
 .dark .sidebar {
-  background-color: var(--card-dark);
+  background-color: #26282d;
   border-right: 1px solid var(--border-dark);
 }
 
 .logo {
-  padding: 0 20px 20px;
-  margin-bottom: 20px;
+  padding: 0 20px 18px;
+  margin-bottom: 14px;
   border-bottom: 1px solid;
 }
 
@@ -241,12 +251,15 @@ input:focus, select:focus, textarea:focus {
   color: var(--primary-color);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  font-size: 1.35rem;
+  letter-spacing: 0;
 }
 
 .logo-icon {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
+  filter: drop-shadow(0 4px 10px rgba(37, 99, 235, 0.2));
 }
 
 .nav-menu {
@@ -257,16 +270,24 @@ input:focus, select:focus, textarea:focus {
 
 .nav-item {
   padding: 12px 20px;
-  margin: 4px 0;
+  margin: 3px 10px;
   display: flex;
   align-items: center;
+  border-radius: 6px;
   border-left: 3px solid transparent;
-  transition: background-color 0.2s, border-color 0.2s;
+  color: inherit;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
 .nav-item:hover, .nav-item.active {
-  background-color: rgba(74, 109, 167, 0.1);
+  background-color: rgba(37, 99, 235, 0.12);
   border-left-color: var(--primary-color);
+  color: var(--text-light);
+}
+
+.light .nav-item:hover,
+.light .nav-item.active {
+  color: var(--text-dark);
 }
 
 .theme-switch {
@@ -286,7 +307,7 @@ input:focus, select:focus, textarea:focus {
 .theme-switch button {
   width: 100%;
   padding: 10px;
-  background-color: transparent;
+  background-color: rgba(37, 99, 235, 0.08);
   border: 1px solid;
 }
 
@@ -296,6 +317,7 @@ input:focus, select:focus, textarea:focus {
 
 .dark .theme-switch button {
   border-color: var(--border-dark);
+  color: var(--text-light);
 }
 
 .theme-switch button:hover {
@@ -311,7 +333,7 @@ input:focus, select:focus, textarea:focus {
 .editor-content,
 .templates-content,
 .settings-content {
-  padding: 30px;
+  padding: 38px 40px;
   min-height: 100vh;
   max-width: 1200px;
   width: 100%;
@@ -927,20 +949,6 @@ body.dark .tox-statusbar {
   box-shadow: 0 0 0 2px rgba(74, 109, 167, 0.4);
 }
 
-.dashboard-container button:not(.theme-button):not(.alignment-button) {
-  background-color: #4a6da7;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 20px;
-}
-
-.dashboard-container button:not(.theme-button):not(.alignment-button):hover {
-  background-color: #3a5d97;
-}
-
 .placeholder-page {
   display: flex;
   min-height: 100vh;
@@ -974,13 +982,16 @@ body.dark .tox-statusbar {
 .logout button {
   width: 100%;
   padding: 10px;
-  background-color: #e74c3c;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+  background-color: transparent;
+  border: 1px solid var(--danger-color);
+  color: #fecaca;
+}
+
+.light .logout button {
+  color: var(--danger-color);
 }
 
 .logout button:hover {
-  background-color: #c0392b;
+  background-color: var(--danger-color);
+  color: white;
 }

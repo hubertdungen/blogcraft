@@ -278,12 +278,33 @@ class BloggerApiError extends Error {
   }
 }
 
+export const normalizeBlogListResponse = (data = {}) => {
+  const itemBlogs = Array.isArray(data.items) ? data.items : [];
+  const userInfoBlogs = Array.isArray(data.blogUserInfos)
+    ? data.blogUserInfos.map(info => info?.blog).filter(Boolean)
+    : [];
+
+  const byKey = new Map();
+
+  [...itemBlogs, ...userInfoBlogs].forEach((blog, index) => {
+    if (!blog) return;
+    const key = blog.id || blog.url || blog.name || `blog-${index}`;
+    byKey.set(key, blog);
+  });
+
+  return {
+    ...data,
+    items: Array.from(byKey.values())
+  };
+};
+
 /**
  * Retrieves the user's blogs
  */
 const getUserBlogs = async (options = {}) => {
   try {
-    return await request('/users/self/blogs', { ...options });
+    const data = await request('/users/self/blogs', { ...options });
+    return normalizeBlogListResponse(data);
   } catch (error) {
     // Convert to a more specific error
     if (error.message.includes('permission')) {

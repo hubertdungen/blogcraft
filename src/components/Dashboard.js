@@ -81,11 +81,7 @@ function Dashboard() {
       }
 
       // Fetch blogs from API
-      const data = await BloggerService.getUserBlogs({
-        params: {
-          fetchUserInfo: true
-        }
-      });
+      const data = await BloggerService.getUserBlogs();
       
       if (data.items && data.items.length > 0) {
         setBlogs(data.items);

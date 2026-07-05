@@ -11,7 +11,8 @@ Estado: Alpha/Preview — executável localmente. Fluxos principais (login com G
 Para utilizadores Windows, o caminho mais simples é o executável portátil sem
 instalação:
 
-1. Descarregar o `.exe` portátil da release.
+1. Descarregar o `.exe` portátil na
+   [página de Releases do GitHub](https://github.com/hubertdungen/blogcraft/releases).
 2. Executar o ficheiro.
 3. Abrir `http://localhost:3000` se o navegador não abrir automaticamente.
 4. Iniciar sessão com a conta Google que possui ou pode editar os seus blogues
@@ -187,6 +188,12 @@ O binário de release inicia o servidor local do BlogCraft. Execute-o e abra
 descarregar binários de runtime Node usados pelo `pkg`. Os binários macOS não
 são assinados, por isso utilizadores Apple podem ter de autorizar a aplicação
 nas definições de segurança do macOS ou executá-la pelo Terminal.
+
+Maintainers podem publicar uma release ao enviar uma tag de versão como
+`v1.0.0`. O workflow de release do GitHub Actions cria e anexa binários
+portáteis para Windows, Linux e macOS. Os binários macOS devem ser criados em
+macOS para poderem receber assinatura ad-hoc; builds locais em Windows ignoram
+os alvos macOS.
 
 ## 📚 Mais Ajuda
 - [Documentação da API do Blogger](https://developers.google.com/blogger/docs/3.0/getting_started)

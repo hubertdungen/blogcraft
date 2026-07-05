@@ -17,7 +17,8 @@ BlogCraft is a modern web application designed to replace discontinued tools lik
 
 For normal Windows users, the easiest path is the no-install executable:
 
-1. Download the portable Windows `.exe` from the release.
+1. Download the portable Windows `.exe` from the
+   [GitHub Releases page](https://github.com/hubertdungen/blogcraft/releases).
 2. Run it.
 3. Open `http://localhost:3000` if the browser does not open automatically.
 4. Sign in with the Google account that owns or can edit your Blogger blogs.
@@ -188,6 +189,11 @@ The release binary starts BlogCraft's local server. Run it, then open
 Node runtime binaries used by `pkg`. macOS binaries are unsigned, so Apple
 users may need to allow the app in macOS security settings or run it from
 Terminal.
+
+Maintainers can publish a release by pushing a version tag such as `v1.0.0`.
+The GitHub Actions release workflow builds and attaches Windows, Linux, and
+macOS portable binaries. macOS binaries should be built on macOS so they can be
+ad-hoc signed; local Windows builds skip macOS targets.
 
 ## 🕒 Background Scheduler Service
 

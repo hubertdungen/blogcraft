@@ -22,12 +22,14 @@ const releaseTargets = {
   'macos-x64': {
     label: 'macOS Intel',
     pkgTarget: 'node18-macos-x64',
-    fileName: `blogcraft-${version}-macos-x64`
+    fileName: `blogcraft-${version}-macos-x64`,
+    requiredPlatform: 'darwin'
   },
   'macos-arm64': {
     label: 'macOS Apple Silicon',
     pkgTarget: 'node18-macos-arm64',
-    fileName: `blogcraft-${version}-macos-arm64`
+    fileName: `blogcraft-${version}-macos-arm64`,
+    requiredPlatform: 'darwin'
   }
 };
 
@@ -136,6 +138,19 @@ function resolveTargets(requested) {
   return [...new Set(targetKeys)].map((key) => releaseTargets[key]);
 }
 
+function filterTargetsForHost(targets) {
+  return targets.filter((target) => {
+    if (!target.requiredPlatform || target.requiredPlatform === process.platform) {
+      return true;
+    }
+
+    console.warn(
+      `Skipping ${target.label}: build this target on macOS so the binary can be signed.`
+    );
+    return false;
+  });
+}
+
 function ensureDependencies() {
   if (!fs.existsSync(path.join(root, 'node_modules'))) {
     console.log('Installing dependencies...');
@@ -181,10 +196,10 @@ function packageTarget(target) {
 
 function main() {
   const { requested, skipBuild } = parseArgs(process.argv.slice(2));
-  const targets = resolveTargets(requested);
+  const targets = filterTargetsForHost(resolveTargets(requested));
 
   if (!targets.length) {
-    throw new Error('No release targets selected.');
+    throw new Error('No release targets can be built on this host.');
   }
 
   if (!fs.existsSync(distDir)) {
