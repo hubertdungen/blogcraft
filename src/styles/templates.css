@@ -22,19 +22,29 @@
   }
   
   .templates-actions {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(210px, auto) repeat(2, minmax(92px, auto));
     gap: 10px;
     align-items: center;
+    justify-content: end;
   }
   
   .create-template-button,
   .export-all-button,
   .import-button {
-    padding: 10px 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
     border-radius: 6px;
     cursor: pointer;
-    font-weight: 500;
+    font-weight: 700;
     min-height: 40px;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+    width: auto;
+    margin-bottom: 0;
   }
   
   .create-template-button {
@@ -48,13 +58,14 @@
   
   .export-all-button,
   .import-button {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: transparent;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
   }
   
   .export-all-button:hover,
   .import-button:hover {
-    background-color: var(--primary-hover);
+    background-color: rgba(37, 99, 235, 0.1);
   }
   
   .templates-layout {
@@ -483,12 +494,12 @@
     
     .templates-actions {
       width: 100%;
-      flex-wrap: wrap;
+      grid-template-columns: 1fr;
     }
     
     .templates-actions button,
     .templates-actions label {
-      flex: 1;
+      width: 100%;
     }
     
     .template-editor-header {

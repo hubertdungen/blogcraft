@@ -23,7 +23,7 @@ jobs:
           gh release view "$TAG_NAME" >/dev/null 2>&1 || \
           gh release create "$TAG_NAME" \
             --title "BlogCraft $TAG_NAME" \
-            --notes "Portable BlogCraft binaries. Run the file for your operating system, then open http://localhost:3000 in a browser."
+            --notes "Portable BlogCraft binaries. Run the file for your operating system; BlogCraft starts locally and opens the browser automatically."
 
   windows:
     name: Windows portable binary

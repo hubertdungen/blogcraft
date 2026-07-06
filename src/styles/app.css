@@ -102,6 +102,13 @@ button {
   transition: background-color 0.2s, border-color 0.2s, color 0.2s, transform 0.1s;
 }
 
+button:disabled,
+button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
 button:hover {
   transform: translateY(-1px);
 }
@@ -432,20 +439,6 @@ input:focus, select:focus, textarea:focus {
   font-size: 14px;
 }
 
-.post-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.post-actions button {
-  background-color: var(--primary-color);
-  color: white;
-}
-
-.post-actions button:hover {
-  background-color: var(--primary-hover);
-}
-
 /* Avoid styling buttons from react-datetime-picker and react-calendar */
 .post-actions .react-datetime-picker__button,
 .post-actions .react-calendar button {
@@ -520,7 +513,7 @@ input:focus, select:focus, textarea:focus {
   font-weight: 500;
 }
 
-.post-actions {
+.editor-content .post-actions {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 20px;

@@ -1,8 +1,12 @@
 const http = require('http');
 const path = require('path');
 const fs = require('fs');
+const { spawn } = require('child_process');
 
-const port = process.env.PORT || 3000;
+const DEFAULT_PORT = 3000;
+const MAX_PORT_ATTEMPTS = 20;
+const requestedPort = Number.parseInt(process.env.PORT || '', 10) || DEFAULT_PORT;
+const hasExplicitPort = !!process.env.PORT;
 const buildDir = path.join(__dirname, 'build');
 const indexFile = path.join(buildDir, 'index.html');
 
@@ -36,7 +40,7 @@ const sendFile = (res, filePath) => {
   });
 };
 
-const server = http.createServer((req, res) => {
+const requestHandler = (req, res) => {
   let pathname;
   try {
     pathname = decodeURIComponent(new URL(req.url, `http://${req.headers.host || 'localhost'}`).pathname);
@@ -67,8 +71,62 @@ const server = http.createServer((req, res) => {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     return res.end('Not Found');
   });
-});
+};
 
-server.listen(port, () => {
-  console.log(`BlogCraft running on http://localhost:${port}`);
-});
+const shouldOpenBrowser = () => {
+  return process.env.BLOGCRAFT_OPEN_BROWSER !== '0' && process.env.CI !== 'true';
+};
+
+const openBrowser = (url) => {
+  if (!shouldOpenBrowser()) {
+    return;
+  }
+
+  const commands = {
+    win32: ['cmd', ['/c', 'start', '', url]],
+    darwin: ['open', [url]],
+    linux: ['xdg-open', [url]]
+  };
+  const command = commands[process.platform];
+
+  if (!command) {
+    return;
+  }
+
+  try {
+    const child = spawn(command[0], command[1], {
+      detached: true,
+      stdio: 'ignore',
+      windowsHide: true
+    });
+    child.unref();
+  } catch (error) {
+    console.warn(`Unable to open the browser automatically: ${error.message}`);
+  }
+};
+
+const listenOnPort = (port, attemptsLeft = MAX_PORT_ATTEMPTS) => {
+  const server = http.createServer(requestHandler);
+
+  server.once('error', (error) => {
+    if (error.code === 'EADDRINUSE' && !hasExplicitPort && attemptsLeft > 0) {
+      console.warn(`Port ${port} is already in use. Trying ${port + 1}...`);
+      server.close();
+      listenOnPort(port + 1, attemptsLeft - 1);
+      return;
+    }
+
+    console.error(`BlogCraft could not start: ${error.message}`);
+    process.exitCode = 1;
+  });
+
+  server.once('listening', () => {
+    const url = `http://localhost:${port}`;
+    console.log(`BlogCraft running on ${url}`);
+    openBrowser(url);
+  });
+
+  server.listen(port);
+};
+
+listenOnPort(requestedPort);

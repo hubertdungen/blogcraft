@@ -7,12 +7,15 @@ const pkgJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf
 const version = pkgJson.version || '0.0.0';
 const distDir = path.join(root, 'dist');
 const pkgConfigFile = 'pkg.config.json';
+const windowsIconFile = path.join(root, 'public', 'logo.ico');
+const windowsPkgCacheDir = path.join(distDir, '.pkg-cache-win-icon');
 
 const releaseTargets = {
   'win-x64': {
     label: 'Windows x64',
     pkgTarget: 'node18-win-x64',
-    fileName: `blogcraft-${version}-windows-x64.exe`
+    fileName: `blogcraft-${version}-windows-x64.exe`,
+    platform: 'win32'
   },
   'linux-x64': {
     label: 'Linux x64',
@@ -53,6 +56,19 @@ function quoteArg(arg) {
 function run(command, args = [], opts = {}) {
   const line = [command, ...args].map(quoteArg).join(' ');
   execSync(line, { stdio: 'inherit', cwd: root, ...opts });
+}
+
+function parsePkgTarget(pkgTarget) {
+  const match = String(pkgTarget).match(/^node(\d+)-([a-z0-9]+)-([a-z0-9]+)$/i);
+  if (!match) {
+    throw new Error(`Cannot parse pkg target: ${pkgTarget}`);
+  }
+
+  return {
+    nodeRange: `node${match[1]}`,
+    platform: match[2],
+    arch: match[3]
+  };
 }
 
 function parseArgs(argv) {
@@ -172,8 +188,84 @@ function ensureProductionBuild(skipBuild) {
   }
 }
 
-function packageTarget(target) {
+function normalizeWindowsVersion(value) {
+  const parts = String(value)
+    .split('.')
+    .map((part) => Number.parseInt(part, 10))
+    .filter((part) => Number.isFinite(part));
+
+  while (parts.length < 4) {
+    parts.push(0);
+  }
+
+  return parts.slice(0, 4).join('.');
+}
+
+async function prepareWindowsPkgCache(target) {
+  if (target.platform !== 'win32') {
+    return {};
+  }
+
+  if (!fs.existsSync(windowsIconFile)) {
+    throw new Error(`Missing Windows icon file: ${windowsIconFile}`);
+  }
+
+  if (process.platform !== 'win32') {
+    console.warn('Skipping Windows icon embedding: preparing the iconized pkg base binary needs Windows.');
+    return {};
+  }
+
+  if (!fs.existsSync(windowsPkgCacheDir)) {
+    fs.mkdirSync(windowsPkgCacheDir, { recursive: true });
+  }
+
+  const originalCachePath = process.env.PKG_CACHE_PATH;
+  process.env.PKG_CACHE_PATH = windowsPkgCacheDir;
+
+  try {
+    const { need } = require('pkg-fetch');
+    const { rcedit } = await import('rcedit');
+    const parsedTarget = parsePkgTarget(target.pkgTarget);
+
+    const fetchedBase = await need({
+      ...parsedTarget,
+      forceFetch: true
+    });
+    const builtBase = path.join(
+      path.dirname(fetchedBase),
+      path.basename(fetchedBase).replace(/^fetched-/, 'built-')
+    );
+
+    fs.copyFileSync(fetchedBase, builtBase);
+
+    console.log('Embedding BlogCraft icon in Windows pkg base binary...');
+    await rcedit(builtBase, {
+      icon: windowsIconFile,
+      'file-version': normalizeWindowsVersion(version),
+      'product-version': normalizeWindowsVersion(version),
+      'version-string': {
+        CompanyName: 'BlogCraft',
+        FileDescription: 'BlogCraft portable Blogger editor',
+        ProductName: 'BlogCraft',
+        InternalName: 'BlogCraft',
+        OriginalFilename: target.fileName
+      }
+    });
+
+    fs.rmSync(fetchedBase, { force: true });
+    return { PKG_CACHE_PATH: windowsPkgCacheDir };
+  } finally {
+    if (originalCachePath) {
+      process.env.PKG_CACHE_PATH = originalCachePath;
+    } else {
+      delete process.env.PKG_CACHE_PATH;
+    }
+  }
+}
+
+async function packageTarget(target) {
   const outputPath = path.join('dist', target.fileName);
+  const envOverrides = await prepareWindowsPkgCache(target);
 
   console.log(`Packaging ${target.label} portable binary...`);
   run('npx', [
@@ -189,12 +281,17 @@ function packageTarget(target) {
     '--no-bytecode',
     '--public-packages',
     '*'
-  ]);
+  ], {
+    env: {
+      ...process.env,
+      ...envOverrides
+    }
+  });
 
   return outputPath;
 }
 
-function main() {
+async function main() {
   const { requested, skipBuild } = parseArgs(process.argv.slice(2));
   const targets = filterTargetsForHost(resolveTargets(requested));
 
@@ -209,11 +306,18 @@ function main() {
   ensureDependencies();
   ensureProductionBuild(skipBuild);
 
-  const outputs = targets.map(packageTarget);
+  const outputs = [];
+  for (const target of targets) {
+    const output = await packageTarget(target);
+    outputs.push(output);
+  }
 
   console.log('\nRelease files created:');
   outputs.forEach((file) => console.log(`- ${file}`));
-  console.log('\nRun one of these files and open http://localhost:3000 in a browser.');
+  console.log('\nRun one of these files. BlogCraft opens a browser tab automatically.');
 }
 
-main();
+main().catch((error) => {
+  console.error(error.message);
+  process.exit(1);
+});

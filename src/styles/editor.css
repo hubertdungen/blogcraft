@@ -111,9 +111,10 @@
 
   .editor-content .post-actions {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
     gap: 16px;
     margin-bottom: 20px;
+    align-items: end;
   }
   
   .labels-input,
@@ -138,13 +139,19 @@
   }
   
   .template-select button {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: transparent;
+    border: 1px solid var(--border-dark);
+    color: inherit;
     min-height: 40px;
+    width: 100%;
+  }
+
+  .light .template-select button {
+    border-color: var(--border-light);
   }
   
   .template-select button:hover {
-    background-color: var(--primary-hover);
+    background-color: rgba(37, 99, 235, 0.1);
   }
   
   .schedule-input {
@@ -176,37 +183,66 @@
     padding: 10px 6.6667px;
     line-height: 16px;
   }
+
+  .draft-toggle {
+    justify-content: center;
+  }
+
+  .draft-toggle label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+  }
+
+  .metadata-toggle,
+  .import-export {
+    justify-content: flex-end;
+  }
   
   .metadata-toggle button {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: transparent;
+    border: 1px solid var(--border-dark);
+    color: inherit;
     min-height: 40px;
+    width: 100%;
+  }
+
+  .light .metadata-toggle button {
+    border-color: var(--border-light);
   }
   
   .metadata-toggle button:hover {
-    background-color: var(--primary-hover);
+    background-color: rgba(37, 99, 235, 0.1);
   }
   
   .import-export {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
   }
   
   .import-export button,
   .import-export .file-input-label {
-    flex: 1;
-    background-color: var(--primary-color);
-    color: white;
+    background-color: transparent;
+    border: 1px solid var(--border-dark);
+    color: inherit;
     text-align: center;
     padding: 10px 12px;
     border-radius: 6px;
     cursor: pointer;
     min-height: 40px;
+    font-weight: 600;
+  }
+
+  .light .import-export button,
+  .light .import-export .file-input-label {
+    border-color: var(--border-light);
   }
   
   .import-export button:hover,
   .import-export .file-input-label:hover {
-    background-color: var(--primary-hover);
+    background-color: rgba(37, 99, 235, 0.1);
   }
   
   .metadata-editor {
@@ -402,6 +438,12 @@
     color: #d4edda;
   }
   
+  @media (max-width: 1180px) {
+    .editor-content .post-actions {
+      grid-template-columns: repeat(2, minmax(220px, 1fr));
+    }
+  }
+
   /* Responsividade */
   @media (max-width: 768px) {
     .editor-content {
@@ -420,7 +462,7 @@
     }
     
     .import-export {
-      flex-direction: column;
+      grid-template-columns: 1fr;
     }
   }
   

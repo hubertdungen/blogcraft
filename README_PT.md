@@ -2,7 +2,27 @@
 
 O BlogCraft é uma aplicação web moderna concebida para substituir ferramentas descontinuadas como o Open Live Writer, oferecendo uma solução abrangente para edição e publicação no Blogger com uma interface avançada e recursos poderosos.
 
-Estado: Alpha/Preview — executável localmente. Fluxos principais (login com Google, listar blogs e posts, criar/atualizar/publicar, templates e definições) já implementados.
+Estado: Beta/Preview - release portátil funcional. Fluxos principais (login com Google, listar blogs e posts, criar/atualizar/publicar, templates e definições) já implementados.
+
+<p align="center">
+  <img src="docs/screenshots/dashboard.png" alt="Dashboard do BlogCraft com conta demo sanitizada" width="900">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/editor.png" alt="Editor de posts do BlogCraft" width="440">
+  <img src="docs/screenshots/templates.png" alt="Gestor de templates do BlogCraft" width="440">
+</p>
+
+## Apoiar o BlogCraft
+
+Se o BlogCraft lhe poupar tempo, pode apoiar o desenvolvimento através do botão
+PayPal abaixo.
+
+<p>
+  <a href="https://www.paypal.com/donate/?hosted_button_id=X8QF6PQEHLF6G" target="_blank" rel="noopener noreferrer">
+    <img src="https://pics.paypal.com/00/s/ZGRjOTIyYjAtOTAwMi00MTYwLTg5N2QtMDM3NzQzNDA2ZGE2/file.PNG" alt="Botão Doar com PayPal" height="48">
+  </a>
+</p>
 
 ## 🚀 Início Rápido
 
@@ -14,7 +34,8 @@ instalação:
 1. Descarregar o `.exe` portátil na
    [página de Releases do GitHub](https://github.com/hubertdungen/blogcraft/releases).
 2. Executar o ficheiro.
-3. Abrir `http://localhost:3000` se o navegador não abrir automaticamente.
+3. O BlogCraft abre um separador do navegador automaticamente. Se a porta
+   `3000` estiver ocupada, tenta a próxima porta local disponível.
 4. Iniciar sessão com a conta Google que possui ou pode editar os seus blogues
    do Blogger.
 
@@ -183,11 +204,13 @@ npm run release:macos
 npm run release:all
 ```
 
-O binário de release inicia o servidor local do BlogCraft. Execute-o e abra
-`http://localhost:3000` no navegador. O primeiro build de release pode
-descarregar binários de runtime Node usados pelo `pkg`. Os binários macOS não
-são assinados, por isso utilizadores Apple podem ter de autorizar a aplicação
-nas definições de segurança do macOS ou executá-la pelo Terminal.
+O binário de release inicia o servidor local do BlogCraft e abre o navegador
+automaticamente. Se a porta `3000` estiver ocupada, o BlogCraft tenta a próxima
+porta local disponível. Os binários Windows incluem o ícone do BlogCraft. O
+primeiro build de release pode descarregar binários de runtime Node usados pelo
+`pkg`. Os binários macOS não são assinados, por isso utilizadores Apple podem
+ter de autorizar a aplicação nas definições de segurança do macOS ou executá-la
+pelo Terminal.
 
 Maintainers podem publicar uma release ao enviar uma tag de versão como
 `v1.0.0`. O workflow de release do GitHub Actions cria e anexa binários

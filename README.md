@@ -1,15 +1,36 @@
 # BlogCraft - Advanced Blogger Editor
 
-### Currently in Beta – functional release! ###
+### Currently in Beta - functional portable release! ###
 
 BlogCraft is a modern web application designed to replace discontinued tools like Open Live Writer, offering a comprehensive solution for editing and publishing on Blogger with an advanced interface and powerful features.
 
+<p align="center">
+  <img src="docs/screenshots/dashboard.png" alt="BlogCraft dashboard with sanitized demo account" width="900">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/editor.png" alt="BlogCraft post editor" width="440">
+  <img src="docs/screenshots/templates.png" alt="BlogCraft template manager" width="440">
+</p>
+
+## Support BlogCraft
+
+If BlogCraft saves you time, you can support development through the PayPal
+donation button below.
+
+<p>
+  <a href="https://www.paypal.com/donate/?hosted_button_id=X8QF6PQEHLF6G" target="_blank" rel="noopener noreferrer">
+    <img src="https://pics.paypal.com/00/s/ZGRjOTIyYjAtOTAwMi00MTYwLTg5N2QtMDM3NzQzNDA2ZGE2/file.PNG" alt="Donate with PayPal button" height="48">
+  </a>
+</p>
+
 ## 🆕 What's New
 
-- **Beta v0.4.21** – the application is now runnable with essential features.
-- Fixed theme toggle to seamlessly switch between light and dark modes.
-- Updated test suite to ensure core functionality works as expected.
-- Added optional wide content layout expanding editing area to 1600px.
+- Portable Windows release opens BlogCraft automatically and falls back to the
+  next local port if `3000` is busy.
+- Windows `.exe` builds include the BlogCraft logo/icon.
+- Refreshed dashboard/editor/template styling and README screenshots.
+- Added a PayPal donation button for project support.
 
 ## 🚀 Quick Start
 
@@ -20,7 +41,8 @@ For normal Windows users, the easiest path is the no-install executable:
 1. Download the portable Windows `.exe` from the
    [GitHub Releases page](https://github.com/hubertdungen/blogcraft/releases).
 2. Run it.
-3. Open `http://localhost:3000` if the browser does not open automatically.
+3. BlogCraft opens a browser tab automatically. If port `3000` is already busy,
+   it will try the next available local port.
 4. Sign in with the Google account that owns or can edit your Blogger blogs.
 
 Normal users do not need to create a Google Cloud project, enable APIs, or edit
@@ -184,11 +206,12 @@ npm run release:macos
 npm run release:all
 ```
 
-The release binary starts BlogCraft's local server. Run it, then open
-`http://localhost:3000` in a browser. The first release build may download
-Node runtime binaries used by `pkg`. macOS binaries are unsigned, so Apple
-users may need to allow the app in macOS security settings or run it from
-Terminal.
+The release binary starts BlogCraft's local server and opens the browser
+automatically. If `3000` is already in use, BlogCraft tries the next available
+local port. Windows binaries include the BlogCraft icon. The first release
+build may download Node runtime binaries used by `pkg`. macOS binaries are
+unsigned, so Apple users may need to allow the app in macOS security settings
+or run it from Terminal.
 
 Maintainers can publish a release by pushing a version tag such as `v1.0.0`.
 The GitHub Actions release workflow builds and attaches Windows, Linux, and
