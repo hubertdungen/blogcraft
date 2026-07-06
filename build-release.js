@@ -224,7 +224,8 @@ async function prepareWindowsPkgCache(target) {
 
   try {
     const { need } = require('pkg-fetch');
-    const { rcedit } = await import('rcedit');
+    const rceditModule = await import('rcedit');
+    const rcedit = rceditModule.rcedit || rceditModule.default;
     const parsedTarget = parsePkgTarget(target.pkgTarget);
 
     const fetchedBase = await need({

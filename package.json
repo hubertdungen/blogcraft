@@ -1,6 +1,6 @@
 {
   "name": "blogcraft",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Um editor avançado para o Blogger com recursos modernos e integração completa",
   "private": true,
   "homepage": ".",
@@ -44,7 +44,7 @@
     "pkg": "^5.8.1",
     "pkg-fetch": "^3.4.2",
     "postcss-import": "^16.1.1",
-    "rcedit": "^5.0.2",
+    "rcedit": "^4.0.1",
     "react-app-rewired": "^2.2.1"
   },
   "browserslist": {
