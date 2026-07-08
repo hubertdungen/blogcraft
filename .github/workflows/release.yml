@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to create (e.g. v1.1.0)'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -18,10 +24,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          TAG_NAME: ${{ github.ref_name }}
+          TAG_NAME: ${{ inputs.tag || github.ref_name }}
         run: |
           gh release view "$TAG_NAME" >/dev/null 2>&1 || \
           gh release create "$TAG_NAME" \
+            --target "$GITHUB_SHA" \
             --title "BlogCraft $TAG_NAME" \
             --notes "Portable BlogCraft binaries — no installation or dependencies required. Run the file for your operating system; BlogCraft starts locally and opens the browser automatically. The Android APK is an experimental preview: enable \"install from unknown sources\" to sideload it."
 
@@ -50,7 +57,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          TAG_NAME: ${{ github.ref_name }}
+          TAG_NAME: ${{ inputs.tag || github.ref_name }}
         run: |
           $asset = Get-ChildItem dist -Filter *.exe | Select-Object -First 1
           gh release upload "$env:TAG_NAME" "$($asset.FullName)" --clobber
@@ -83,7 +90,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          TAG_NAME: ${{ github.ref_name }}
+          TAG_NAME: ${{ inputs.tag || github.ref_name }}
         run: gh release upload "$TAG_NAME" dist/blogcraft-*-linux-x64 --clobber
 
   macos:
@@ -119,7 +126,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          TAG_NAME: ${{ github.ref_name }}
+          TAG_NAME: ${{ inputs.tag || github.ref_name }}
         run: gh release upload "$TAG_NAME" dist/blogcraft-*-macos-* --clobber
 
   android:
@@ -187,5 +194,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          TAG_NAME: ${{ github.ref_name }}
+          TAG_NAME: ${{ inputs.tag || github.ref_name }}
         run: gh release upload "$TAG_NAME" "$APK_NAME" --clobber
