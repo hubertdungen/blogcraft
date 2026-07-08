@@ -974,9 +974,10 @@ function PostEditor({ theme, toggleTheme }) {
                 // Armazenar referência ao editor
                 editorRef.current = editor;
                 setEditorInstance(editor);
-
-                // Configurações adicionais
-                editor.ui.view.editable.element.style.minHeight = '500px';
+                // A altura mínima do editor é definida em CSS
+                // (.rich-editor .ck-editor__editable_inline); defini-la aqui
+                // via style inline não funciona porque o CKEditor limpa o
+                // atributo style do editável quando este recebe foco.
               }}
               config={{
                 // Plugins adicionais: upload de imagens (base64) e
