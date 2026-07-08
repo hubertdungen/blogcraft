@@ -41,12 +41,12 @@ const AuthenticatedLayout = ({ children, theme, toggleTheme }) => {
   const [contentAlignment, setContentAlignment] = useState('center');
 
   useEffect(() => {
-    const savedSettings = getStoredJson('blogcraft_settings', {});
+    const savedSettings = getStoredJson('blogartifex_settings', {});
     setWideLayout(!!savedSettings.wideLayout);
     setContentAlignment(savedSettings.contentAlignment || 'center');
 
     const handleStorageChange = (e) => {
-      if (e.key === 'blogcraft_settings') {
+      if (e.key === 'blogartifex_settings') {
         try {
           const newSettings = JSON.parse(e.newValue || '{}');
           setWideLayout(!!newSettings.wideLayout);
@@ -68,10 +68,10 @@ const AuthenticatedLayout = ({ children, theme, toggleTheme }) => {
       }
     };
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('blogcraft_settings_update', handleSettingsUpdate);
+    window.addEventListener('blogartifex_settings_update', handleSettingsUpdate);
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('blogcraft_settings_update', handleSettingsUpdate);
+      window.removeEventListener('blogartifex_settings_update', handleSettingsUpdate);
     };
   }, []);
 
@@ -91,32 +91,32 @@ function App() {
   });
 
   const [showDebugger, setShowDebugger] = useState(() => {
-    const savedSettings = getStoredJson('blogcraft_settings', {});
+    const savedSettings = getStoredJson('blogartifex_settings', {});
     return savedSettings.showDebugger || false;
   });
 
   // Keep debugger visibility synchronized with settings changes.
   useEffect(() => {
     const updateDebugger = () => {
-      const savedSettings = getStoredJson('blogcraft_settings', {});
+      const savedSettings = getStoredJson('blogartifex_settings', {});
       setShowDebugger(savedSettings.showDebugger || false);
     };
 
     updateDebugger();
 
     const handleStorageChange = (e) => {
-      if (e.key === 'blogcraft_settings') {
+      if (e.key === 'blogartifex_settings') {
         updateDebugger();
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('blogcraft_settings_updated', updateDebugger);
+    window.addEventListener('blogartifex_settings_updated', updateDebugger);
 
     // Cleanup
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('blogcraft_settings_updated', updateDebugger);
+      window.removeEventListener('blogartifex_settings_updated', updateDebugger);
     };
   }, []);
 

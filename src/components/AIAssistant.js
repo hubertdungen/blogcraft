@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AIService, { getAISettings, getActiveModel, getActiveProvider, isAIConfigured } from '../services/AIService';
 import i18n, { t } from '../services/I18nService';
+import { getStoredJson } from '../utils/storage';
 
 /**
  * AIAssistant - Chat panel docked next to the post editor.
@@ -25,8 +26,8 @@ function AIAssistant({ getTitle, getContent, getSelectionHtml, applyAction, onCl
       setSettings(getAISettings());
       setConfigured(isAIConfigured());
     };
-    window.addEventListener('blogcraft_ai_settings_updated', refresh);
-    return () => window.removeEventListener('blogcraft_ai_settings_updated', refresh);
+    window.addEventListener('blogartifex_ai_settings_updated', refresh);
+    return () => window.removeEventListener('blogartifex_ai_settings_updated', refresh);
   }, []);
 
   useEffect(() => {
@@ -55,12 +56,14 @@ function AIAssistant({ getTitle, getContent, getSelectionHtml, applyAction, onCl
 
     try {
       const selectionHtml = getSelectionHtml ? getSelectionHtml() : '';
+      const templates = getStoredJson('blogartifex_templates', []);
       const { reply, actions } = await AIService.chat({
         history: messages.map(m => ({ role: m.role, content: m.content })),
         userMessage: text,
         title: getTitle(),
         html: getContent(),
         selectionHtml,
+        templates,
         locale: i18n.getLocale()
       });
 

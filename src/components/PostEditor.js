@@ -12,6 +12,7 @@ import AuthService from '../services/AuthService';
 import Feedback from './Feedback';
 import AIAssistant from './AIAssistant';
 import AISelectionMenu from './AISelectionMenu';
+import ImageFormatter from './ImageFormatter';
 import i18n, { t } from '../services/I18nService';
 import { getStoredJson, getStoredValue, setStoredValue } from '../utils/storage';
 import {
@@ -76,7 +77,7 @@ function PostEditor({ theme, toggleTheme }) {
 
   // Assistente de IA
   const [editorInstance, setEditorInstance] = useState(null);
-  const [showAIPanel, setShowAIPanel] = useState(() => getStoredValue('blogcraft_ai_panel_open') === 'true');
+  const [showAIPanel, setShowAIPanel] = useState(() => getStoredValue('blogartifex_ai_panel_open') === 'true');
   const draftCheckedRef = useRef(false);
 
   useEffect(() => {
@@ -86,7 +87,7 @@ function PostEditor({ theme, toggleTheme }) {
   // Efeito para carregar dados iniciais
   useEffect(() => {
     // Carregar templates salvos localmente
-    const savedTemplates = getStoredJson('blogcraft_templates', []);
+    const savedTemplates = getStoredJson('blogartifex_templates', []);
     setTemplates(savedTemplates);
     
     // Carregar lista de blogs do usuário
@@ -116,7 +117,7 @@ function PostEditor({ theme, toggleTheme }) {
     }
     
     // Configurar autosalvamento
-    const settings = getStoredJson('blogcraft_settings', {});
+    const settings = getStoredJson('blogartifex_settings', {});
     const autoSaveInterval = settings.autoSaveInterval || 5; // 5 minutos padrão
     
     const timer = setInterval(() => {
@@ -150,7 +151,7 @@ function PostEditor({ theme, toggleTheme }) {
 
     draftCheckedRef.current = true;
 
-    const draftKey = `blogcraft_draft_${selectedBlog}_new`;
+    const draftKey = `blogartifex_draft_${selectedBlog}_new`;
     const draft = getStoredJson(draftKey, null);
 
     if (draft && (draft.title || draft.content)) {
@@ -174,9 +175,9 @@ function PostEditor({ theme, toggleTheme }) {
     }
 
     // Sem rascunho: aplicar o template padrão definido nas Definições.
-    const settings = getStoredJson('blogcraft_settings', {});
+    const settings = getStoredJson('blogartifex_settings', {});
     if (settings.defaultTemplate) {
-      const savedTemplates = getStoredJson('blogcraft_templates', []);
+      const savedTemplates = getStoredJson('blogartifex_templates', []);
       const defaultTemplate = savedTemplates.find(
         tpl => String(tpl.id) === String(settings.defaultTemplate)
       );
@@ -199,7 +200,7 @@ function PostEditor({ theme, toggleTheme }) {
     if (!current.postData.title || !current.selectedBlog) return;
     
     // Salvar como rascunho local
-    const key = `blogcraft_draft_${current.selectedBlog}_${current.postId || 'new'}`;
+    const key = `blogartifex_draft_${current.selectedBlog}_${current.postId || 'new'}`;
     const draftData = {
       ...current.postData,
       metadata: current.metadata,
@@ -226,7 +227,7 @@ function PostEditor({ theme, toggleTheme }) {
    */
   const fetchUserBlogs = async () => {
     try {
-      const token = localStorage.getItem('blogcraft_token');
+      const token = localStorage.getItem('blogartifex_token');
       
       if (!token) {
         navigate('/');
@@ -244,7 +245,7 @@ function PostEditor({ theme, toggleTheme }) {
         // Se não houver blog selecionado, usar o blog padrão das
         // definições (quando existir) ou o primeiro da lista
         if (!selectedBlog && data.items.length > 0) {
-          const settings = getStoredJson('blogcraft_settings', {});
+          const settings = getStoredJson('blogartifex_settings', {});
           const preferred = data.items.find(blog => blog.id === settings.defaultBlogId);
           setSelectedBlog((preferred || data.items[0]).id);
         }
@@ -412,7 +413,7 @@ function PostEditor({ theme, toggleTheme }) {
     
     const updatedTemplates = [...templates, newTemplate];
     setTemplates(updatedTemplates);
-    localStorage.setItem('blogcraft_templates', JSON.stringify(updatedTemplates));
+    localStorage.setItem('blogartifex_templates', JSON.stringify(updatedTemplates));
     
     setFeedback({
       type: 'success',
@@ -547,7 +548,7 @@ function PostEditor({ theme, toggleTheme }) {
    */
   const toggleAIPanel = () => {
     setShowAIPanel(prev => {
-      setStoredValue('blogcraft_ai_panel_open', String(!prev));
+      setStoredValue('blogartifex_ai_panel_open', String(!prev));
       return !prev;
     });
   };
@@ -630,7 +631,7 @@ function PostEditor({ theme, toggleTheme }) {
       });
       
       // Limpar rascunho local após salvar
-      const draftKey = `blogcraft_draft_${selectedBlog}_${postId || 'new'}`;
+      const draftKey = `blogartifex_draft_${selectedBlog}_${postId || 'new'}`;
       localStorage.removeItem(draftKey);
       
       // Redirecionar para o dashboard após um breve atraso
@@ -1015,6 +1016,8 @@ function PostEditor({ theme, toggleTheme }) {
         getTitle={() => autoSaveDataRef.current.postData.title}
         onFeedback={setFeedback}
       />
+      
+      <ImageFormatter editor={editorInstance} />
       
       {/* Indicador de salvamento */}
       {saving && (

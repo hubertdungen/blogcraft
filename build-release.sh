@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build a portable BlogCraft release for the current OS by default.
+# Build a portable BlogArtifex release for the current OS by default.
 
 set -euo pipefail
 

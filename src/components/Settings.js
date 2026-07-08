@@ -56,7 +56,7 @@ function Settings({ theme, toggleTheme }) {
    */
   const loadSettings = () => {
     try {
-      const savedSettings = getStoredJson('blogcraft_settings', {});
+      const savedSettings = getStoredJson('blogartifex_settings', {});
       
       setSettings({
         defaultBlogId: savedSettings.defaultBlogId || '',
@@ -100,7 +100,7 @@ function Settings({ theme, toggleTheme }) {
    */
   const loadTemplates = () => {
     try {
-      const savedTemplates = getStoredJson('blogcraft_templates', []);
+      const savedTemplates = getStoredJson('blogartifex_templates', []);
       setTemplates(savedTemplates);
     } catch (error) {
       console.error('Erro ao carregar templates:', error);
@@ -178,10 +178,10 @@ function Settings({ theme, toggleTheme }) {
   const handleSaveSettings = () => {
     try {
       // Salvar configurações gerais
-      localStorage.setItem('blogcraft_settings', JSON.stringify(settings));
+      localStorage.setItem('blogartifex_settings', JSON.stringify(settings));
       // Notificar outros componentes sobre a atualização das configurações
       window.dispatchEvent(
-        new CustomEvent('blogcraft_settings_update', {
+        new CustomEvent('blogartifex_settings_update', {
           detail: {
             wideLayout: settings.wideLayout,
             contentAlignment: settings.contentAlignment,
@@ -197,7 +197,7 @@ function Settings({ theme, toggleTheme }) {
       i18n.setLocale(language);
 
       // Notify application about settings update
-      window.dispatchEvent(new Event('blogcraft_settings_updated'));
+      window.dispatchEvent(new Event('blogartifex_settings_updated'));
 
       alert(t('settings.confirmations.saveSuccess'));
     } catch (error) {
@@ -224,9 +224,9 @@ function Settings({ theme, toggleTheme }) {
       };
 
       setSettings(defaultSettings);
-      localStorage.setItem('blogcraft_settings', JSON.stringify(defaultSettings));
+      localStorage.setItem('blogartifex_settings', JSON.stringify(defaultSettings));
       window.dispatchEvent(
-        new CustomEvent('blogcraft_settings_update', {
+        new CustomEvent('blogartifex_settings_update', {
           detail: {
             wideLayout: defaultSettings.wideLayout,
             contentAlignment: defaultSettings.contentAlignment,
@@ -234,7 +234,7 @@ function Settings({ theme, toggleTheme }) {
           }
         })
       );
-      window.dispatchEvent(new Event('blogcraft_settings_updated'));
+      window.dispatchEvent(new Event('blogartifex_settings_updated'));
       alert(t('settings.confirmations.resetSuccess'));
     }
   };
@@ -245,7 +245,7 @@ function Settings({ theme, toggleTheme }) {
   const handleClearData = () => {
     if (window.confirm(t('settings.confirmations.clearDataConfirm'))) {
       // Manter apenas o token de autenticação
-      const token = localStorage.getItem('blogcraft_token');
+      const token = localStorage.getItem('blogartifex_token');
       const currentLocale = i18n.getLocale(); // Preservar o idioma atual
       
       // Limpar localStorage
@@ -253,9 +253,9 @@ function Settings({ theme, toggleTheme }) {
       
       // Restaurar o token e idioma
       if (token) {
-        localStorage.setItem('blogcraft_token', token);
+        localStorage.setItem('blogartifex_token', token);
       }
-      localStorage.setItem('blogcraft_locale', currentLocale);
+      localStorage.setItem('blogartifex_locale', currentLocale);
       
       // Recarregar a página
       window.location.reload();
@@ -527,6 +527,36 @@ function Settings({ theme, toggleTheme }) {
                     </select>
                     <p className="setting-description">{t('ai.settings.modelDesc')}</p>
                   </div>
+
+                  <div className="setting-item">
+                    <label htmlFor="aiTone">{t('ai.settings.tone')}</label>
+                    <select
+                      id="aiTone"
+                      value={aiSettings.tone || 'default'}
+                      onChange={(e) => handleAIChange('tone', e.target.value)}
+                    >
+                      <option value="default">{t('ai.settings.toneOptions.default')}</option>
+                      <option value="casual">{t('ai.settings.toneOptions.casual')}</option>
+                      <option value="humorous">{t('ai.settings.toneOptions.humorous')}</option>
+                      <option value="inspirational">{t('ai.settings.toneOptions.inspirational')}</option>
+                      <option value="technical">{t('ai.settings.toneOptions.technical')}</option>
+                      <option value="custom">{t('ai.settings.toneOptions.custom')}</option>
+                    </select>
+                    <p className="setting-description">{t('ai.settings.toneDesc')}</p>
+                  </div>
+                  
+                  {aiSettings.tone === 'custom' && (
+                    <div className="setting-item">
+                      <label htmlFor="aiCustomTone">{t('ai.settings.customTone')}</label>
+                      <input
+                        id="aiCustomTone"
+                        type="text"
+                        value={aiSettings.customTone || ''}
+                        placeholder={t('ai.settings.customToneDesc')}
+                        onChange={(e) => handleAIChange('customTone', e.target.value)}
+                      />
+                    </div>
+                  )}
 
                   <div className="setting-item">
                     <div className="ai-test-row">

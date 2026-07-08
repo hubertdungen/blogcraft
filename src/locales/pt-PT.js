@@ -3,7 +3,7 @@
  */
 const translations = {
     app: {
-      name: 'BlogCraft',
+      name: 'BlogArtifex',
       slogan: 'Editor Avançado para Blogger',
       version: 'Versão {version}'
     },
@@ -26,7 +26,7 @@ const translations = {
     },
     
     dashboard: {
-      welcome: 'Bem-vindo ao BlogCraft!',
+      welcome: 'Bem-vindo ao BlogArtifex!',
       welcomeSubtitle: 'O seu editor avançado para o Blogger.',
       quickActions: 'Ações Rápidas',
       createNew: 'Criar Novo Artigo',
@@ -37,14 +37,14 @@ const translations = {
       selectBlog: 'Selecionar Blogue:',
       account: {
         label: 'Conta Google',
-        activeTitle: 'Conta Google usada pelo BlogCraft',
+        activeTitle: 'Conta Google usada pelo BlogArtifex',
         signedInAs: 'Sessão iniciada como'
       },
       emptyBlogs: {
         title: 'Nenhum blogue encontrado',
         warning: 'Nenhum blogue encontrado. Experimente trocar para a conta Google que usa no Blogger.',
         warningForAccount: 'Nenhum blogue encontrado para {email}. Experimente trocar para a conta Google que usa no Blogger.',
-        body: 'O BlogCraft só consegue mostrar blogues onde esta conta Google tem permissões de autor ou administrador. Se os seus blogues aparecem no Blogger com outra conta, termine sessão aqui e escolha essa conta.',
+        body: 'O BlogArtifex só consegue mostrar blogues onde esta conta Google tem permissões de autor ou administrador. Se os seus blogues aparecem no Blogger com outra conta, termine sessão aqui e escolha essa conta.',
         switchAccount: 'Trocar Conta Google',
         retry: 'Tentar Novamente',
         openBlogger: 'Abrir Blogger'
@@ -226,6 +226,18 @@ const translations = {
         model: 'Modelo:',
         modelDesc: 'Modelo usado para o chat e edição de texto.',
         defaultModel: 'Predefinido ({model})',
+        tone: 'Tom:',
+        toneDesc: 'O estilo de escrita e o tom que o assistente IA deve utilizar.',
+        toneOptions: {
+          default: 'Predefinido (Profissional e Claro)',
+          casual: 'Casual e Amigável',
+          humorous: 'Bem-humorado e Cativante',
+          inspirational: 'Inspirador e Motivador',
+          technical: 'Técnico e Académico',
+          custom: 'Personalizado...'
+        },
+        customTone: 'Tom Personalizado:',
+        customToneDesc: 'Descreva o tom exato que pretende (ex: "Como um detetive dos anos 20")',
         testConnection: 'Testar Ligação',
         testing: 'A testar...',
         testSuccess: 'Ligação a funcionar!',

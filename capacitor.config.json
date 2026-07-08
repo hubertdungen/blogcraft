@@ -1,6 +1,6 @@
 {
-  "appId": "com.hubertdungen.blogcraft",
-  "appName": "BlogCraft",
+  "appId": "com.hubertdungen.blogartifex",
+  "appName": "BlogArtifex",
   "webDir": "build",
   "server": {
     "androidScheme": "https"

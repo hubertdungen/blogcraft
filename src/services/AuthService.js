@@ -4,8 +4,8 @@
  */
 
 // Constants
-const TOKEN_KEY = 'blogcraft_token';
-const ACCOUNT_KEY = 'blogcraft_account';
+const TOKEN_KEY = 'blogartifex_token';
+const ACCOUNT_KEY = 'blogartifex_account';
 const BLOGGER_API_SCOPE = 'https://www.googleapis.com/auth/blogger';
 const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
 const USER_INFO_ENDPOINT = 'https://openidconnect.googleapis.com/v1/userinfo';

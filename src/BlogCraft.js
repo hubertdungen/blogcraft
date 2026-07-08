@@ -51,7 +51,7 @@ function Login() {
   const handleLoginSuccess = (credentialResponse) => {
     // Autenticar com a API do Blogger usando o token do Google
     const token = credentialResponse.credential;
-    localStorage.setItem('blogcraft_token', token);
+    localStorage.setItem('blogartifex_token', token);
     
     // Redirecionar para o dashboard após login bem-sucedido
     navigate('/dashboard');
@@ -105,7 +105,7 @@ function Dashboard({ theme, toggleTheme }) {
 
   const fetchUserBlogs = async () => {
     try {
-      const token = localStorage.getItem('blogcraft_token');
+      const token = localStorage.getItem('blogartifex_token');
       // Chamada para a API do Blogger para obter os blogs
       const response = await fetch('https://www.googleapis.com/blogger/v3/users/self/blogs', {
         headers: {
@@ -129,7 +129,7 @@ function Dashboard({ theme, toggleTheme }) {
   const fetchPosts = async (blogId) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('blogcraft_token');
+      const token = localStorage.getItem('blogartifex_token');
       
       // Chamada para a API do Blogger para obter os posts
       const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts`, {
@@ -162,7 +162,7 @@ function Dashboard({ theme, toggleTheme }) {
 
   const handleDuplicatePost = async (postId) => {
     try {
-      const token = localStorage.getItem('blogcraft_token');
+      const token = localStorage.getItem('blogartifex_token');
       
       // Buscar o post original
       const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${selectedBlog}/posts/${postId}`, {
@@ -264,7 +264,7 @@ function PostEditor({ theme, toggleTheme }) {
 
   useEffect(() => {
     // Carregar templates salvos
-    const savedTemplates = JSON.parse(localStorage.getItem('blogcraft_templates') || '[]');
+    const savedTemplates = JSON.parse(localStorage.getItem('blogartifex_templates') || '[]');
     setTemplates(savedTemplates);
     
     // Verificar se estamos editando um post existente
@@ -284,7 +284,7 @@ function PostEditor({ theme, toggleTheme }) {
   const fetchPost = async (blogId, postId) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('blogcraft_token');
+      const token = localStorage.getItem('blogartifex_token');
       
       // Buscar o post existente
       const response = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${blogId}/posts/${postId}`, {
@@ -384,7 +384,7 @@ function PostEditor({ theme, toggleTheme }) {
       
       const updatedTemplates = [...templates, newTemplate];
       setTemplates(updatedTemplates);
-      localStorage.setItem('blogcraft_templates', JSON.stringify(updatedTemplates));
+      localStorage.setItem('blogartifex_templates', JSON.stringify(updatedTemplates));
       
       alert('Template salvo com sucesso!');
     }
@@ -412,7 +412,7 @@ function PostEditor({ theme, toggleTheme }) {
   const handleSavePost = async (publish = false) => {
     try {
       setSaving(true);
-      const token = localStorage.getItem('blogcraft_token');
+      const token = localStorage.getItem('blogartifex_token');
       const urlParams = new URLSearchParams(window.location.search);
       const postId = urlParams.get('postId');
       const blogId = urlParams.get('blogId');
@@ -782,7 +782,7 @@ function Templates({ theme, toggleTheme }) {
 
   useEffect(() => {
     // Carregar templates
-    const savedTemplates = JSON.parse(localStorage.getItem('blogcraft_templates') || '[]');
+    const savedTemplates = JSON.parse(localStorage.getItem('blogartifex_templates') || '[]');
     setTemplates(savedTemplates);
   }, []);
 
@@ -805,7 +805,7 @@ function Templates({ theme, toggleTheme }) {
     
     const updatedTemplates = templates.filter(template => template.id !== templateId);
     setTemplates(updatedTemplates);
-    localStorage.setItem('blogcraft_templates', JSON.stringify(updatedTemplates));
+    localStorage.setItem('blogartifex_templates', JSON.stringify(updatedTemplates));
     
     if (selectedTemplate && selectedTemplate.id === templateId) {
       setSelectedTemplate(null);
@@ -835,7 +835,7 @@ function Templates({ theme, toggleTheme }) {
     }
     
     setTemplates(updatedTemplates);
-    localStorage.setItem('blogcraft_templates', JSON.stringify(updatedTemplates));
+    localStorage.setItem('blogartifex_templates', JSON.stringify(updatedTemplates));
     
     alert('Template salvo com sucesso!');
   };
@@ -947,7 +947,7 @@ function Settings({ theme, toggleTheme }) {
 
   useEffect(() => {
     // Carregar configurações
-    const savedSettings = JSON.parse(localStorage.getItem('blogcraft_settings') || '{}');
+    const savedSettings = JSON.parse(localStorage.getItem('blogartifex_settings') || '{}');
     setSettings({
       defaultBlogId: savedSettings.defaultBlogId || '',
       defaultTemplate: savedSettings.defaultTemplate || '',
@@ -959,13 +959,13 @@ function Settings({ theme, toggleTheme }) {
     fetchUserBlogs();
     
     // Carregar templates
-    const savedTemplates = JSON.parse(localStorage.getItem('blogcraft_templates') || '[]');
+    const savedTemplates = JSON.parse(localStorage.getItem('blogartifex_templates') || '[]');
     setTemplates(savedTemplates);
   }, []);
 
   const fetchUserBlogs = async () => {
     try {
-      const token = localStorage.getItem('blogcraft_token');
+      const token = localStorage.getItem('blogartifex_token');
       
       if (!token) {
         navigate('/');
@@ -1003,13 +1003,13 @@ function Settings({ theme, toggleTheme }) {
   };
 
   const handleSaveSettings = () => {
-    localStorage.setItem('blogcraft_settings', JSON.stringify(settings));
+    localStorage.setItem('blogartifex_settings', JSON.stringify(settings));
     alert('Configurações salvas com sucesso!');
   };
 
   const handleLogout = () => {
     if (confirm('Tem certeza que deseja sair? Seus dados locais serão mantidos.')) {
-      localStorage.removeItem('blogcraft_token');
+      localStorage.removeItem('blogartifex_token');
       navigate('/');
     }
   };

@@ -42,7 +42,7 @@ function TemplatesManager({ theme }) {
    */
   const loadTemplates = () => {
     try {
-      const savedTemplates = getStoredJson('blogcraft_templates', []);
+      const savedTemplates = getStoredJson('blogartifex_templates', []);
       setTemplates(savedTemplates);
     } catch (error) {
       console.error('Erro ao carregar templates:', error);
@@ -134,7 +134,7 @@ function TemplatesManager({ theme }) {
     }
     
     // Salvar no localStorage
-    localStorage.setItem('blogcraft_templates', JSON.stringify(updatedTemplates));
+    localStorage.setItem('blogartifex_templates', JSON.stringify(updatedTemplates));
     
     // Atualizar estado
     setTemplates(updatedTemplates);
@@ -158,7 +158,7 @@ function TemplatesManager({ theme }) {
     const updatedTemplates = templates.filter(t => t.id !== templateId);
     
     // Salvar no localStorage
-    localStorage.setItem('blogcraft_templates', JSON.stringify(updatedTemplates));
+    localStorage.setItem('blogartifex_templates', JSON.stringify(updatedTemplates));
     
     // Atualizar estado
     setTemplates(updatedTemplates);
@@ -286,7 +286,7 @@ function TemplatesManager({ theme }) {
           }
           
           // Salvar no localStorage
-          localStorage.setItem('blogcraft_templates', JSON.stringify(updatedTemplates));
+          localStorage.setItem('blogartifex_templates', JSON.stringify(updatedTemplates));
           
           // Atualizar estado
           setTemplates(updatedTemplates);
@@ -308,7 +308,7 @@ function TemplatesManager({ theme }) {
           const updatedTemplates = [...templates, newTemplate];
           
           // Salvar no localStorage
-          localStorage.setItem('blogcraft_templates', JSON.stringify(updatedTemplates));
+          localStorage.setItem('blogartifex_templates', JSON.stringify(updatedTemplates));
           
           // Atualizar estado
           setTemplates(updatedTemplates);

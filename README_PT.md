@@ -1,21 +1,21 @@
-# BlogCraft - Editor Avançado para Blogger
+# BlogArtifex - Editor Avançado para Blogger
 
-O BlogCraft é uma aplicação web moderna concebida para substituir ferramentas descontinuadas como o Open Live Writer, oferecendo uma solução abrangente para edição e publicação no Blogger com uma interface avançada e recursos poderosos.
+O BlogArtifex é uma aplicação web moderna concebida para substituir ferramentas descontinuadas como o Open Live Writer, oferecendo uma solução abrangente para edição e publicação no Blogger com uma interface avançada e recursos poderosos.
 
 Estado: Beta/Preview - release portátil funcional. Fluxos principais (login com Google, listar blogs e posts, criar/atualizar/publicar, templates e definições) já implementados.
 
 <p align="center">
-  <img src="docs/screenshots/dashboard.png" alt="Dashboard do BlogCraft com conta demo sanitizada" width="900">
+  <img src="docs/screenshots/dashboard.png" alt="Dashboard do BlogArtifex com conta demo sanitizada" width="900">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/editor.png" alt="Editor de posts do BlogCraft" width="440">
-  <img src="docs/screenshots/templates.png" alt="Gestor de templates do BlogCraft" width="440">
+  <img src="docs/screenshots/editor.png" alt="Editor de posts do BlogArtifex" width="440">
+  <img src="docs/screenshots/templates.png" alt="Gestor de templates do BlogArtifex" width="440">
 </p>
 
-## Apoiar o BlogCraft
+## Apoiar o BlogArtifex
 
-Se o BlogCraft lhe poupar tempo, pode apoiar o desenvolvimento através do botão
+Se o BlogArtifex lhe poupar tempo, pode apoiar o desenvolvimento através do botão
 PayPal abaixo.
 
 <p>
@@ -32,16 +32,16 @@ Para utilizadores Windows, o caminho mais simples é o executável portátil sem
 instalação:
 
 1. Descarregar o `.exe` portátil na
-   [página de Releases do GitHub](https://github.com/hubertdungen/blogcraft/releases).
+   [página de Releases do GitHub](https://github.com/hubertdungen/blogartifex/releases).
 2. Executar o ficheiro.
-3. O BlogCraft abre um separador do navegador automaticamente. Se a porta
+3. O BlogArtifex abre um separador do navegador automaticamente. Se a porta
    `3000` estiver ocupada, tenta a próxima porta local disponível.
 4. Iniciar sessão com a conta Google que possui ou pode editar os seus blogues
    do Blogger.
 
 Utilizadores normais não precisam de criar um projeto na Google Cloud, ativar
 APIs nem editar ficheiros `.env`. Só precisam de aprovar o acesso ao Blogger no
-início de sessão Google. O Google Authenticator não é um requisito do BlogCraft;
+início de sessão Google. O Google Authenticator não é um requisito do BlogArtifex;
 o Google pode pedir a autenticação de dois fatores normal se a conta a tiver
 ativa.
 
@@ -55,8 +55,8 @@ ativa.
 
 1. Clonar o repositório
    ```bash
-   git clone https://github.com/hubertdungen/blogcraft.git
-   cd blogcraft
+   git clone https://github.com/hubertdungen/blogartifex.git
+   cd blogartifex
    ```
 
 2. Instalar dependências
@@ -70,7 +70,7 @@ ativa.
    - Copie `.env.example` para `.env` apenas se quiser substituir valores
      predefinidos.
    - `REACT_APP_GOOGLE_CLIENT_ID` é opcional para uso local normal, porque o
-     BlogCraft inclui um ID de cliente OAuth predefinido.
+     BlogArtifex inclui um ID de cliente OAuth predefinido.
    - `REACT_APP_TINYMCE_API_KEY` também é opcional.
 
 4. Executar a aplicação
@@ -108,7 +108,7 @@ ativa.
 
 ## 🤖 Assistente de IA (GPT / Gemini / Claude)
 
-O BlogCraft pode ligar-se a um fornecedor de IA à sua escolha usando a sua
+O BlogArtifex pode ligar-se a um fornecedor de IA à sua escolha usando a sua
 própria chave de API ou subscrição. Tudo corre no seu navegador: a chave é
 guardada apenas no `localStorage` e os pedidos vão diretamente do navegador
 para o fornecedor.
@@ -153,14 +153,14 @@ para o fornecedor.
 
 ### Início de sessão normal
 
-O BlogCraft usa OAuth da Google para pedir permissão de acesso ao Blogger.
+O BlogArtifex usa OAuth da Google para pedir permissão de acesso ao Blogger.
 Durante o login, escolha a mesma conta Google que aparece no Blogger. Se o
-BlogCraft disser "Nenhum blogue encontrado", use **Trocar Conta Google** e
+BlogArtifex disser "Nenhum blogue encontrado", use **Trocar Conta Google** e
 escolha a conta que possui ou tem permissão de autor/admin nos blogues.
 
 A API do Blogger só devolve blogues onde a conta autenticada tem autoria ou
 permissões de administrador. Se um blogue aparecer no Blogger noutra conta
-Google, ele não aparece no BlogCraft até essa conta ser escolhida.
+Google, ele não aparece no BlogArtifex até essa conta ser escolhida.
 
 ### Configuração de cliente OAuth próprio
 
@@ -200,7 +200,7 @@ uma release pública, correr um fork ou substituir o ID de cliente OAuth incluí
      configurados conseguem iniciar sessão
 
 ### Resolução de Problemas
-- Verificar a conta Google mostrada no topo do dashboard do BlogCraft
+- Verificar a conta Google mostrada no topo do dashboard do BlogArtifex
 - Usar **Trocar Conta Google** se o Blogger mostrar os blogues noutra conta
 - Garantir que a conta Google tem acesso de autor/admin no Blogger
 - Verificar se o ID de Cliente e âmbitos correspondem à aplicação
@@ -236,7 +236,7 @@ ou:
 npm run release
 ```
 
-O ficheiro Windows fica em `dist/blogcraft-x.y.z-windows-x64.exe`.
+O ficheiro Windows fica em `dist/blogartifex-x.y.z-windows-x64.exe`.
 
 No macOS e Linux, pode criar um binário portátil para o sistema atual:
 
@@ -255,9 +255,9 @@ npm run release:macos
 npm run release:all
 ```
 
-O binário de release inicia o servidor local do BlogCraft e abre o navegador
-automaticamente. Se a porta `3000` estiver ocupada, o BlogCraft tenta a próxima
-porta local disponível. Os binários Windows incluem o ícone do BlogCraft. O
+O binário de release inicia o servidor local do BlogArtifex e abre o navegador
+automaticamente. Se a porta `3000` estiver ocupada, o BlogArtifex tenta a próxima
+porta local disponível. Os binários Windows incluem o ícone do BlogArtifex. O
 primeiro build de release pode descarregar binários de runtime Node usados pelo
 `pkg`. Os binários macOS não são assinados, por isso utilizadores Apple podem
 ter de autorizar a aplicação nas definições de segurança do macOS ou executá-la
@@ -271,11 +271,11 @@ os alvos macOS.
 
 ## 📱 App Android (preview experimental)
 
-Cada release inclui também `blogcraft-x.y.z-android.apk`, uma app Android
-nativa que embrulha a interface do BlogCraft (construída com Capacitor).
+Cada release inclui também `blogartifex-x.y.z-android.apk`, uma app Android
+nativa que embrulha a interface do BlogArtifex (construída com Capacitor).
 
 - Descarregue o APK da
-  [página de Releases](https://github.com/hubertdungen/blogcraft/releases) e
+  [página de Releases](https://github.com/hubertdungen/blogartifex/releases) e
   permita "instalar de fontes desconhecidas" quando o Android pedir.
 - O APK é auto-assinado para distribuição direta (não está na Play Store).
   Por omissão cada release é assinado com uma chave nova, pelo que o Android
@@ -310,7 +310,7 @@ O resultado é criado em `android/app/build/outputs/apk/release/`.
 - Verificar mensagens de erro na consola do navegador
 
 ## 🛡️ Permissões
-O BlogCraft requer permissões mínimas para:
+O BlogArtifex requer permissões mínimas para:
 - Ler os seus blogues do Blogger
 - Criar, editar e gerir artigos de blogue
 - Aceder a informações básicas de perfil

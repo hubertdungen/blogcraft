@@ -9,7 +9,7 @@ let tokenRemovalInProgress = false;
 let lastTokenRemoval = 0;
 
 // Chave para armazenamento do token no localStorage
-const TOKEN_KEY = 'blogcraft_token';
+const TOKEN_KEY = 'blogartifex_token';
 
 /**
  * Obtém o token de autenticação

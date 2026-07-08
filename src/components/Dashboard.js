@@ -87,7 +87,7 @@ function Dashboard() {
         setBlogs(data.items);
         
         // Get preferred blog from localStorage
-        const savedBlogId = localStorage.getItem('blogcraft_lastBlog');
+        const savedBlogId = localStorage.getItem('blogartifex_lastBlog');
         
         // Select first blog or saved blog
         const defaultBlog = data.items.find(blog => blog.id === savedBlogId) || data.items[0];
@@ -180,7 +180,7 @@ function Dashboard() {
       setLoadingStats(true);
       
       // Save selected blog ID for future use
-      localStorage.setItem('blogcraft_lastBlog', blogId);
+      localStorage.setItem('blogartifex_lastBlog', blogId);
       
       // Fetch different post types in parallel
       const [publishedData, draftData, scheduledData] = await Promise.all([

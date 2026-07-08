@@ -54,3 +54,27 @@ export const removeStoredValue = (key) => {
     return false;
   }
 };
+
+const migrateStorage = () => {
+  const storage = getStorage();
+  if (!storage) return;
+  
+  const keysToMigrate = [];
+  for (let i = 0; i < storage.length; i++) {
+    const key = storage.key(i);
+    if (key && key.startsWith('blogartifex_')) {
+      keysToMigrate.push(key);
+    }
+  }
+  
+  keysToMigrate.forEach(oldKey => {
+    const newKey = oldKey.replace('blogartifex_', 'blogartifex_');
+    const value = storage.getItem(oldKey);
+    if (value !== null) {
+      storage.setItem(newKey, value);
+      storage.removeItem(oldKey);
+    }
+  });
+};
+
+migrateStorage();

@@ -43,7 +43,7 @@ export function Base64UploadAdapterPlugin(editor) {
   editor.plugins.get('FileRepository').createUploadAdapter = loader => new Base64UploadAdapter(loader);
 }
 
-const SIZE_ATTRIBUTES = ['width', 'height'];
+const SIZE_ATTRIBUTES = ['width', 'height', 'style'];
 const IMAGE_MODELS = ['imageBlock', 'imageInline'];
 
 /**

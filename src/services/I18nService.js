@@ -30,7 +30,7 @@ const DEFAULT_LOCALE = LOCALES.EN_US;
 class I18nService {
   constructor() {
     // Obter o idioma salvo ou usar o padrão
-    const savedLocale = getStoredValue('blogcraft_locale', DEFAULT_LOCALE);
+    const savedLocale = getStoredValue('blogartifex_locale', DEFAULT_LOCALE);
     this.currentLocale = translations[savedLocale] ? savedLocale : DEFAULT_LOCALE;
     
     // Registrar listeners para eventos de mudança de idioma
@@ -56,7 +56,7 @@ class I18nService {
     }
     
     this.currentLocale = locale;
-    setStoredValue('blogcraft_locale', locale);
+    setStoredValue('blogartifex_locale', locale);
     
     // Notificar listeners sobre a mudança de idioma
     this.notifyListeners();

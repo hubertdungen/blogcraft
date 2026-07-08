@@ -3,7 +3,7 @@
  */
 const translations = {
     app: {
-      name: 'BlogCraft',
+      name: 'BlogArtifex',
       slogan: 'Advanced Editor for Blogger',
       version: 'Version {version}'
     },
@@ -26,7 +26,7 @@ const translations = {
     },
     
     dashboard: {
-      welcome: 'Welcome to BlogCraft!',
+      welcome: 'Welcome to BlogArtifex!',
       welcomeSubtitle: 'Your advanced editor for Blogger.',
       quickActions: 'Quick Actions',
       createNew: 'Create New Post',
@@ -37,14 +37,14 @@ const translations = {
       selectBlog: 'Select Blog:',
       account: {
         label: 'Google account',
-        activeTitle: 'Google account used by BlogCraft',
+        activeTitle: 'Google account used by BlogArtifex',
         signedInAs: 'Signed in as'
       },
       emptyBlogs: {
         title: 'No blogs found',
         warning: 'No blogs were found. Try switching to the Google account you use with Blogger.',
         warningForAccount: 'No blogs were found for {email}. Try switching to the Google account you use with Blogger.',
-        body: 'BlogCraft can only show blogs where this Google account has author or admin permission. If your blogs appear in Blogger under another account, sign out here and choose that account.',
+        body: 'BlogArtifex can only show blogs where this Google account has author or admin permission. If your blogs appear in Blogger under another account, sign out here and choose that account.',
         switchAccount: 'Switch Google Account',
         retry: 'Try Again',
         openBlogger: 'Open Blogger'
@@ -226,6 +226,18 @@ const translations = {
         model: 'Model:',
         modelDesc: 'Model used for chat and text editing.',
         defaultModel: 'Default ({model})',
+        tone: 'Tone:',
+        toneDesc: 'The writing style and tone the AI assistant should use.',
+        toneOptions: {
+          default: 'Default (Professional & Clear)',
+          casual: 'Casual & Friendly',
+          humorous: 'Humorous & Engaging',
+          inspirational: 'Inspirational & Motivating',
+          technical: 'Technical & Academic',
+          custom: 'Custom...'
+        },
+        customTone: 'Custom Tone:',
+        customToneDesc: 'Describe the exact tone you want (e.g. "Like a 1920s detective")',
         testConnection: 'Test Connection',
         testing: 'Testing...',
         testSuccess: 'Connection working!',

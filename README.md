@@ -1,21 +1,21 @@
-# BlogCraft - Advanced Blogger Editor
+# BlogArtifex - Advanced Blogger Editor
 
 ### Currently in Beta - functional portable release! ###
 
-BlogCraft is a modern web application designed to replace discontinued tools like Open Live Writer, offering a comprehensive solution for editing and publishing on Blogger with an advanced interface and powerful features.
+BlogArtifex is a modern web application designed to replace discontinued tools like Open Live Writer, offering a comprehensive solution for editing and publishing on Blogger with an advanced interface and powerful features.
 
 <p align="center">
-  <img src="docs/screenshots/dashboard.png" alt="BlogCraft dashboard with sanitized demo account" width="900">
+  <img src="docs/screenshots/dashboard.png" alt="BlogArtifex dashboard with sanitized demo account" width="900">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/editor.png" alt="BlogCraft post editor" width="440">
-  <img src="docs/screenshots/templates.png" alt="BlogCraft template manager" width="440">
+  <img src="docs/screenshots/editor.png" alt="BlogArtifex post editor" width="440">
+  <img src="docs/screenshots/templates.png" alt="BlogArtifex template manager" width="440">
 </p>
 
-## Support BlogCraft
+## Support BlogArtifex
 
-If BlogCraft saves you time, you can support development through the PayPal
+If BlogArtifex saves you time, you can support development through the PayPal
 donation button below.
 
 <p>
@@ -34,15 +34,15 @@ donation button below.
   size/position preserved while editing, cleaned-up toolbar, word/character
   count, auto-saved draft restore, and default blog/template applied from
   Settings.
-- Portable Windows release opens BlogCraft automatically and falls back to the
+- Portable Windows release opens BlogArtifex automatically and falls back to the
   next local port if `3000` is busy.
-- Windows `.exe` builds include the BlogCraft logo/icon.
+- Windows `.exe` builds include the BlogArtifex logo/icon.
 - Refreshed dashboard/editor/template styling and README screenshots.
 - Added a PayPal donation button for project support.
 
 ## 🤖 AI Assistant (GPT / Gemini / Claude)
 
-BlogCraft can connect to an AI provider of your choice using your own API key
+BlogArtifex can connect to an AI provider of your choice using your own API key
 or subscription. Everything runs in your browser: the key is stored only in
 `localStorage` and requests go directly from your browser to the provider.
 
@@ -83,15 +83,15 @@ or subscription. Everything runs in your browser: the key is stored only in
 For normal Windows users, the easiest path is the no-install executable:
 
 1. Download the portable Windows `.exe` from the
-   [GitHub Releases page](https://github.com/hubertdungen/blogcraft/releases).
+   [GitHub Releases page](https://github.com/hubertdungen/blogartifex/releases).
 2. Run it.
-3. BlogCraft opens a browser tab automatically. If port `3000` is already busy,
+3. BlogArtifex opens a browser tab automatically. If port `3000` is already busy,
    it will try the next available local port.
 4. Sign in with the Google account that owns or can edit your Blogger blogs.
 
 Normal users do not need to create a Google Cloud project, enable APIs, or edit
 `.env` files. They only need to approve Blogger access during Google sign-in.
-Google Authenticator is not a BlogCraft requirement; Google may still ask for
+Google Authenticator is not a BlogArtifex requirement; Google may still ask for
 the user's normal two-factor authentication if their account has it enabled.
 
 ### Source/developer prerequisites
@@ -104,8 +104,8 @@ the user's normal two-factor authentication if their account has it enabled.
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/hubertdungen/blogcraft.git
-   cd blogcraft
+   git clone https://github.com/hubertdungen/blogartifex.git
+   cd blogartifex
    ```
 
 2. Install dependencies
@@ -118,7 +118,7 @@ the user's normal two-factor authentication if their account has it enabled.
 3. Optional local configuration
    - Copy `.env.example` to `.env` only if you want to override defaults.
    - `REACT_APP_GOOGLE_CLIENT_ID` is optional for normal local use because
-     BlogCraft includes a default OAuth client ID.
+     BlogArtifex includes a default OAuth client ID.
    - `REACT_APP_TINYMCE_API_KEY` is also optional.
 
 4. Run the application
@@ -151,14 +151,14 @@ the user's normal two-factor authentication if their account has it enabled.
 
 ### Normal user login
 
-BlogCraft uses Google OAuth to ask for Blogger permission. During login, choose
-the same Google account shown in Blogger. If BlogCraft says "No blogs found",
+BlogArtifex uses Google OAuth to ask for Blogger permission. During login, choose
+the same Google account shown in Blogger. If BlogArtifex says "No blogs found",
 use **Switch Google Account** and choose the account that owns or has author/admin
 permission on the blogs.
 
 The Blogger API returns only blogs where the signed-in account has authorship or
 admin rights. If a blog appears in Blogger under a different Google account, it
-will not appear in BlogCraft until that account is selected.
+will not appear in BlogArtifex until that account is selected.
 
 ### Custom OAuth client setup
 
@@ -196,7 +196,7 @@ release, running a fork, or replacing the bundled OAuth client ID.
      sign in
 
 ### Troubleshooting
-- Check the Google account shown at the top of the BlogCraft dashboard
+- Check the Google account shown at the top of the BlogArtifex dashboard
 - Use **Switch Google Account** if Blogger shows the blogs under another account
 - Ensure your Google account has author/admin Blogger access
 - Verify Client ID and scopes match your application
@@ -232,7 +232,7 @@ or:
 npm run release
 ```
 
-The Windows file is created at `dist/blogcraft-x.y.z-windows-x64.exe`.
+The Windows file is created at `dist/blogartifex-x.y.z-windows-x64.exe`.
 
 macOS and Linux users can build a portable binary for their current OS:
 
@@ -251,9 +251,9 @@ npm run release:macos
 npm run release:all
 ```
 
-The release binary starts BlogCraft's local server and opens the browser
-automatically. If `3000` is already in use, BlogCraft tries the next available
-local port. Windows binaries include the BlogCraft icon. The first release
+The release binary starts BlogArtifex's local server and opens the browser
+automatically. If `3000` is already in use, BlogArtifex tries the next available
+local port. Windows binaries include the BlogArtifex icon. The first release
 build may download Node runtime binaries used by `pkg`. macOS binaries are
 unsigned, so Apple users may need to allow the app in macOS security settings
 or run it from Terminal.
@@ -265,11 +265,11 @@ ad-hoc signed; local Windows builds skip macOS targets.
 
 ## 📱 Android App (experimental preview)
 
-Each release also ships `blogcraft-x.y.z-android.apk`, a native Android app
-that wraps the BlogCraft interface (built with Capacitor).
+Each release also ships `blogartifex-x.y.z-android.apk`, a native Android app
+that wraps the BlogArtifex interface (built with Capacitor).
 
 - Download the APK from the
-  [Releases page](https://github.com/hubertdungen/blogcraft/releases) and
+  [Releases page](https://github.com/hubertdungen/blogartifex/releases) and
   allow "install from unknown sources" when Android asks.
 - The APK is self-signed for direct distribution (it is not on the Play
   Store). By default each release is signed with a fresh key, so Android may
@@ -294,7 +294,7 @@ The result is created at `android/app/build/outputs/apk/release/`.
 
 ## 🕒 Background Scheduler Service
 
-BlogCraft includes an optional Node.js scheduler that can publish posts at a later time even when the main UI is closed.
+BlogArtifex includes an optional Node.js scheduler that can publish posts at a later time even when the main UI is closed.
 
 1. Add scheduled posts to `scheduled-posts.json` (see `scheduled-posts.example.json` for the structure).
 2. Export a Blogger access token in `BLOGGER_TOKEN` and optionally set `SCHEDULED_POSTS_FILE`.
@@ -314,7 +314,7 @@ The process will stay running and publish each post at its configured `publishDa
 - Check browser console for detailed error messages
 
 ## 🛡️ Permissions
-BlogCraft requires minimal permissions to:
+BlogArtifex requires minimal permissions to:
 - Read your Blogger blogs
 - Create, edit, and manage blog posts
 - Access basic profile information

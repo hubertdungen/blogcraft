@@ -1,9 +1,9 @@
-# Estrutura do Projeto BlogCraft
+# Estrutura do Projeto BlogArtifex
 
 Estrutura atual do repositório (ficheiros relevantes):
 
 ```
-blogcraft/
+blogartifex/
 ├── .github/workflows/        # Workflows: release (binários + APK) e teste Android
 ├── android/                  # Projeto nativo Android (Capacitor); a keystore
 │                             # de assinatura é gerada no CI (nunca versionada)
@@ -53,7 +53,7 @@ blogcraft/
 │   │   ├── logger.js
 │   │   └── storage.js            # Acesso seguro ao localStorage
 │   ├── App.js                    # Rotas e layout autenticado
-│   ├── BlogCraft.js
+│   ├── BlogArtifex.js
 │   ├── index.js                  # Entrada da aplicação (GoogleOAuthProvider)
 │   ├── reportWebVitals.js
 │   └── setupTests.js
@@ -80,7 +80,7 @@ blogcraft/
 - **Assistente de IA** (`src/services/AIService.js`):
   - Fornecedores suportados: OpenAI (GPT), Google (Gemini), Anthropic (Claude).
   - A chave de API é fornecida pelo utilizador e guardada apenas no
-    `localStorage` (`blogcraft_ai_settings`); os pedidos vão diretamente do
+    `localStorage` (`blogartifex_ai_settings`); os pedidos vão diretamente do
     navegador para o fornecedor.
   - Protocolo de ações em JSON: o modelo devolve `{"reply", "actions"}` e o
     editor aplica `replace_document`, `insert_html`, `replace_selection` e
@@ -95,12 +95,12 @@ blogcraft/
 
 | Chave                     | Conteúdo                                    |
 | ------------------------- | ------------------------------------------- |
-| `blogcraft_token`         | Access token Google/Blogger                 |
-| `blogcraft_settings`      | Preferências gerais                         |
-| `blogcraft_ai_settings`   | Fornecedor de IA, chaves e modelos          |
-| `blogcraft_templates`     | Modelos de conteúdo                         |
-| `blogcraft_draft_*`       | Rascunhos locais auto-guardados             |
-| `blogcraft_locale`        | Idioma da interface                         |
+| `blogartifex_token`         | Access token Google/Blogger                 |
+| `blogartifex_settings`      | Preferências gerais                         |
+| `blogartifex_ai_settings`   | Fornecedor de IA, chaves e modelos          |
+| `blogartifex_templates`     | Modelos de conteúdo                         |
+| `blogartifex_draft_*`       | Rascunhos locais auto-guardados             |
+| `blogartifex_locale`        | Idioma da interface                         |
 | `theme`                   | Tema claro/escuro                           |
 
 ## Planeamento (roadmap)

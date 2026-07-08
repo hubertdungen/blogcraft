@@ -15,7 +15,7 @@ test('renders login page heading', () => {
 
 test('renders even when saved settings contain invalid JSON', () => {
   const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
-  localStorage.setItem('blogcraft_settings', '{invalid');
+  localStorage.setItem('blogartifex_settings', '{invalid');
 
   try {
     render(

@@ -14,24 +14,24 @@ const releaseTargets = {
   'win-x64': {
     label: 'Windows x64',
     pkgTarget: 'node18-win-x64',
-    fileName: `blogcraft-${version}-windows-x64.exe`,
+    fileName: `blogartifex-${version}-windows-x64.exe`,
     platform: 'win32'
   },
   'linux-x64': {
     label: 'Linux x64',
     pkgTarget: 'node18-linux-x64',
-    fileName: `blogcraft-${version}-linux-x64`
+    fileName: `blogartifex-${version}-linux-x64`
   },
   'macos-x64': {
     label: 'macOS Intel',
     pkgTarget: 'node18-macos-x64',
-    fileName: `blogcraft-${version}-macos-x64`,
+    fileName: `blogartifex-${version}-macos-x64`,
     requiredPlatform: 'darwin'
   },
   'macos-arm64': {
     label: 'macOS Apple Silicon',
     pkgTarget: 'node18-macos-arm64',
-    fileName: `blogcraft-${version}-macos-arm64`,
+    fileName: `blogartifex-${version}-macos-arm64`,
     requiredPlatform: 'darwin'
   }
 };
@@ -239,16 +239,16 @@ async function prepareWindowsPkgCache(target) {
 
     fs.copyFileSync(fetchedBase, builtBase);
 
-    console.log('Embedding BlogCraft icon in Windows pkg base binary...');
+    console.log('Embedding BlogArtifex icon in Windows pkg base binary...');
     await rcedit(builtBase, {
       icon: windowsIconFile,
       'file-version': normalizeWindowsVersion(version),
       'product-version': normalizeWindowsVersion(version),
       'version-string': {
-        CompanyName: 'BlogCraft',
-        FileDescription: 'BlogCraft portable Blogger editor',
-        ProductName: 'BlogCraft',
-        InternalName: 'BlogCraft',
+        CompanyName: 'BlogArtifex',
+        FileDescription: 'BlogArtifex portable Blogger editor',
+        ProductName: 'BlogArtifex',
+        InternalName: 'BlogArtifex',
         OriginalFilename: target.fileName
       }
     });
@@ -315,7 +315,7 @@ async function main() {
 
   console.log('\nRelease files created:');
   outputs.forEach((file) => console.log(`- ${file}`));
-  console.log('\nRun one of these files. BlogCraft opens a browser tab automatically.');
+  console.log('\nRun one of these files. BlogArtifex opens a browser tab automatically.');
 }
 
 main().catch((error) => {

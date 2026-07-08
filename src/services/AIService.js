@@ -16,14 +16,14 @@
 
 import { getStoredJson, setStoredValue } from '../utils/storage';
 
-const SETTINGS_KEY = 'blogcraft_ai_settings';
+const SETTINGS_KEY = 'blogartifex_ai_settings';
 const REQUEST_TIMEOUT = 90 * 1000;
 
 export const AI_PROVIDERS = {
   openai: {
     id: 'openai',
     label: 'OpenAI (GPT)',
-    models: ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1-mini', 'gpt-4.1'],
+    models: ['gpt-4o-mini', 'gpt-4o', 'o1-mini', 'o1-preview', 'o3-mini', 'gpt-4.5-preview'],
     defaultModel: 'gpt-4o-mini',
     keyPlaceholder: 'sk-...',
     keyUrl: 'https://platform.openai.com/api-keys'
@@ -52,7 +52,9 @@ const DEFAULT_SETTINGS = {
   // One key per provider so switching providers does not lose keys.
   apiKeys: { openai: '', gemini: '', anthropic: '' },
   // Empty model means "use the provider default".
-  models: { openai: '', gemini: '', anthropic: '' }
+  models: { openai: '', gemini: '', anthropic: '' },
+  tone: 'default',
+  customTone: ''
 };
 
 export const getAISettings = () => {
@@ -68,7 +70,7 @@ export const getAISettings = () => {
 export const saveAISettings = (settings) => {
   const merged = { ...getAISettings(), ...settings };
   setStoredValue(SETTINGS_KEY, JSON.stringify(merged));
-  window.dispatchEvent(new Event('blogcraft_ai_settings_updated'));
+  window.dispatchEvent(new Event('blogartifex_ai_settings_updated'));
   return merged;
 };
 
@@ -90,12 +92,27 @@ export const isAIConfigured = (settings = getAISettings()) => {
   return !!(settings.enabled && getActiveApiKey(settings));
 };
 
+const getToneInstruction = (settings) => {
+  const tone = settings.tone || 'default';
+  if (tone === 'default') return '';
+  if (tone === 'custom' && settings.customTone) {
+    return `\n\nTone & Style Requirement: ${settings.customTone}`;
+  }
+  const tones = {
+    casual: 'Use a casual, friendly, and approachable tone.',
+    humorous: 'Use a humorous, witty, and engaging tone.',
+    inspirational: 'Use an inspirational, motivating, and uplifting tone.',
+    technical: 'Use a technical, precise, and academic tone.'
+  };
+  return tones[tone] ? `\n\nTone & Style Requirement: ${tones[tone]}` : '';
+};
+
 /**
  * System prompt for the editor assistant. The model answers with a JSON
- * envelope so BlogCraft can apply edits directly inside CKEditor.
+ * envelope so BlogArtifex can apply edits directly inside CKEditor.
  */
-const buildAssistantSystemPrompt = ({ locale }) => `You are BlogCraft's writing assistant, embedded in a rich-text editor for Blogger posts.
-You help the user write, edit and illustrate blog articles.
+const buildAssistantSystemPrompt = ({ locale, toneInstruction }) => `You are BlogArtifex's writing assistant, embedded in a rich-text editor for Blogger posts.
+You help the user write, edit and illustrate blog articles.${toneInstruction}
 
 Always answer with a SINGLE valid JSON object (no markdown fences, no text outside the JSON):
 {
@@ -112,15 +129,16 @@ Available actions:
 HTML rules for article content:
 - Use clean semantic HTML: <h2>/<h3> for sections, <p>, <ul>/<ol>, <blockquote>, <table>, <a>, <strong>, <i>.
 - Images: <figure class="image"><img src="URL" alt="description" width="600"><figcaption>optional caption</figcaption></figure>
-- Image position: add one class to the <figure> — "image-style-align-left", "image-style-align-center", "image-style-align-right", or "image-style-side" (floated right sidebar image). Resize with the width attribute (pixels).
+- Image position: add one class to the <figure> — "image-style-align-left", "image-style-align-center", "image-style-align-right", or "image-style-side" (floated right sidebar image).
+- Image formatting: you can add style="object-fit: cover; width: 100%;", style="object-fit: contain; width: 100%;", style="object-fit: fill; width: 100%;" or width attribute (pixels) directly to the <img> tag inside the <figure>.
 - Only reference image URLs the user gave you, images already present in the article, or clearly-labelled placeholders such as https://placehold.co/800x400.
 - Never include <html>, <head>, <body> or <script> tags.
 
 Reply in the user's language (interface locale: ${locale}).
 When the user only asks a question, return "actions": [].`;
 
-const SELECTION_SYSTEM_PROMPT = `You rewrite fragments of a blog article.
-You receive an HTML fragment and an instruction.
+const buildSelectionSystemPrompt = ({ toneInstruction }) => `You rewrite fragments of a blog article.
+You receive an HTML fragment and an instruction.${toneInstruction}
 Return ONLY the rewritten HTML fragment. No JSON, no markdown fences, no explanations.
 Keep the same language as the fragment unless asked otherwise, and keep inline formatting (links, bold, images) unless the instruction says to change it.`;
 
@@ -204,13 +222,17 @@ const truncate = (text, max) => {
 /**
  * Builds the user message with document context for the chat assistant.
  */
-export const buildEditorContextMessage = ({ title, html, selectionHtml, userMessage }) => {
+export const buildEditorContextMessage = ({ title, html, selectionHtml, templates, userMessage }) => {
   const parts = [
     `POST TITLE: ${title || '(untitled)'}`,
     `CURRENT ARTICLE HTML:\n${truncate(html, MAX_CONTEXT_HTML) || '(empty)'}`
   ];
   if (selectionHtml) {
     parts.push(`CURRENTLY SELECTED FRAGMENT:\n${truncate(selectionHtml, 8000)}`);
+  }
+  if (templates && templates.length > 0) {
+    const tpls = templates.map(t => `Template "${t.name}":\n${t.content}`).join('\n\n');
+    parts.push(`AVAILABLE TEMPLATES:\n${tpls}`);
   }
   parts.push(`USER REQUEST:\n${userMessage}`);
   return parts.join('\n\n---\n\n');
@@ -362,8 +384,10 @@ export const complete = async ({ system, messages, maxTokens = 8192 }) => {
 /**
  * Chat with the editor assistant. Returns { reply, actions }.
  */
-export const chat = async ({ history = [], userMessage, title, html, selectionHtml, locale = 'en-US' }) => {
-  const contextMessage = buildEditorContextMessage({ title, html, selectionHtml, userMessage });
+export const chat = async ({ history = [], userMessage, title, html, selectionHtml, templates, locale = 'en-US' }) => {
+  const settings = getAISettings();
+  const toneInstruction = getToneInstruction(settings);
+  const contextMessage = buildEditorContextMessage({ title, html, selectionHtml, templates, userMessage });
 
   // Older turns are sent as plain text (no document snapshots) to keep
   // requests small; the current turn carries the fresh article HTML.
@@ -373,7 +397,7 @@ export const chat = async ({ history = [], userMessage, title, html, selectionHt
   ];
 
   const raw = await complete({
-    system: buildAssistantSystemPrompt({ locale }),
+    system: buildAssistantSystemPrompt({ locale, toneInstruction }),
     messages
   });
 
@@ -389,8 +413,11 @@ export const chat = async ({ history = [], userMessage, title, html, selectionHt
  * Returns the replacement HTML.
  */
 export const transformSelection = async ({ selectionHtml, instruction, title, locale = 'en-US' }) => {
+  const settings = getAISettings();
+  const toneInstruction = getToneInstruction(settings);
+
   const raw = await complete({
-    system: SELECTION_SYSTEM_PROMPT,
+    system: buildSelectionSystemPrompt({ toneInstruction }),
     messages: [{
       role: 'user',
       content: [
