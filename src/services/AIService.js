@@ -23,24 +23,24 @@ export const AI_PROVIDERS = {
   openai: {
     id: 'openai',
     label: 'OpenAI (GPT)',
-    models: ['gpt-4o-mini', 'gpt-4o', 'o1-mini', 'o1-preview', 'o3-mini', 'gpt-4.5-preview'],
-    defaultModel: 'gpt-4o-mini',
+    models: ['gpt-5.5-pro', 'gpt-5.4-pro', 'gpt-5.4-mini', 'gpt-5.4-nano', 'o3-pro', 'o3-mini'],
+    defaultModel: 'gpt-5.4-mini',
     keyPlaceholder: 'sk-...',
     keyUrl: 'https://platform.openai.com/api-keys'
   },
   gemini: {
     id: 'gemini',
     label: 'Google (Gemini)',
-    models: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'],
-    defaultModel: 'gemini-2.5-flash',
+    models: ['gemini-3.5-flash', 'gemini-3.1-pro', 'gemini-2.5-flash-lite', 'gemini-omni'],
+    defaultModel: 'gemini-3.5-flash',
     keyPlaceholder: 'AIza...',
     keyUrl: 'https://aistudio.google.com/app/apikey'
   },
   anthropic: {
     id: 'anthropic',
     label: 'Anthropic (Claude)',
-    models: ['claude-sonnet-4-5', 'claude-haiku-4-5', 'claude-opus-4-1'],
-    defaultModel: 'claude-sonnet-4-5',
+    models: ['claude-opus-4-8', 'claude-sonnet-5', 'claude-fable-5', 'claude-haiku-4-5'],
+    defaultModel: 'claude-sonnet-5',
     keyPlaceholder: 'sk-ant-...',
     keyUrl: 'https://console.anthropic.com/settings/keys'
   }
