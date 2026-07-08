@@ -269,6 +269,37 @@ portáteis para Windows, Linux e macOS. Os binários macOS devem ser criados em
 macOS para poderem receber assinatura ad-hoc; builds locais em Windows ignoram
 os alvos macOS.
 
+## 📱 App Android (preview experimental)
+
+Cada release inclui também `blogcraft-x.y.z-android.apk`, uma app Android
+nativa que embrulha a interface do BlogCraft (construída com Capacitor).
+
+- Descarregue o APK da
+  [página de Releases](https://github.com/hubertdungen/blogcraft/releases) e
+  permita "instalar de fontes desconhecidas" quando o Android pedir.
+- O APK é auto-assinado para distribuição direta (não está na Play Store).
+  Por omissão cada release é assinado com uma chave nova, pelo que o Android
+  pode exigir desinstalar a versão anterior antes de atualizar. Os
+  maintainers podem definir os secrets `ANDROID_KEYSTORE_BASE64`
+  (+ password/alias) no repositório para assinar todos os releases com uma
+  chave estável.
+- **Limitação conhecida**: a Google bloqueia o seu início de sessão OAuth
+  dentro de WebViews embebidas em alguns dispositivos. A app aplica uma
+  medida de compatibilidade, mas se o login falhar com um erro
+  *"disallowed_useragent"* ou semelhante, a versão Android ainda não é
+  utilizável nesse dispositivo — um fluxo de login nativo está no roadmap.
+  As versões portáteis para desktop são a opção estável.
+
+Para compilar o APK localmente:
+
+```bash
+npm run build
+npx cap sync android
+cd android && ./gradlew assembleRelease
+```
+
+O resultado é criado em `android/app/build/outputs/apk/release/`.
+
 ## 📚 Mais Ajuda
 - [Documentação da API do Blogger](https://developers.google.com/blogger/docs/3.0/getting_started)
 - [Guia OAuth do Google](https://developers.google.com/identity/protocols/oauth2)
@@ -285,6 +316,7 @@ O BlogCraft requer permissões mínimas para:
 - Aceder a informações básicas de perfil
 
 ## 🗺️ Roadmap (curto prazo)
+- Fluxo de login Google nativo para a app Android
 - Streaming das respostas de IA no painel de chat
 - Upload de imagens para um serviço de alojamento (em vez de base64)
 - Variáveis/snippets de template mais poderosos

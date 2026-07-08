@@ -4,7 +4,9 @@ Estrutura atual do repositório (ficheiros relevantes):
 
 ```
 blogcraft/
-├── .github/workflows/        # Workflow de release (binários portáveis)
+├── .github/workflows/        # Workflows: release (binários + APK) e teste Android
+├── android/                  # Projeto nativo Android (Capacitor); a keystore
+│                             # de assinatura é gerada no CI (nunca versionada)
 ├── docs/screenshots/         # Capturas de ecrã usadas no README
 ├── public/                   # Ficheiros estáticos (index.html, logos, manifest)
 ├── src/
@@ -56,6 +58,7 @@ blogcraft/
 │   ├── reportWebVitals.js
 │   └── setupTests.js
 ├── build-release.js / .sh / .bat # Empacotamento portátil (pkg)
+├── capacitor.config.json         # Configuração do wrapper Android (Capacitor)
 ├── config-overrides.js           # Overrides do webpack (CSS do CKEditor)
 ├── scheduler.js                  # Serviço opcional de publicação agendada
 ├── server.js                     # Servidor estático de produção
@@ -103,6 +106,8 @@ blogcraft/
 ## Planeamento (roadmap)
 
 Curto prazo:
+- [x] App Android experimental (wrapper Capacitor, APK nos releases)
+- [ ] Fluxo de login Google nativo na app Android
 - [x] Assistente de IA integrado no editor (chat + ações no documento)
 - [x] Menu de IA sobre seleção de texto (melhorar/corrigir/encurtar/expandir/pedido livre)
 - [x] Inserção de imagens do disco (base64) e redimensionamento/posicionamento

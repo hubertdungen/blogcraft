@@ -263,6 +263,35 @@ The GitHub Actions release workflow builds and attaches Windows, Linux, and
 macOS portable binaries. macOS binaries should be built on macOS so they can be
 ad-hoc signed; local Windows builds skip macOS targets.
 
+## 📱 Android App (experimental preview)
+
+Each release also ships `blogcraft-x.y.z-android.apk`, a native Android app
+that wraps the BlogCraft interface (built with Capacitor).
+
+- Download the APK from the
+  [Releases page](https://github.com/hubertdungen/blogcraft/releases) and
+  allow "install from unknown sources" when Android asks.
+- The APK is self-signed for direct distribution (it is not on the Play
+  Store). By default each release is signed with a fresh key, so Android may
+  require uninstalling the previous version before updating. Maintainers can
+  set the `ANDROID_KEYSTORE_BASE64` (+ password/alias) repository secrets to
+  sign all releases with a stable key.
+- **Known limitation**: Google blocks its OAuth sign-in inside embedded
+  WebViews on some devices. The app applies a compatibility workaround, but
+  if sign-in fails with a *"disallowed_useragent"* or similar error, the
+  Android build is not yet usable on that device — a native sign-in flow is
+  on the roadmap. The desktop portable builds are the stable option.
+
+To build the APK yourself:
+
+```bash
+npm run build
+npx cap sync android
+cd android && ./gradlew assembleRelease
+```
+
+The result is created at `android/app/build/outputs/apk/release/`.
+
 ## 🕒 Background Scheduler Service
 
 BlogCraft includes an optional Node.js scheduler that can publish posts at a later time even when the main UI is closed.
@@ -291,6 +320,7 @@ BlogCraft requires minimal permissions to:
 - Access basic profile information
 
 ## 🗺️ Roadmap (short-term)
+- Native Google sign-in flow for the Android app
 - Streaming AI responses in the chat panel
 - Image upload to a hosting service (instead of base64 embedding)
 - More powerful template variables and snippets
