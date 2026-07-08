@@ -1,157 +1,129 @@
 # Estrutura do Projeto BlogCraft
 
-Abaixo está a estrutura de arquivos recomendada para o projeto BlogCraft:
+Estrutura atual do repositório (ficheiros relevantes):
 
 ```
 blogcraft/
-├── node_modules/
-├── public/
-│   ├── index.html
-│   ├── logo.svg
-│   ├── logo192.png
-│   ├── logo512.png
-│   ├── manifest.json
-│   └── robots.txt
+├── .github/workflows/        # Workflow de release (binários portáveis)
+├── docs/screenshots/         # Capturas de ecrã usadas no README
+├── public/                   # Ficheiros estáticos (index.html, logos, manifest)
 ├── src/
 │   ├── components/
-│   │   ├── Dashboard.js
-│   │   ├── PostEditor.js
-│   │   ├── Settings.js
-│   │   ├── Sidebar.js
-│   │   └── TemplatesManager.js
+│   │   ├── AIAssistant.js       # Painel de chat com IA no editor
+│   │   ├── AISelectionMenu.js   # Menu flutuante de IA sobre texto selecionado
+│   │   ├── AuthDebugger.js      # Ferramenta de depuração de autenticação
+│   │   ├── Dashboard.js         # Painel com blogues, posts recentes e estatísticas
+│   │   ├── Feedback.js          # Mensagens de feedback (sucesso/erro/info)
+│   │   ├── LanguageSelector.js  # Seletor de idioma no login
+│   │   ├── Login.js             # Autenticação Google OAuth
+│   │   ├── LoginDebugger.js     # Overlay de depuração do login
+│   │   ├── PostEditor.js        # Editor de artigos (CKEditor 5 + IA)
+│   │   ├── Settings.js          # Definições (incl. fornecedor de IA)
+│   │   ├── Sidebar.js           # Navegação lateral
+│   │   └── TemplatesManager.js  # Gestor de modelos de conteúdo
+│   ├── locales/
+│   │   ├── en-US.js             # Traduções em inglês
+│   │   └── pt-PT.js             # Traduções em português
 │   ├── services/
-│   │   └── BloggerService.js
+│   │   ├── AIService.js         # Integração multi-fornecedor de IA (GPT/Gemini/Claude)
+│   │   ├── AIService.test.js    # Testes do serviço de IA
+│   │   ├── AuthService.js       # Gestão de tokens e sessão Google
+│   │   ├── BloggerService.js    # Cliente da API do Blogger (cache, timeouts)
+│   │   ├── BloggerService.test.js
+│   │   ├── I18nService.js       # Serviço de internacionalização
+│   │   └── TokenManager.js      # Utilitários de token
 │   ├── styles/
+│   │   ├── ai.css               # Estilos do assistente de IA
+│   │   ├── app.css              # Estilos globais e layout
 │   │   ├── dashboard.css
+│   │   ├── debug.css
 │   │   ├── editor.css
+│   │   ├── feedback.css
+│   │   ├── index.css
 │   │   ├── settings.css
 │   │   └── templates.css
 │   ├── utils/
+│   │   ├── ckeditorExtensions.js # Plugins runtime do CKEditor (upload base64,
+│   │   │                         # preservação de largura/altura de imagens,
+│   │   │                         # configuração de toolbar)
 │   │   ├── dateUtils.js
-│   │   └── fileUtils.js
-│   ├── App.css
-│   ├── App.js
-│   ├── App.test.js
-│   ├── index.css
-│   ├── index.js
-│   ├── logo.svg
+│   │   ├── fileUtils.js
+│   │   ├── logger.js
+│   │   └── storage.js            # Acesso seguro ao localStorage
+│   ├── App.js                    # Rotas e layout autenticado
+│   ├── BlogCraft.js
+│   ├── index.js                  # Entrada da aplicação (GoogleOAuthProvider)
 │   ├── reportWebVitals.js
 │   └── setupTests.js
-├── .gitignore
-├── package-lock.json
+├── build-release.js / .sh / .bat # Empacotamento portátil (pkg)
+├── config-overrides.js           # Overrides do webpack (CSS do CKEditor)
+├── scheduler.js                  # Serviço opcional de publicação agendada
+├── server.js                     # Servidor estático de produção
 ├── package.json
-└── README.md
+├── README.md / README_PT.md
+└── Project_Structure.md
 ```
 
-## Passos para Implementação
+## Arquitetura
 
-1. **Configuração da Estrutura de Pastas**:
-   - Criar as pastas `components`, `services`, `styles` e `utils` dentro de `src`
-   - Mover os arquivos desenvolvidos para as pastas apropriadas
+- **UI**: React 18 com `react-router-dom` (HashRouter). Tema claro/escuro
+  aplicado via classe no `body`.
+- **Editor**: CKEditor 5 (build clássico) com plugins runtime adicionais em
+  `src/utils/ckeditorExtensions.js`:
+  - upload de imagens do disco como data URLs base64;
+  - preservação dos atributos `width`/`height` das imagens (necessário para o
+    redimensionamento feito pela IA e por conteúdo importado);
+  - toolbar limitada às funcionalidades realmente existentes no build.
+- **Assistente de IA** (`src/services/AIService.js`):
+  - Fornecedores suportados: OpenAI (GPT), Google (Gemini), Anthropic (Claude).
+  - A chave de API é fornecida pelo utilizador e guardada apenas no
+    `localStorage` (`blogcraft_ai_settings`); os pedidos vão diretamente do
+    navegador para o fornecedor.
+  - Protocolo de ações em JSON: o modelo devolve `{"reply", "actions"}` e o
+    editor aplica `replace_document`, `insert_html`, `replace_selection` e
+    `set_title` através do modelo do CKEditor (compatível com undo).
+  - `transformSelection()` reescreve fragmentos HTML selecionados (menu
+    flutuante de seleção).
+- **Blogger**: `BloggerService.js` encapsula a API v3 com cache de 5 minutos,
+  timeouts e mensagens de erro tratadas.
+- **i18n**: `I18nService.js` + `src/locales/*.js` (en-US, pt-PT).
 
-2. **Instalar Dependências**:
-   ```bash
-   npm install @tinymce/tinymce-react react-datetime-picker file-saver @react-oauth/google react-router-dom
-   ```
+## Dados no localStorage
 
-3. **Configuração do OAuth**:
-   - Confirmar que o Client ID do OAuth está correto em `index.js`:
-   ```javascript
-   const CLIENT_ID = "404858006833-cs2qa9oank867t1jkpttus0uq1m7nnfm.apps.googleusercontent.com";
-   ```
+| Chave                     | Conteúdo                                    |
+| ------------------------- | ------------------------------------------- |
+| `blogcraft_token`         | Access token Google/Blogger                 |
+| `blogcraft_settings`      | Preferências gerais                         |
+| `blogcraft_ai_settings`   | Fornecedor de IA, chaves e modelos          |
+| `blogcraft_templates`     | Modelos de conteúdo                         |
+| `blogcraft_draft_*`       | Rascunhos locais auto-guardados             |
+| `blogcraft_locale`        | Idioma da interface                         |
+| `theme`                   | Tema claro/escuro                           |
 
-4. **Implementação dos Componentes**:
-   - Copiar os componentes desenvolvidos para suas respectivas pastas
-   - Atualizar as importações em cada arquivo para refletir a nova estrutura
+## Planeamento (roadmap)
 
-5. **Implementação dos Estilos**:
-   - Copiar os estilos CSS para seus respectivos arquivos
-   - Importar os estilos em `App.css` ou nos componentes apropriados
+Curto prazo:
+- [x] Assistente de IA integrado no editor (chat + ações no documento)
+- [x] Menu de IA sobre seleção de texto (melhorar/corrigir/encurtar/expandir/pedido livre)
+- [x] Inserção de imagens do disco (base64) e redimensionamento/posicionamento
+- [x] Restauro de rascunhos locais auto-guardados
+- [x] Aplicação do blogue e modelo padrão definidos nas Definições
+- [ ] Streaming das respostas de IA no painel de chat
+- [ ] Upload de imagens para um serviço de alojamento (em vez de base64)
+- [ ] Variáveis de modelo mais poderosas (placeholders dinâmicos)
 
-6. **Configuração dos Arquivos Principais**:
-   - Atualizar `App.js` e `index.js` com o código desenvolvido
+Médio prazo:
+- [ ] Sugestões de SEO geradas por IA a partir do conteúdo
+- [ ] Histórico de conversas de IA por artigo
+- [ ] Suporte offline melhorado
 
-## Utilitários Adicionais
+## Testes
 
-### dateUtils.js
-
-```javascript
-/**
- * Formata uma data para exibição
- * @param {string|Date} date - Data para formatar
- * @returns {string} Data formatada
- */
-export const formatDate = (date) => {
-  if (!date) return '';
-  
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
-  return dateObj.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
-
-/**
- * Verifica se uma data está no futuro
- * @param {string|Date} date - Data para verificar
- * @returns {boolean} True se a data estiver no futuro
- */
-export const isFutureDate = (date) => {
-  if (!date) return false;
-  
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  const now = new Date();
-  
-  return dateObj > now;
-};
+```bash
+npm test -- --watchAll=false   # Jest (serviços)
+npm run build                  # Build de produção
 ```
 
-### fileUtils.js
-
-```javascript
-/**
- * Extrai nome e extensão de um arquivo
- * @param {string} filename - Nome do arquivo
- * @returns {Object} Objeto contendo nome e extensão
- */
-export const parseFileName = (filename) => {
-  const lastDot = filename.lastIndexOf('.');
-  
-  if (lastDot === -1) {
-    return { name: filename, extension: '' };
-  }
-  
-  return {
-    name: filename.substring(0, lastDot),
-    extension: filename.substring(lastDot + 1).toLowerCase()
-  };
-};
-
-/**
- * Verifica se a extensão do arquivo é suportada
- * @param {string} filename - Nome do arquivo
- * @param {Array} supportedExtensions - Lista de extensões suportadas
- * @returns {boolean} True se a extensão for suportada
- */
-export const isExtensionSupported = (filename, supportedExtensions) => {
-  const { extension } = parseFileName(filename);
-  
-  return supportedExtensions.includes(extension);
-};
-```
-
-## Considerações Finais
-
-Ao implementar o projeto, certifique-se de:
-
-1. Verificar que todas as importações estão corretas
-2. Testar o fluxo completo de autenticação e integração com o Blogger
-3. Verificar a responsividade em diferentes dispositivos
-4. Testar o tema claro e escuro
-5. Verificar o tratamento de erros em todos os componentes
-
-Para obter uma chave da API do TinyMCE, visite [https://www.tiny.cloud/](https://www.tiny.cloud/) e registre-se para uma conta gratuita. A chave deve ser adicionada nos componentes que utilizam o editor.
+Os testes cobrem o `BloggerService` e o `AIService` (definições, análise do
+protocolo de ações, sanitização de HTML e transportes dos três fornecedores
+com `fetch` simulado).

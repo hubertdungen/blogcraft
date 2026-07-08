@@ -1,0 +1,443 @@
+/**
+ * AIService - Multi-provider AI integration
+ *
+ * Lets the user plug in their own API key (or subscription key) for
+ * OpenAI (GPT), Google (Gemini) or Anthropic (Claude) and talk to the
+ * model directly from the post editor.
+ *
+ * The service exposes:
+ * - Provider metadata (models, key format hints, docs links)
+ * - Settings persistence (stored locally in the browser only)
+ * - chat()               – free-form conversation with document context
+ * - transformSelection() – rewrite a selected HTML fragment
+ * - parseAssistantResponse() – parses the JSON action protocol
+ * - testConnection()     – small round-trip to validate credentials
+ */
+
+import { getStoredJson, setStoredValue } from '../utils/storage';
+
+const SETTINGS_KEY = 'blogcraft_ai_settings';
+const REQUEST_TIMEOUT = 90 * 1000;
+
+export const AI_PROVIDERS = {
+  openai: {
+    id: 'openai',
+    label: 'OpenAI (GPT)',
+    models: ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1-mini', 'gpt-4.1'],
+    defaultModel: 'gpt-4o-mini',
+    keyPlaceholder: 'sk-...',
+    keyUrl: 'https://platform.openai.com/api-keys'
+  },
+  gemini: {
+    id: 'gemini',
+    label: 'Google (Gemini)',
+    models: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'],
+    defaultModel: 'gemini-2.5-flash',
+    keyPlaceholder: 'AIza...',
+    keyUrl: 'https://aistudio.google.com/app/apikey'
+  },
+  anthropic: {
+    id: 'anthropic',
+    label: 'Anthropic (Claude)',
+    models: ['claude-sonnet-4-5', 'claude-haiku-4-5', 'claude-opus-4-1'],
+    defaultModel: 'claude-sonnet-4-5',
+    keyPlaceholder: 'sk-ant-...',
+    keyUrl: 'https://console.anthropic.com/settings/keys'
+  }
+};
+
+const DEFAULT_SETTINGS = {
+  enabled: false,
+  provider: 'openai',
+  // One key per provider so switching providers does not lose keys.
+  apiKeys: { openai: '', gemini: '', anthropic: '' },
+  // Empty model means "use the provider default".
+  models: { openai: '', gemini: '', anthropic: '' }
+};
+
+export const getAISettings = () => {
+  const stored = getStoredJson(SETTINGS_KEY, {});
+  return {
+    ...DEFAULT_SETTINGS,
+    ...stored,
+    apiKeys: { ...DEFAULT_SETTINGS.apiKeys, ...(stored.apiKeys || {}) },
+    models: { ...DEFAULT_SETTINGS.models, ...(stored.models || {}) }
+  };
+};
+
+export const saveAISettings = (settings) => {
+  const merged = { ...getAISettings(), ...settings };
+  setStoredValue(SETTINGS_KEY, JSON.stringify(merged));
+  window.dispatchEvent(new Event('blogcraft_ai_settings_updated'));
+  return merged;
+};
+
+export const getActiveProvider = (settings = getAISettings()) => {
+  return AI_PROVIDERS[settings.provider] || AI_PROVIDERS.openai;
+};
+
+export const getActiveModel = (settings = getAISettings()) => {
+  const provider = getActiveProvider(settings);
+  return (settings.models && settings.models[provider.id]) || provider.defaultModel;
+};
+
+export const getActiveApiKey = (settings = getAISettings()) => {
+  const provider = getActiveProvider(settings);
+  return ((settings.apiKeys && settings.apiKeys[provider.id]) || '').trim();
+};
+
+export const isAIConfigured = (settings = getAISettings()) => {
+  return !!(settings.enabled && getActiveApiKey(settings));
+};
+
+/**
+ * System prompt for the editor assistant. The model answers with a JSON
+ * envelope so BlogCraft can apply edits directly inside CKEditor.
+ */
+const buildAssistantSystemPrompt = ({ locale }) => `You are BlogCraft's writing assistant, embedded in a rich-text editor for Blogger posts.
+You help the user write, edit and illustrate blog articles.
+
+Always answer with a SINGLE valid JSON object (no markdown fences, no text outside the JSON):
+{
+  "reply": "<short conversational answer for the chat panel>",
+  "actions": [ ...zero or more of the actions below... ]
+}
+
+Available actions:
+- {"type": "replace_document", "html": "<full new article body HTML>"} — rewrite the whole article.
+- {"type": "insert_html", "html": "<HTML fragment>"} — insert content at the user's cursor (or at the end).
+- {"type": "replace_selection", "html": "<HTML fragment>"} — replace the text the user currently has selected. Only use when a selection is provided.
+- {"type": "set_title", "title": "<new post title>"} — change the post title.
+
+HTML rules for article content:
+- Use clean semantic HTML: <h2>/<h3> for sections, <p>, <ul>/<ol>, <blockquote>, <table>, <a>, <strong>, <i>.
+- Images: <figure class="image"><img src="URL" alt="description" width="600"><figcaption>optional caption</figcaption></figure>
+- Image position: add one class to the <figure> — "image-style-align-left", "image-style-align-center", "image-style-align-right", or "image-style-side" (floated right sidebar image). Resize with the width attribute (pixels).
+- Only reference image URLs the user gave you, images already present in the article, or clearly-labelled placeholders such as https://placehold.co/800x400.
+- Never include <html>, <head>, <body> or <script> tags.
+
+Reply in the user's language (interface locale: ${locale}).
+When the user only asks a question, return "actions": [].`;
+
+const SELECTION_SYSTEM_PROMPT = `You rewrite fragments of a blog article.
+You receive an HTML fragment and an instruction.
+Return ONLY the rewritten HTML fragment. No JSON, no markdown fences, no explanations.
+Keep the same language as the fragment unless asked otherwise, and keep inline formatting (links, bold, images) unless the instruction says to change it.`;
+
+/**
+ * Strips markdown code fences the models sometimes add despite instructions.
+ */
+export const stripCodeFences = (text) => {
+  if (!text) return '';
+  let out = text.trim();
+  const fence = out.match(/^```[a-zA-Z]*\s*([\s\S]*?)\s*```$/);
+  if (fence) out = fence[1].trim();
+  return out;
+};
+
+/**
+ * Parses the assistant JSON envelope. Falls back to a plain-text reply
+ * when the model did not follow the protocol.
+ */
+export const parseAssistantResponse = (text) => {
+  const cleaned = stripCodeFences(text);
+
+  let candidate = cleaned;
+  // Some models wrap the JSON in prose; extract the outermost object.
+  if (!candidate.startsWith('{')) {
+    const start = candidate.indexOf('{');
+    const end = candidate.lastIndexOf('}');
+    if (start !== -1 && end > start) {
+      candidate = candidate.slice(start, end + 1);
+    }
+  }
+
+  try {
+    const parsed = JSON.parse(candidate);
+    if (parsed && typeof parsed === 'object' && ('reply' in parsed || 'actions' in parsed)) {
+      const actions = Array.isArray(parsed.actions) ? parsed.actions.filter(isValidAction) : [];
+      return { reply: typeof parsed.reply === 'string' ? parsed.reply : '', actions };
+    }
+  } catch {
+    // Not JSON – treat the full text as a conversational reply.
+  }
+
+  return { reply: cleaned, actions: [] };
+};
+
+const isValidAction = (action) => {
+  if (!action || typeof action !== 'object') return false;
+  switch (action.type) {
+    case 'replace_document':
+    case 'insert_html':
+    case 'replace_selection':
+      return typeof action.html === 'string' && action.html.length > 0;
+    case 'set_title':
+      return typeof action.title === 'string';
+    default:
+      return false;
+  }
+};
+
+/**
+ * Removes obviously dangerous markup from model-generated HTML before it
+ * reaches the editor (defence in depth – CKEditor filters too).
+ */
+export const sanitizeAIHtml = (html) => {
+  if (!html) return '';
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<(iframe|object|embed|form)[\s\S]*?<\/\1>/gi, '')
+    .replace(/\son\w+\s*=\s*"[^"]*"/gi, '')
+    .replace(/\son\w+\s*=\s*'[^']*'/gi, '')
+    .replace(/javascript:/gi, '');
+};
+
+const MAX_CONTEXT_HTML = 60000;
+
+const truncate = (text, max) => {
+  if (!text || text.length <= max) return text || '';
+  return `${text.slice(0, max)}\n<!-- [content truncated] -->`;
+};
+
+/**
+ * Builds the user message with document context for the chat assistant.
+ */
+export const buildEditorContextMessage = ({ title, html, selectionHtml, userMessage }) => {
+  const parts = [
+    `POST TITLE: ${title || '(untitled)'}`,
+    `CURRENT ARTICLE HTML:\n${truncate(html, MAX_CONTEXT_HTML) || '(empty)'}`
+  ];
+  if (selectionHtml) {
+    parts.push(`CURRENTLY SELECTED FRAGMENT:\n${truncate(selectionHtml, 8000)}`);
+  }
+  parts.push(`USER REQUEST:\n${userMessage}`);
+  return parts.join('\n\n---\n\n');
+};
+
+/* ------------------------------------------------------------------ */
+/* Provider transports                                                  */
+/* ------------------------------------------------------------------ */
+
+const fetchWithTimeout = async (url, options) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('AI request timed out. Please try again.');
+    }
+    throw new Error('Could not reach the AI provider. Check your connection.');
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
+const readErrorMessage = async (response) => {
+  let detail = '';
+  try {
+    const data = await response.json();
+    detail = data?.error?.message || data?.message || '';
+  } catch {
+    // ignore body parse failures
+  }
+  if (response.status === 401 || response.status === 403) {
+    return `The AI provider rejected the API key (${response.status}). ${detail}`.trim();
+  }
+  if (response.status === 429) {
+    return `AI rate limit or quota exceeded (429). ${detail}`.trim();
+  }
+  return `AI request failed (${response.status}). ${detail}`.trim();
+};
+
+const callOpenAI = async ({ apiKey, model, system, messages, maxTokens }) => {
+  const response = await fetchWithTimeout('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model,
+      max_completion_tokens: maxTokens,
+      messages: [
+        { role: 'system', content: system },
+        ...messages.map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content }))
+      ]
+    })
+  });
+
+  if (!response.ok) throw new Error(await readErrorMessage(response));
+  const data = await response.json();
+  const text = data?.choices?.[0]?.message?.content;
+  if (!text) throw new Error('The AI provider returned an empty response.');
+  return text;
+};
+
+const callGemini = async ({ apiKey, model, system, messages, maxTokens }) => {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+  const response = await fetchWithTimeout(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': apiKey
+    },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: system }] },
+      contents: messages.map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }]
+      })),
+      generationConfig: { maxOutputTokens: maxTokens }
+    })
+  });
+
+  if (!response.ok) throw new Error(await readErrorMessage(response));
+  const data = await response.json();
+  const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('');
+  if (!text) throw new Error('The AI provider returned an empty response.');
+  return text;
+};
+
+const callAnthropic = async ({ apiKey, model, system, messages, maxTokens }) => {
+  const response = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      // Required for calling the Anthropic API from a browser with a user-supplied key.
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: maxTokens,
+      system,
+      messages: messages.map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content }))
+    })
+  });
+
+  if (!response.ok) throw new Error(await readErrorMessage(response));
+  const data = await response.json();
+  const text = (data?.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+  if (!text) throw new Error('The AI provider returned an empty response.');
+  return text;
+};
+
+const TRANSPORTS = {
+  openai: callOpenAI,
+  gemini: callGemini,
+  anthropic: callAnthropic
+};
+
+/**
+ * Low-level completion call.
+ * @param {Object} params
+ * @param {string} params.system - system prompt
+ * @param {Array<{role: 'user'|'assistant', content: string}>} params.messages
+ * @param {number} [params.maxTokens]
+ * @returns {Promise<string>} raw model text
+ */
+export const complete = async ({ system, messages, maxTokens = 8192 }) => {
+  const settings = getAISettings();
+
+  if (!settings.enabled) {
+    throw new Error('AI assistant is disabled. Enable it in Settings.');
+  }
+
+  const apiKey = getActiveApiKey(settings);
+  if (!apiKey) {
+    throw new Error('No API key configured for the selected AI provider. Add one in Settings.');
+  }
+
+  const provider = getActiveProvider(settings);
+  const transport = TRANSPORTS[provider.id];
+  const model = getActiveModel(settings);
+
+  return transport({ apiKey, model, system, messages, maxTokens });
+};
+
+/**
+ * Chat with the editor assistant. Returns { reply, actions }.
+ */
+export const chat = async ({ history = [], userMessage, title, html, selectionHtml, locale = 'en-US' }) => {
+  const contextMessage = buildEditorContextMessage({ title, html, selectionHtml, userMessage });
+
+  // Older turns are sent as plain text (no document snapshots) to keep
+  // requests small; the current turn carries the fresh article HTML.
+  const messages = [
+    ...history.slice(-8).map(m => ({ role: m.role, content: m.content })),
+    { role: 'user', content: contextMessage }
+  ];
+
+  const raw = await complete({
+    system: buildAssistantSystemPrompt({ locale }),
+    messages
+  });
+
+  const parsed = parseAssistantResponse(raw);
+  parsed.actions = parsed.actions.map(action => (
+    action.html ? { ...action, html: sanitizeAIHtml(action.html) } : action
+  ));
+  return parsed;
+};
+
+/**
+ * Rewrites a selected HTML fragment following an instruction.
+ * Returns the replacement HTML.
+ */
+export const transformSelection = async ({ selectionHtml, instruction, title, locale = 'en-US' }) => {
+  const raw = await complete({
+    system: SELECTION_SYSTEM_PROMPT,
+    messages: [{
+      role: 'user',
+      content: [
+        `Interface locale: ${locale}`,
+        `Article title: ${title || '(untitled)'}`,
+        `Instruction: ${instruction}`,
+        `Fragment to rewrite:\n${selectionHtml}`
+      ].join('\n\n')
+    }],
+    maxTokens: 4096
+  });
+
+  const html = sanitizeAIHtml(stripCodeFences(raw));
+  if (!html.trim()) {
+    throw new Error('The AI provider returned an empty response.');
+  }
+  return html;
+};
+
+/**
+ * Validates the configured provider/key with a minimal request.
+ */
+export const testConnection = async () => {
+  const raw = await complete({
+    system: 'You are a connectivity test. Answer with the single word: OK',
+    messages: [{ role: 'user', content: 'ping' }],
+    maxTokens: 20
+  });
+  return raw.trim();
+};
+
+const AIService = {
+  AI_PROVIDERS,
+  getAISettings,
+  saveAISettings,
+  getActiveProvider,
+  getActiveModel,
+  getActiveApiKey,
+  isAIConfigured,
+  parseAssistantResponse,
+  stripCodeFences,
+  sanitizeAIHtml,
+  buildEditorContextMessage,
+  complete,
+  chat,
+  transformSelection,
+  testConnection
+};
+
+export default AIService;

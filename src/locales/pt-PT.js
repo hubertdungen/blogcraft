@@ -152,7 +152,84 @@ const translations = {
         selectBlog: 'Por favor, selecione um blogue antes de guardar o artigo.',
         enterTitle: 'Por favor, insira um título para o artigo.',
         loadBlogs: 'Não foi possível carregar os seus blogues. Por favor, verifique a sua conexão e tente novamente.',
-        loadPost: 'Não foi possível carregar o artigo. Por favor, verifique a sua conexão e tente novamente.'
+        loadPost: 'Não foi possível carregar o artigo. Por favor, verifique a sua conexão e tente novamente.',
+        importBinary: 'Este ficheiro Word está num formato binário que não pode ser importado diretamente. No Word, guarde o documento como "Página Web (.html)" ou texto simples e importe esse ficheiro.'
+      },
+      draft: {
+        restoreConfirm: 'Foi encontrado um rascunho guardado automaticamente em {time}. Deseja restaurá-lo?'
+      },
+      stats: {
+        words: '{count} palavras',
+        characters: '{count} caracteres'
+      }
+    },
+
+    ai: {
+      toggle: 'Assistente IA',
+      toggleTooltip: 'Abrir o assistente de escrita com IA (GPT, Gemini ou Claude)',
+      chat: {
+        title: 'Assistente IA',
+        placeholder: 'Peça à IA para escrever, editar ou ilustrar o artigo...',
+        send: 'Enviar',
+        emptyState: 'Peça à IA para escrever um artigo completo, reescrever secções, corrigir a gramática, inserir imagens, ou qualquer outra coisa. As alterações são aplicadas diretamente no editor e podem ser desfeitas com Ctrl+Z.',
+        changesApplied: 'Alterações aplicadas ao artigo',
+        notConfigured: 'O assistente de IA ainda não está configurado. Adicione a sua chave de API da OpenAI (GPT), Google (Gemini) ou Anthropic (Claude) nas Definições para começar a usá-lo.',
+        openSettings: 'Abrir Definições de IA',
+        error: 'Erro de IA: {message}'
+      },
+      quickActions: {
+        improve: 'Melhorar escrita',
+        grammar: 'Corrigir gramática',
+        continue: 'Continuar a escrever',
+        summarize: 'Adicionar resumo',
+        titles: 'Sugerir título',
+        images: 'Sugerir imagens'
+      },
+      quickPrompts: {
+        improve: 'Melhora a escrita de todo o artigo: torna-o mais claro e cativante mantendo o significado, a estrutura, o idioma e as imagens.',
+        grammar: 'Corrige todos os erros de gramática, ortografia e pontuação do artigo sem alterar o estilo, a estrutura ou o idioma.',
+        continue: 'Continua a escrever o artigo a partir do ponto onde termina, mantendo o mesmo tom, idioma e formatação. Adiciona um ou dois parágrafos novos.',
+        summarize: 'Adiciona um pequeno resumo introdutório (2-3 frases) no início do artigo, mantendo o idioma.',
+        titles: 'Sugere um título melhor para este artigo e aplica-o. Menciona algumas alternativas na tua resposta.',
+        images: 'Sugere onde imagens melhorariam este artigo e insere imagens de exemplo (https://placehold.co) com texto alternativo descritivo e legendas nesses locais.'
+      },
+      selection: {
+        label: 'Ações de IA para a seleção',
+        working: 'A reescrever a seleção...',
+        applied: 'Seleção atualizada pela IA.',
+        askPlaceholder: 'Diga à IA o que fazer com a seleção...'
+      },
+      selectionActions: {
+        improve: 'Melhorar',
+        grammar: 'Corrigir',
+        shorten: 'Encurtar',
+        expand: 'Expandir',
+        ask: 'Pedir à IA'
+      },
+      selectionPrompts: {
+        improve: 'Melhora este texto: torna-o mais claro e cativante mantendo o significado e o idioma.',
+        grammar: 'Corrige a gramática, ortografia e pontuação sem alterar o estilo ou o idioma.',
+        shorten: 'Torna este texto mais conciso mantendo toda a informação essencial e o idioma.',
+        expand: 'Expande este texto com mais detalhe e exemplos, mantendo o tom e o idioma.'
+      },
+      settings: {
+        section: 'Assistente de IA',
+        enable: 'Ativar assistente de IA',
+        enableDesc: 'Mostra o assistente de IA e as ferramentas de seleção no editor de artigos.',
+        provider: 'Fornecedor de IA:',
+        providerDesc: 'Escolha o serviço de IA a usar com a sua própria chave de API ou subscrição.',
+        apiKey: 'Chave de API:',
+        apiKeyDesc: 'A sua chave de API pessoal para o fornecedor selecionado.',
+        getKey: 'Obter uma chave de API',
+        showKey: 'Mostrar',
+        hideKey: 'Ocultar',
+        model: 'Modelo:',
+        modelDesc: 'Modelo usado para o chat e edição de texto.',
+        defaultModel: 'Predefinido ({model})',
+        testConnection: 'Testar Ligação',
+        testing: 'A testar...',
+        testSuccess: 'Ligação a funcionar!',
+        securityNote: 'A sua chave de API é guardada apenas neste navegador (localStorage) e enviada diretamente para o fornecedor de IA. Os pedidos podem gerar custos na sua conta do fornecedor. Evite guardar chaves em computadores partilhados.'
       }
     },
 

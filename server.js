@@ -99,6 +99,12 @@ const openBrowser = (url) => {
       stdio: 'ignore',
       windowsHide: true
     });
+    // spawn() reports a missing opener (e.g. headless Linux without
+    // xdg-open) asynchronously; without this handler the whole server
+    // crashes with an unhandled 'error' event.
+    child.on('error', (error) => {
+      console.warn(`Unable to open the browser automatically: ${error.message}`);
+    });
     child.unref();
   } catch (error) {
     console.warn(`Unable to open the browser automatically: ${error.message}`);

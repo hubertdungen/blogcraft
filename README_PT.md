@@ -89,14 +89,65 @@ ativa.
 
 ## ✨ Novidades
 
+- **Assistente de IA**: ligue a sua própria chave de API da OpenAI (GPT),
+  Google (Gemini) ou Anthropic (Claude) e deixe a IA escrever, editar e
+  ilustrar artigos diretamente no editor — via chat, botões de ações rápidas
+  ou um menu flutuante sobre o texto selecionado.
+- Correções na edição de texto: upload de imagens funcional (incorporadas em
+  base64), tamanho/posição das imagens preservados durante a edição, toolbar
+  limpa, contagem de palavras/caracteres, restauro de rascunhos auto-guardados
+  e aplicação do blogue/modelo padrão das Definições.
 - Login Google via `@react-oauth/google` com escopo do Blogger
 - Melhorias no manuseio de token em `AuthService` e `TokenManager` (verificações de sessão, armazenamento mais seguro)
 - `BloggerService` com cache, timeouts e mensagens de erro mais claras (401/403/429)
 - Dashboard: seleção de blog, posts recentes e estatísticas mensais básicas
-- Editor (TinyMCE): rascunho/publicar, agendamento, etiquetas, injeção de metadados, importação (TXT/HTML/Word) e exportação para Word
+- Editor (CKEditor 5): rascunho/publicar, agendamento, etiquetas, injeção de metadados, importação (TXT/HTML) e exportação para Word
 - Gestor de Templates: criar, editar, apagar e reutilizar templates de conteúdo
-- Definições: tema (escuro/claro), predefinições, opções de autosave/backup
+- Definições: tema (escuro/claro), predefinições, opções de autosave/backup, configuração do fornecedor de IA
 - Fundações de i18n (`en-US`, `pt-PT`) e melhorias de estilo
+
+## 🤖 Assistente de IA (GPT / Gemini / Claude)
+
+O BlogCraft pode ligar-se a um fornecedor de IA à sua escolha usando a sua
+própria chave de API ou subscrição. Tudo corre no seu navegador: a chave é
+guardada apenas no `localStorage` e os pedidos vão diretamente do navegador
+para o fornecedor.
+
+### Configuração
+
+1. Abra **Definições → Assistente de IA**.
+2. Ative o assistente e escolha um fornecedor:
+   - **OpenAI (GPT)** — chave em <https://platform.openai.com/api-keys>
+   - **Google (Gemini)** — chave em <https://aistudio.google.com/app/apikey>
+   - **Anthropic (Claude)** — chave em <https://console.anthropic.com/settings/keys>
+3. Cole a sua chave de API, escolha opcionalmente um modelo e prima
+   **Testar Ligação**.
+4. Guarde as definições.
+
+### Utilização no editor
+
+- Clique em **✨ Assistente IA** no cabeçalho do Editor de Artigos para abrir
+  o painel de chat. Peça à IA para escrever um artigo completo, reestruturar
+  secções, corrigir o tom, adicionar um resumo, sugerir um título ou inserir
+  imagens — as alterações são aplicadas diretamente na caixa de texto e podem
+  ser desfeitas com `Ctrl+Z`.
+- Os botões de ações rápidas (Melhorar escrita, Corrigir gramática, Continuar
+  a escrever, Adicionar resumo, Sugerir título, Sugerir imagens) executam
+  pedidos comuns com um clique.
+- **Selecione qualquer texto** no editor para obter um menu flutuante de IA
+  com *Melhorar*, *Corrigir*, *Encurtar*, *Expandir* e *Pedir à IA* (instrução
+  livre). O fragmento selecionado é reescrito no próprio local.
+- A IA pode inserir imagens e alterar a sua posição (esquerda/centro/direita/
+  lateral) e tamanho; também pode ajustar imagens manualmente com a toolbar
+  de imagem.
+
+### Notas sobre privacidade e custos
+
+- A sua chave de API nunca sai da sua máquina exceto para chamar o fornecedor
+  que escolheu.
+- Os pedidos de IA são faturados na sua conta do fornecedor segundo os preços
+  deste.
+- Evite guardar chaves de API em computadores partilhados.
 
 ## 🔑 Guia de Autenticação
 
@@ -234,8 +285,10 @@ O BlogCraft requer permissões mínimas para:
 - Aceder a informações básicas de perfil
 
 ## 🗺️ Roadmap (curto prazo)
-- Upload de imagens e gestão de media aprimorados
+- Streaming das respostas de IA no painel de chat
+- Upload de imagens para um serviço de alojamento (em vez de base64)
 - Variáveis/snippets de template mais poderosos
+- Sugestões de SEO geradas por IA
 - Experiência offline/autosalvamento melhorada
 
 ---
