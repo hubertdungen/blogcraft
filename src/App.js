@@ -18,6 +18,7 @@ import './styles/editor.css';
 import './styles/templates.css';
 import './styles/settings.css';
 import './styles/feedback.css';
+import './styles/ai.css';
 
 // Protected route component to handle authentication
 const ProtectedRoute = ({ children }) => {

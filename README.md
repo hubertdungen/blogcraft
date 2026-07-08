@@ -26,11 +26,55 @@ donation button below.
 
 ## 🆕 What's New
 
+- **AI Assistant**: connect your own OpenAI (GPT), Google (Gemini) or
+  Anthropic (Claude) API key and let the AI write, edit and illustrate posts
+  directly inside the editor — via chat, quick-action buttons, or a floating
+  menu over selected text.
+- Text-editing fixes: working image upload (embedded as base64), image
+  size/position preserved while editing, cleaned-up toolbar, word/character
+  count, auto-saved draft restore, and default blog/template applied from
+  Settings.
 - Portable Windows release opens BlogCraft automatically and falls back to the
   next local port if `3000` is busy.
 - Windows `.exe` builds include the BlogCraft logo/icon.
 - Refreshed dashboard/editor/template styling and README screenshots.
 - Added a PayPal donation button for project support.
+
+## 🤖 AI Assistant (GPT / Gemini / Claude)
+
+BlogCraft can connect to an AI provider of your choice using your own API key
+or subscription. Everything runs in your browser: the key is stored only in
+`localStorage` and requests go directly from your browser to the provider.
+
+### Setup
+
+1. Open **Settings → AI Assistant**.
+2. Enable the assistant and pick a provider:
+   - **OpenAI (GPT)** — key from <https://platform.openai.com/api-keys>
+   - **Google (Gemini)** — key from <https://aistudio.google.com/app/apikey>
+   - **Anthropic (Claude)** — key from <https://console.anthropic.com/settings/keys>
+3. Paste your API key, optionally pick a model, and press **Test Connection**.
+4. Save the settings.
+
+### Using the assistant in the editor
+
+- Click **✨ AI Assistant** in the Post Editor header to open the chat panel.
+  Ask the AI to write a full article, restructure sections, fix the tone,
+  add a summary, suggest a title, or insert images — the changes are applied
+  directly in the text box and can be undone with `Ctrl+Z`.
+- Quick-action buttons (Improve writing, Fix grammar, Continue writing,
+  Add summary, Suggest title, Suggest images) run common requests in one click.
+- **Select any text** in the editor to get a floating AI menu with
+  *Improve*, *Fix grammar*, *Shorten*, *Expand* and *Ask AI* (free-form
+  instruction). The selected fragment is rewritten in place.
+- The AI can insert images, and change their position (left/center/right/side)
+  and size; you can also adjust images manually with the image toolbar.
+
+### Notes on privacy and cost
+
+- Your API key never leaves your machine except to call the provider you chose.
+- AI requests are billed to your provider account according to their pricing.
+- Avoid storing API keys on shared computers.
 
 ## 🚀 Quick Start
 
@@ -91,15 +135,16 @@ the user's normal two-factor authentication if their account has it enabled.
 
 5. Access the application at `http://localhost:3000`
 
-## ✨ What's new
+## ✨ Feature overview
 
 - Robust Google Sign-In via `@react-oauth/google` with Blogger scope
 - Token handling improvements in `AuthService` and `TokenManager` (session checks, safer storage)
 - `BloggerService` with caching, timeouts, and clearer error messages (401/403/429)
 - Dashboard: blog selector, recent posts, and basic monthly stats
-- Post Editor (TinyMCE): draft/publish, scheduling, labels, metadata injection, import (TXT/HTML/Word) and export to Word
+- Post Editor (CKEditor 5): draft/publish, scheduling, labels, metadata injection, image upload with resize/position, word count, import (TXT/HTML) and export to Word
+- AI Assistant: chat panel, quick actions and selection menu backed by GPT, Gemini or Claude with your own API key
 - Templates Manager: create, edit, delete, and reuse content templates
-- Settings: theme (dark/light), defaults, autosave/backup options
+- Settings: theme (dark/light), defaults, autosave/backup options, AI provider configuration
 - i18n foundations (`en-US`, `pt-PT`) and improved styling
 
 ## 🔑 Authentication Guide
@@ -246,8 +291,10 @@ BlogCraft requires minimal permissions to:
 - Access basic profile information
 
 ## 🗺️ Roadmap (short-term)
-- Image upload conveniences and media management
+- Streaming AI responses in the chat panel
+- Image upload to a hosting service (instead of base64 embedding)
 - More powerful template variables and snippets
+- AI-generated SEO suggestions
 - Improved offline/auto-save experience
 
 ---

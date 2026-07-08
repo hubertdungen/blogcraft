@@ -10,8 +10,17 @@ import { saveAs } from 'file-saver';
 import BloggerService from '../services/BloggerService';
 import AuthService from '../services/AuthService';
 import Feedback from './Feedback';
+import AIAssistant from './AIAssistant';
+import AISelectionMenu from './AISelectionMenu';
 import i18n, { t } from '../services/I18nService';
-import { getStoredJson, setStoredValue } from '../utils/storage';
+import { getStoredJson, getStoredValue, setStoredValue } from '../utils/storage';
+import {
+  Base64UploadAdapterPlugin,
+  ImageSizeAttributesPlugin,
+  EDITOR_TOOLBAR,
+  EDITOR_IMAGE_CONFIG,
+  EDITOR_TABLE_CONFIG
+} from '../utils/ckeditorExtensions';
 
 /**
  * Componente do Editor de Posts
@@ -64,6 +73,11 @@ function PostEditor({ theme, toggleTheme }) {
   // Estado para mensagens de feedback
   const [feedback, setFeedback] = useState(null);
   const autoSaveDataRef = useRef({ postData, metadata, selectedBlog, postId });
+
+  // Assistente de IA
+  const [editorInstance, setEditorInstance] = useState(null);
+  const [showAIPanel, setShowAIPanel] = useState(() => getStoredValue('blogcraft_ai_panel_open') === 'true');
+  const draftCheckedRef = useRef(false);
 
   useEffect(() => {
     autoSaveDataRef.current = { postData, metadata, selectedBlog, postId };
@@ -126,6 +140,56 @@ function PostEditor({ theme, toggleTheme }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBlog, postId]);
 
+  /**
+   * Ao criar um novo post: oferece a restauração do rascunho local
+   * (auto-guardado) ou aplica o template padrão das definições.
+   */
+  useEffect(() => {
+    if (draftCheckedRef.current || !selectedBlog || postId) return;
+    if (location.state && (location.state.title || location.state.content)) return;
+
+    draftCheckedRef.current = true;
+
+    const draftKey = `blogcraft_draft_${selectedBlog}_new`;
+    const draft = getStoredJson(draftKey, null);
+
+    if (draft && (draft.title || draft.content)) {
+      const savedAt = draft.savedAt ? new Date(draft.savedAt).toLocaleString() : '';
+      if (window.confirm(t('editor.draft.restoreConfirm', { time: savedAt }))) {
+        setPostData(prev => ({
+          ...prev,
+          title: draft.title || '',
+          content: draft.content || '',
+          labels: draft.labels || []
+        }));
+        if (draft.metadata) {
+          setMetadata(draft.metadata);
+        }
+        if (editorRef.current && draft.content) {
+          editorRef.current.setData(draft.content);
+        }
+        return;
+      }
+      localStorage.removeItem(draftKey);
+    }
+
+    // Sem rascunho: aplicar o template padrão definido nas Definições.
+    const settings = getStoredJson('blogcraft_settings', {});
+    if (settings.defaultTemplate) {
+      const savedTemplates = getStoredJson('blogcraft_templates', []);
+      const defaultTemplate = savedTemplates.find(
+        tpl => String(tpl.id) === String(settings.defaultTemplate)
+      );
+      if (defaultTemplate && defaultTemplate.content) {
+        setPostData(prev => (prev.content ? prev : { ...prev, content: defaultTemplate.content }));
+        if (editorRef.current) {
+          editorRef.current.setData(defaultTemplate.content);
+        }
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedBlog, postId]);
+
 
   /**
    * Auto-salva o post atual como rascunho
@@ -176,10 +240,13 @@ function PostEditor({ theme, toggleTheme }) {
       
       if (data.items) {
         setBlogs(data.items);
-        
-        // Se não houver blog selecionado, selecionar o primeiro
+
+        // Se não houver blog selecionado, usar o blog padrão das
+        // definições (quando existir) ou o primeiro da lista
         if (!selectedBlog && data.items.length > 0) {
-          setSelectedBlog(data.items[0].id);
+          const settings = getStoredJson('blogcraft_settings', {});
+          const preferred = data.items.find(blog => blog.id === settings.defaultBlogId);
+          setSelectedBlog((preferred || data.items[0]).id);
         }
       }
     } catch (error) {
@@ -406,6 +473,86 @@ function PostEditor({ theme, toggleTheme }) {
   };
 
   /**
+   * Insere um fragmento HTML no editor mantendo o histórico de undo.
+   * @param {string} html - Fragmento HTML a inserir
+   * @param {Object} [range] - Range do modelo a substituir (opcional)
+   */
+  const insertHtmlInEditor = (html, range = null) => {
+    const editor = editorRef.current;
+    if (!editor) return false;
+
+    const viewFragment = editor.data.processor.toView(html);
+    const modelFragment = editor.data.toModel(viewFragment);
+
+    if (range) {
+      editor.model.insertContent(modelFragment, range);
+    } else {
+      editor.model.insertContent(modelFragment);
+    }
+    return true;
+  };
+
+  /**
+   * Aplica uma ação devolvida pelo assistente de IA diretamente no
+   * artigo (documento completo, inserção, substituição da seleção ou
+   * título). As alterações passam pelo modelo do CKEditor, por isso
+   * podem ser desfeitas com Ctrl+Z.
+   */
+  const applyAIAction = (action) => {
+    const editor = editorRef.current;
+
+    switch (action.type) {
+      case 'set_title':
+        setPostData(prev => ({ ...prev, title: action.title }));
+        return true;
+
+      case 'replace_document': {
+        if (!editor) {
+          setPostData(prev => ({ ...prev, content: action.html }));
+          return true;
+        }
+        const root = editor.model.document.getRoot();
+        const range = editor.model.createRangeIn(root);
+        return insertHtmlInEditor(action.html, range);
+      }
+
+      case 'insert_html':
+      case 'replace_selection':
+        return insertHtmlInEditor(action.html);
+
+      default:
+        return false;
+    }
+  };
+
+  /**
+   * Devolve o HTML atualmente selecionado no editor (para dar contexto
+   * ao assistente de IA).
+   */
+  const getEditorSelectionHtml = () => {
+    const editor = editorRef.current;
+    if (!editor) return '';
+
+    try {
+      const selection = editor.model.document.selection;
+      if (selection.isCollapsed) return '';
+      return editor.data.stringify(editor.model.getSelectedContent(selection));
+    } catch {
+      return '';
+    }
+  };
+
+  /**
+   * Alterna o painel do assistente de IA
+   */
+  const toggleAIPanel = () => {
+    setShowAIPanel(prev => {
+      setStoredValue('blogcraft_ai_panel_open', String(!prev));
+      return !prev;
+    });
+  };
+
+  /**
    * Salva o post (como rascunho ou publicado)
    */
   const handleSavePost = async (publish = false) => {
@@ -561,26 +708,39 @@ function PostEditor({ theme, toggleTheme }) {
     
     reader.onload = (event) => {
       const fileContent = event.target.result;
-      
+
+      // Ficheiros .docx (e .doc modernos) são contentores ZIP binários
+      // que não podem ser interpretados como HTML no navegador.
+      if (typeof fileContent === 'string' && fileContent.startsWith('PK')) {
+        setFeedback({
+          type: 'error',
+          message: t('editor.errors.importBinary')
+        });
+        e.target.value = '';
+        return;
+      }
+
       // Tentar extrair título e conteúdo
       let title = '';
       let content = '';
-      
+
       if (file.name.endsWith('.txt')) {
         // Arquivo TXT - primeira linha como título, resto como conteúdo
         const lines = fileContent.split('\n');
         title = lines[0] || '';
-        content = lines.slice(1).join('\n');
-      } else if (file.name.endsWith('.doc') || file.name.endsWith('.docx') || file.name.endsWith('.html')) {
+        content = lines.slice(1)
+          .map(line => (line.trim() ? `<p>${line}</p>` : ''))
+          .join('');
+      } else {
         // Arquivo Word/HTML - tentar extrair conteúdo
         try {
           const parser = new DOMParser();
           const doc = parser.parseFromString(fileContent, 'text/html');
-          
+
           // Tentar obter o título
           const titleElement = doc.querySelector('title') || doc.querySelector('h1');
           title = titleElement ? titleElement.textContent : '';
-          
+
           // Obter o conteúdo do body
           const bodyElement = doc.querySelector('body');
           content = bodyElement ? bodyElement.innerHTML : fileContent;
@@ -589,25 +749,33 @@ function PostEditor({ theme, toggleTheme }) {
           content = fileContent;
         }
       }
-      
+
       setPostData(prev => ({
         ...prev,
         title: title || prev.title,
         content: content || prev.content
       }));
-      
+
       // Atualizar o editor com o novo conteúdo
-      if (editorRef.current) {
+      if (editorRef.current && content) {
         editorRef.current.setData(content);
       }
+      e.target.value = '';
     };
-    
-    if (file.name.endsWith('.txt') || file.name.endsWith('.html')) {
-      reader.readAsText(file);
-    } else {
-      reader.readAsDataURL(file);
-    }
+
+    reader.readAsText(file);
   };
+
+  // Contagem de palavras/caracteres do artigo (sem markup)
+  const plainText = postData.content
+    ? postData.content
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+    : '';
+  const wordCount = plainText ? plainText.split(' ').length : 0;
+  const charCount = plainText.length;
 
   /**
    * Render do componente
@@ -619,15 +787,23 @@ function PostEditor({ theme, toggleTheme }) {
         
         <div className="editor-actions">
           <button
+            className={`ai-toggle-button ${showAIPanel ? 'active' : ''}`}
+            onClick={toggleAIPanel}
+            title={t('ai.toggleTooltip')}
+          >
+            <span role="img" aria-label="AI">✨</span> {t('ai.toggle')}
+          </button>
+
+          <button
             className="save-draft-button"
             onClick={handleSaveAsDraft}
             disabled={saving}
           >
             {saving ? t('editor.saving.saving') : t('editor.buttons.saveDraft')}
           </button>
-          
-          <button 
-            className="publish-button" 
+
+          <button
+            className="publish-button"
             onClick={handlePublish}
             disabled={saving}
           >
@@ -647,7 +823,8 @@ function PostEditor({ theme, toggleTheme }) {
       {loading ? (
         <div className="loading">{t('common.loading')}</div>
       ) : (
-        <>
+        <div className={`editor-body ${showAIPanel ? 'with-ai' : ''}`}>
+        <div className="editor-main">
           <div className="blog-selector">
             <label>{t('editor.labels.blog')}</label>
             <select
@@ -796,52 +973,47 @@ function PostEditor({ theme, toggleTheme }) {
               onReady={editor => {
                 // Armazenar referência ao editor
                 editorRef.current = editor;
-                
+                setEditorInstance(editor);
+
                 // Configurações adicionais
                 editor.ui.view.editable.element.style.minHeight = '500px';
               }}
               config={{
-                toolbar: [
-                  'heading',
-                  '|',
-                  'bold', 'italic', 'strikethrough', 'underline',
-                  '|',
-                  'link', 'bulletedList', 'numberedList', 'todoList',
-                  '|',
-                  'indent', 'outdent',
-                  '|',
-                  'imageUpload', 'blockQuote', 'insertTable', 'mediaEmbed',
-                  '|',
-                  'undo', 'redo',
-                  '|',
-                  'fontBackgroundColor', 'fontColor',
-                  '|',
-                  'fontSize', 'fontFamily',
-                  '|',
-                  'alignment',
-                  '|',
-                  'horizontalLine'
-                ],
-                image: {
-                  // Configuração para upload de imagens
-                  toolbar: [
-                    'imageTextAlternative',
-                    'imageStyle:full',
-                    'imageStyle:side'
-                  ]
-                },
-                table: {
-                  contentToolbar: [
-                    'tableColumn', 'tableRow', 'mergeTableCells',
-                    'tableCellProperties', 'tableProperties'
-                  ]
-                },
-                  language: i18n.getLocale().split('-')[0]
-                }}
-              />
+                // Plugins adicionais: upload de imagens (base64) e
+                // preservação de largura/altura das imagens
+                extraPlugins: [Base64UploadAdapterPlugin, ImageSizeAttributesPlugin],
+                toolbar: EDITOR_TOOLBAR,
+                image: EDITOR_IMAGE_CONFIG,
+                table: EDITOR_TABLE_CONFIG,
+                language: i18n.getLocale().split('-')[0]
+              }}
+            />
           </div>
-        </>
+
+          <div className="editor-statusbar">
+            <span>{t('editor.stats.words', { count: wordCount })}</span>
+            <span>·</span>
+            <span>{t('editor.stats.characters', { count: charCount })}</span>
+          </div>
+        </div>
+
+        {showAIPanel && (
+          <AIAssistant
+            getTitle={() => autoSaveDataRef.current.postData.title}
+            getContent={() => autoSaveDataRef.current.postData.content}
+            getSelectionHtml={getEditorSelectionHtml}
+            applyAction={applyAIAction}
+            onClose={toggleAIPanel}
+          />
+        )}
+        </div>
       )}
+
+      <AISelectionMenu
+        editor={editorInstance}
+        getTitle={() => autoSaveDataRef.current.postData.title}
+        onFeedback={setFeedback}
+      />
       
       {/* Indicador de salvamento */}
       {saving && (

@@ -152,7 +152,84 @@ const translations = {
         selectBlog: 'Please select a blog before saving the post.',
         enterTitle: 'Please enter a title for the post.',
         loadBlogs: 'Unable to load your blogs. Please check your connection and try again.',
-        loadPost: 'Unable to load the post. Please check your connection and try again.'
+        loadPost: 'Unable to load the post. Please check your connection and try again.',
+        importBinary: 'This Word file is in a binary format that cannot be imported directly. In Word, save the document as "Web Page (.html)" or plain text and import that file.'
+      },
+      draft: {
+        restoreConfirm: 'An auto-saved draft from {time} was found. Do you want to restore it?'
+      },
+      stats: {
+        words: '{count} words',
+        characters: '{count} characters'
+      }
+    },
+
+    ai: {
+      toggle: 'AI Assistant',
+      toggleTooltip: 'Open the AI writing assistant (GPT, Gemini or Claude)',
+      chat: {
+        title: 'AI Assistant',
+        placeholder: 'Ask the AI to write, edit or illustrate your article...',
+        send: 'Send',
+        emptyState: 'Ask the AI to write a full article, rewrite sections, fix grammar, insert images, or anything else. Changes are applied directly in the editor and can be undone with Ctrl+Z.',
+        changesApplied: 'Changes applied to the article',
+        notConfigured: 'The AI assistant is not configured yet. Add your OpenAI (GPT), Google (Gemini) or Anthropic (Claude) API key in Settings to start using it.',
+        openSettings: 'Open AI Settings',
+        error: 'AI error: {message}'
+      },
+      quickActions: {
+        improve: 'Improve writing',
+        grammar: 'Fix grammar',
+        continue: 'Continue writing',
+        summarize: 'Add summary',
+        titles: 'Suggest title',
+        images: 'Suggest images'
+      },
+      quickPrompts: {
+        improve: 'Improve the writing of the whole article: make it clearer and more engaging while keeping the meaning, structure, language and images.',
+        grammar: 'Fix all grammar, spelling and punctuation mistakes in the article without changing its style, structure or language.',
+        continue: 'Continue writing the article from where it ends, keeping the same tone, language and formatting. Add one or two new paragraphs.',
+        summarize: 'Add a short introduction summary (2-3 sentences) at the top of the article, keeping its language.',
+        titles: 'Suggest a better title for this article and set it. Mention a couple of alternatives in your reply.',
+        images: 'Suggest where images would improve this article and insert placeholder images (https://placehold.co) with descriptive alt text and captions at those spots.'
+      },
+      selection: {
+        label: 'AI actions for the selection',
+        working: 'Rewriting selection...',
+        applied: 'Selection updated by the AI.',
+        askPlaceholder: 'Tell the AI what to do with the selection...'
+      },
+      selectionActions: {
+        improve: 'Improve',
+        grammar: 'Fix grammar',
+        shorten: 'Shorten',
+        expand: 'Expand',
+        ask: 'Ask AI'
+      },
+      selectionPrompts: {
+        improve: 'Improve this text: make it clearer and more engaging while keeping the meaning and language.',
+        grammar: 'Fix grammar, spelling and punctuation without changing the style or language.',
+        shorten: 'Make this text more concise while keeping all key information and the language.',
+        expand: 'Expand this text with more detail and examples, keeping the tone and language.'
+      },
+      settings: {
+        section: 'AI Assistant',
+        enable: 'Enable AI assistant',
+        enableDesc: 'Shows the AI assistant and selection tools in the post editor.',
+        provider: 'AI Provider:',
+        providerDesc: 'Choose which AI service to use with your own API key or subscription.',
+        apiKey: 'API Key:',
+        apiKeyDesc: 'Your personal API key for the selected provider.',
+        getKey: 'Get an API key',
+        showKey: 'Show',
+        hideKey: 'Hide',
+        model: 'Model:',
+        modelDesc: 'Model used for chat and text editing.',
+        defaultModel: 'Default ({model})',
+        testConnection: 'Test Connection',
+        testing: 'Testing...',
+        testSuccess: 'Connection working!',
+        securityNote: 'Your API key is stored only in this browser (localStorage) and sent directly to the AI provider. Requests may incur costs on your provider account. Do not use shared computers for storing keys.'
       }
     },
 

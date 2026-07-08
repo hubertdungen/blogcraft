@@ -7,6 +7,7 @@ import BloggerService from '../services/BloggerService';
 // Importar o serviço de internacionalização
 import i18n, { LOCALES, t } from '../services/I18nService';
 import { getStoredJson } from '../utils/storage';
+import AIService, { AI_PROVIDERS, getAISettings, saveAISettings } from '../services/AIService';
 
 /**
  * Componente Settings - Configurações da aplicação
@@ -37,7 +38,12 @@ function Settings({ theme, toggleTheme }) {
     showDebugger: false
   });
   const [error, setError] = useState(null);
-  
+
+  // Definições do assistente de IA
+  const [aiSettings, setAISettings] = useState(getAISettings());
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [aiTestState, setAITestState] = useState({ status: 'idle', message: '' });
+
   // Carregar configurações e dados ao montar o componente
   useEffect(() => {
     loadSettings();
@@ -127,6 +133,38 @@ function Settings({ theme, toggleTheme }) {
   };
 
   /**
+   * Atualiza uma definição do assistente de IA
+   */
+  const handleAIChange = (field, value) => {
+    setAITestState({ status: 'idle', message: '' });
+    setAISettings(prev => {
+      if (field === 'apiKey') {
+        return { ...prev, apiKeys: { ...prev.apiKeys, [prev.provider]: value } };
+      }
+      if (field === 'model') {
+        return { ...prev, models: { ...prev.models, [prev.provider]: value } };
+      }
+      return { ...prev, [field]: value };
+    });
+  };
+
+  /**
+   * Testa a ligação ao fornecedor de IA com as definições atuais
+   */
+  const handleTestAI = async () => {
+    setAITestState({ status: 'testing', message: '' });
+    // Guardar primeiro para que o serviço use as definições atuais
+    saveAISettings(aiSettings);
+
+    try {
+      await AIService.testConnection();
+      setAITestState({ status: 'success', message: t('ai.settings.testSuccess') });
+    } catch (error) {
+      setAITestState({ status: 'error', message: error.message });
+    }
+  };
+
+  /**
    * Manipula a mudança de idioma
    */
   const handleLanguageChange = (e) => {
@@ -151,6 +189,9 @@ function Settings({ theme, toggleTheme }) {
           }
         })
       );
+
+      // Salvar definições do assistente de IA
+      saveAISettings(aiSettings);
 
       // Salvar idioma
       i18n.setLocale(language);
@@ -408,6 +449,109 @@ function Settings({ theme, toggleTheme }) {
                 <p className="setting-description">{t('settings.fields.languageDesc')}</p>
               </div>
             </div>
+            <div className="setting-group">
+              <h2>{t('ai.settings.section')}</h2>
+
+              <div className="setting-item">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={aiSettings.enabled}
+                    onChange={(e) => handleAIChange('enabled', e.target.checked)}
+                  />
+                  {t('ai.settings.enable')}
+                </label>
+                <p className="setting-description">{t('ai.settings.enableDesc')}</p>
+              </div>
+
+              {aiSettings.enabled && (
+                <>
+                  <div className="setting-item">
+                    <label htmlFor="aiProvider">{t('ai.settings.provider')}</label>
+                    <select
+                      id="aiProvider"
+                      value={aiSettings.provider}
+                      onChange={(e) => handleAIChange('provider', e.target.value)}
+                    >
+                      {Object.values(AI_PROVIDERS).map(provider => (
+                        <option key={provider.id} value={provider.id}>{provider.label}</option>
+                      ))}
+                    </select>
+                    <p className="setting-description">{t('ai.settings.providerDesc')}</p>
+                  </div>
+
+                  <div className="setting-item">
+                    <label htmlFor="aiApiKey">{t('ai.settings.apiKey')}</label>
+                    <div className="ai-key-row">
+                      <input
+                        id="aiApiKey"
+                        type={showApiKey ? 'text' : 'password'}
+                        autoComplete="off"
+                        value={aiSettings.apiKeys[aiSettings.provider] || ''}
+                        placeholder={AI_PROVIDERS[aiSettings.provider].keyPlaceholder}
+                        onChange={(e) => handleAIChange('apiKey', e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="ai-key-toggle"
+                        onClick={() => setShowApiKey(prev => !prev)}
+                      >
+                        {showApiKey ? t('ai.settings.hideKey') : t('ai.settings.showKey')}
+                      </button>
+                    </div>
+                    <p className="setting-description">
+                      {t('ai.settings.apiKeyDesc')}{' '}
+                      <a
+                        href={AI_PROVIDERS[aiSettings.provider].keyUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {t('ai.settings.getKey')}
+                      </a>
+                    </p>
+                  </div>
+
+                  <div className="setting-item">
+                    <label htmlFor="aiModel">{t('ai.settings.model')}</label>
+                    <select
+                      id="aiModel"
+                      value={aiSettings.models[aiSettings.provider] || ''}
+                      onChange={(e) => handleAIChange('model', e.target.value)}
+                    >
+                      <option value="">
+                        {t('ai.settings.defaultModel', { model: AI_PROVIDERS[aiSettings.provider].defaultModel })}
+                      </option>
+                      {AI_PROVIDERS[aiSettings.provider].models.map(model => (
+                        <option key={model} value={model}>{model}</option>
+                      ))}
+                    </select>
+                    <p className="setting-description">{t('ai.settings.modelDesc')}</p>
+                  </div>
+
+                  <div className="setting-item">
+                    <div className="ai-test-row">
+                      <button
+                        type="button"
+                        className="ai-test-button"
+                        onClick={handleTestAI}
+                        disabled={aiTestState.status === 'testing' || !(aiSettings.apiKeys[aiSettings.provider] || '').trim()}
+                      >
+                        {aiTestState.status === 'testing' ? t('ai.settings.testing') : t('ai.settings.testConnection')}
+                      </button>
+                      {aiTestState.status === 'success' && (
+                        <span className="ai-test-result success">✓ {aiTestState.message}</span>
+                      )}
+                      {aiTestState.status === 'error' && (
+                        <span className="ai-test-result error">✗ {aiTestState.message}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <p className="ai-security-note">{t('ai.settings.securityNote')}</p>
+                </>
+              )}
+            </div>
+
             <div className="setting-group">
               <h2>{t('settings.sections.debug')}</h2>
 
