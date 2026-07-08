@@ -1,0 +1,67 @@
+name: Android build test
+
+# Validation of the Android APK build, used to verify the Capacitor
+# project compiles before pushing a release tag. Runs manually or on
+# pushes that touch the Android project.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'claude/**'
+    paths:
+      - 'android/**'
+      - 'capacitor.config.json'
+      - '.github/workflows/android-test.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Android APK (test)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Sync Capacitor Android project
+        run: npx cap sync android
+
+      - name: Prepare signing key (ephemeral)
+        run: |
+          keytool -genkeypair -keystore android/blogcraft-dist.keystore -alias blogcraft \
+            -keyalg RSA -keysize 2048 -validity 10950 \
+            -storepass blogcraft -keypass blogcraft \
+            -dname "CN=BlogCraft, O=hubertdungen"
+
+      - name: Build signed APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: blogcraft-android-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 7

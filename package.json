@@ -20,6 +20,8 @@
     "scheduler": "node scheduler.js"
   },
   "dependencies": {
+    "@capacitor/android": "^6.2.1",
+    "@capacitor/core": "^6.2.1",
     "@ckeditor/ckeditor5-build-classic": "^35.4.0",
     "@ckeditor/ckeditor5-react": "^5.0.6",
     "@ckeditor/ckeditor5-theme-lark": "^46.0.1",
@@ -34,6 +36,7 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@capacitor/cli": "^6.2.1",
     "@ckeditor/ckeditor5-dev-utils": "^43.1.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
