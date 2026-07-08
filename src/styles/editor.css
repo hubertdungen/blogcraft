@@ -111,7 +111,11 @@
 
   .editor-content .post-actions {
     display: grid;
-    grid-template-columns: repeat(4, minmax(180px, 1fr));
+    /* auto-fit reflows by the real container width, so the fields stay
+       aligned whether or not the AI panel is open (a fixed column count
+       plus viewport media queries overflowed once the panel narrowed the
+       editor column without changing the viewport width). */
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
     gap: 16px;
     margin-bottom: 20px;
     align-items: end;
@@ -297,6 +301,14 @@
     border: 1px solid;
     box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
   }
+
+  /* Keep a comfortable editing height. This must live in CSS: CKEditor
+     manages the editable element's inline `style` attribute and wipes any
+     inline min-height we set from JS the moment the editor gains focus,
+     which otherwise collapses the box to a single line on first click. */
+  .rich-editor .ck-editor__editable_inline {
+    min-height: 500px;
+  }
   
   .light .rich-editor {
     border-color: var(--border-light);
@@ -438,12 +450,6 @@
     color: #d4edda;
   }
   
-  @media (max-width: 1180px) {
-    .editor-content .post-actions {
-      grid-template-columns: repeat(2, minmax(220px, 1fr));
-    }
-  }
-
   /* Responsividade */
   @media (max-width: 768px) {
     .editor-content {
