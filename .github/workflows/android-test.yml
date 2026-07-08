@@ -1,9 +1,17 @@
 name: Android build test
 
-# Manually-triggered validation of the Android APK build, used to verify
-# the Capacitor project compiles before pushing a release tag.
+# Validation of the Android APK build, used to verify the Capacitor
+# project compiles before pushing a release tag. Runs manually or on
+# pushes that touch the Android project.
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - 'claude/**'
+    paths:
+      - 'android/**'
+      - 'capacitor.config.json'
+      - '.github/workflows/android-test.yml'
 
 permissions:
   contents: read
