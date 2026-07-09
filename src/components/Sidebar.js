@@ -44,7 +44,7 @@ function Sidebar({ theme, toggleTheme }) {
       <div className="logo">
         <h2>
           <img src={logo} alt="BlogArtifex logo" className="logo-icon" />
-          BlogCraft
+          BlogArtifex
         </h2>
       </div>
       

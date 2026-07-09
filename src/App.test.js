@@ -9,7 +9,7 @@ test('renders login page heading', () => {
       <App />
     </GoogleOAuthProvider>
   );
-  const heading = screen.getByText(/blogcraft/i);
+  const heading = screen.getByText(/blogartifex/i);
   expect(heading).toBeInTheDocument();
 });
 
@@ -24,7 +24,7 @@ test('renders even when saved settings contain invalid JSON', () => {
       </GoogleOAuthProvider>
     );
 
-    expect(screen.getByText(/blogcraft/i)).toBeInTheDocument();
+    expect(screen.getByText(/blogartifex/i)).toBeInTheDocument();
   } finally {
     warn.mockRestore();
   }

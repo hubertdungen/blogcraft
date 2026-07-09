@@ -89,10 +89,19 @@ ativa.
 
 ## ✨ Novidades
 
+- **Renomeado para BlogArtifex** com um novo logótipo vetorial coerente (uma
+  ponta de caneta roxo→ciano que se dissolve em píxeis), usado de forma
+  consistente no ícone da app, favicon e ícones Android.
 - **Assistente de IA**: ligue a sua própria chave de API da OpenAI (GPT),
-  Google (Gemini) ou Anthropic (Claude) e deixe a IA escrever, editar e
-  ilustrar artigos diretamente no editor — via chat, botões de ações rápidas
-  ou um menu flutuante sobre o texto selecionado.
+  Google (Gemini) ou Anthropic (Claude) e deixe a IA escrever, editar,
+  formatar e ilustrar artigos diretamente no editor — via chat, botões de
+  ações rápidas ou um menu flutuante sobre o texto selecionado. Escolha um tom
+  de escrita nas Definições; o assistente também pode reutilizar os seus
+  modelos guardados.
+- **Formatação de imagens**: selecione uma imagem para definir o ajuste
+  (padrão, conter, cobrir, esticar); a IA também pode controlar tamanho/posição.
+- Corrigido um bug crítico de migração de armazenamento que terminava a sessão
+  e apagava os dados locais em cada carregamento; rebrand concluído em toda a app.
 - Correções na edição de texto: upload de imagens funcional (incorporadas em
   base64), tamanho/posição das imagens preservados durante a edição, toolbar
   limpa, contagem de palavras/caracteres, restauro de rascunhos auto-guardados

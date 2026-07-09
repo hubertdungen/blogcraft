@@ -51,7 +51,7 @@ jobs:
           keytool -genkeypair -keystore android/blogcraft-dist.keystore -alias blogcraft \
             -keyalg RSA -keysize 2048 -validity 10950 \
             -storepass blogcraft -keypass blogcraft \
-            -dname "CN=BlogCraft, O=hubertdungen"
+            -dname "CN=BlogArtifex, O=hubertdungen"
 
       - name: Build signed APK
         run: |

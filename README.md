@@ -26,10 +26,18 @@ donation button below.
 
 ## 🆕 What's New
 
+- **Rebranded to BlogArtifex** with a new, coherent vector logo (a
+  purple→cyan pen nib dissolving into pixels) used consistently across the
+  app icon, favicon and Android launcher icons.
 - **AI Assistant**: connect your own OpenAI (GPT), Google (Gemini) or
-  Anthropic (Claude) API key and let the AI write, edit and illustrate posts
-  directly inside the editor — via chat, quick-action buttons, or a floating
-  menu over selected text.
+  Anthropic (Claude) API key and let the AI write, edit, format and
+  illustrate posts directly inside the editor — via chat, quick-action
+  buttons, or a floating menu over selected text. Pick a writing tone in
+  Settings, and the assistant can reuse your saved templates.
+- **Image formatting**: select an image to set its fit (standard, contain,
+  cover, stretch); the AI can control image size/position too.
+- Fixed a critical storage-migration bug that logged users out and wiped
+  local data on every load; completed the rebrand across the whole app.
 - Text-editing fixes: working image upload (embedded as base64), image
   size/position preserved while editing, cleaned-up toolbar, word/character
   count, auto-saved draft restore, and default blog/template applied from

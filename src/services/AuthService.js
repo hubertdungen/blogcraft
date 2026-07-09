@@ -1,5 +1,5 @@
 /**
- * AuthService - Enhanced service for BlogCraft authentication
+ * AuthService - Enhanced service for BlogArtifex authentication
  * Fixed to properly handle Google OAuth token validation
  */
 
