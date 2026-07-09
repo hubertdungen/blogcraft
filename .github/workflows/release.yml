@@ -84,14 +84,14 @@ jobs:
         run: npm run release:linux
 
       - name: Mark executable
-        run: chmod +x dist/blogcraft-*-linux-x64
+        run: chmod +x dist/blogartifex-*-linux-x64
 
       - name: Upload Linux asset
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           TAG_NAME: ${{ inputs.tag || github.ref_name }}
-        run: gh release upload "$TAG_NAME" dist/blogcraft-*-linux-x64 --clobber
+        run: gh release upload "$TAG_NAME" dist/blogartifex-*-linux-x64 --clobber
 
   macos:
     name: macOS portable binaries
@@ -116,18 +116,18 @@ jobs:
 
       - name: Ad-hoc sign macOS binaries
         run: |
-          codesign --force --sign - dist/blogcraft-*-macos-x64
-          codesign --force --sign - dist/blogcraft-*-macos-arm64
+          codesign --force --sign - dist/blogartifex-*-macos-x64
+          codesign --force --sign - dist/blogartifex-*-macos-arm64
 
       - name: Mark executable
-        run: chmod +x dist/blogcraft-*-macos-*
+        run: chmod +x dist/blogartifex-*-macos-*
 
       - name: Upload macOS assets
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           TAG_NAME: ${{ inputs.tag || github.ref_name }}
-        run: gh release upload "$TAG_NAME" dist/blogcraft-*-macos-* --clobber
+        run: gh release upload "$TAG_NAME" dist/blogartifex-*-macos-* --clobber
 
   android:
     name: Android APK
@@ -187,8 +187,8 @@ jobs:
       - name: Rename APK
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          cp android/app/build/outputs/apk/release/app-release.apk "blogcraft-${VERSION}-android.apk"
-          echo "APK_NAME=blogcraft-${VERSION}-android.apk" >> "$GITHUB_ENV"
+          cp android/app/build/outputs/apk/release/app-release.apk "blogartifex-${VERSION}-android.apk"
+          echo "APK_NAME=blogartifex-${VERSION}-android.apk" >> "$GITHUB_ENV"
 
       - name: Upload Android asset
         env:
