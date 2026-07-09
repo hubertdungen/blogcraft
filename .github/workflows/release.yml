@@ -29,8 +29,8 @@ jobs:
           gh release view "$TAG_NAME" >/dev/null 2>&1 || \
           gh release create "$TAG_NAME" \
             --target "$GITHUB_SHA" \
-            --title "BlogCraft $TAG_NAME" \
-            --notes "Portable BlogCraft binaries — no installation or dependencies required. Run the file for your operating system; BlogCraft starts locally and opens the browser automatically. The Android APK is an experimental preview: enable \"install from unknown sources\" to sideload it."
+            --title "BlogArtifex $TAG_NAME" \
+            --notes "Portable BlogArtifex binaries — no installation or dependencies required. Run the file for your operating system; BlogArtifex starts locally and opens the browser automatically. The Android APK is an experimental preview: enable \"install from unknown sources\" to sideload it."
 
   windows:
     name: Windows portable binary
@@ -170,7 +170,7 @@ jobs:
             keytool -genkeypair -keystore android/blogcraft-dist.keystore -alias blogcraft \
               -keyalg RSA -keysize 2048 -validity 10950 \
               -storepass blogcraft -keypass blogcraft \
-              -dname "CN=BlogCraft, O=hubertdungen"
+              -dname "CN=BlogArtifex, O=hubertdungen"
             echo "No ANDROID_KEYSTORE_BASE64 secret set; generated an ephemeral signing key (APK signature will differ between releases)"
           fi
 

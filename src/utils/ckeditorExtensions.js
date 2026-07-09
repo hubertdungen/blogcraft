@@ -10,7 +10,7 @@
 
 /**
  * Upload adapter that inlines picked files as base64 data URLs.
- * Blogger accepts data URLs in post HTML, and this keeps BlogCraft
+ * Blogger accepts data URLs in post HTML, and this keeps BlogArtifex
  * free of any server-side upload dependency.
  */
 class Base64UploadAdapter {

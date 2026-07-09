@@ -122,13 +122,13 @@ const listenOnPort = (port, attemptsLeft = MAX_PORT_ATTEMPTS) => {
       return;
     }
 
-    console.error(`BlogCraft could not start: ${error.message}`);
+    console.error(`BlogArtifex could not start: ${error.message}`);
     process.exitCode = 1;
   });
 
   server.once('listening', () => {
     const url = `http://localhost:${port}`;
-    console.log(`BlogCraft running on ${url}`);
+    console.log(`BlogArtifex running on ${url}`);
     openBrowser(url);
   });
 

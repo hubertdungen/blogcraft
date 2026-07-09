@@ -61,8 +61,8 @@ function Login() {
     <div className="login-container">
       <div className="login-card">
         <h1>
-          <img src={logo} alt="BlogCraft logo" className="logo-icon" />
-          BlogCraft
+          <img src={logo} alt="BlogArtifex logo" className="logo-icon" />
+          BlogArtifex
         </h1>
         <p>Editor Avançado para Blogger</p>
         
@@ -1117,8 +1117,8 @@ function Sidebar({ theme, toggleTheme }) {
     <div className="sidebar">
       <div className="logo">
         <h2>
-          <img src={logo} alt="BlogCraft logo" className="logo-icon" />
-          BlogCraft
+          <img src={logo} alt="BlogArtifex logo" className="logo-icon" />
+          BlogArtifex
         </h2>
       </div>
       

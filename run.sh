@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Helper script to install dependencies and start BlogCraft
+# Helper script to install dependencies and start BlogArtifex
 
 set -e
 

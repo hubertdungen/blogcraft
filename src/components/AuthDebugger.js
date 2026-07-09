@@ -76,7 +76,7 @@ function AuthDebugger() {
       } else {
         setFeedback({
           type: 'warning',
-          message: 'Token is present, but BlogCraft could not read the account profile. Use "Test API Connection" to verify Blogger access.'
+          message: 'Token is present, but BlogArtifex could not read the account profile. Use "Test API Connection" to verify Blogger access.'
         });
       }
     } catch (error) {
@@ -371,7 +371,7 @@ function AuthDebugger() {
             <div className="oauth-checks">
               <h3>Common Issues Checklist:</h3>
               <ul>
-                <li>Check that BlogCraft is signed into the same Google account shown in Blogger</li>
+                <li>Check that BlogArtifex is signed into the same Google account shown in Blogger</li>
                 <li>Check that the account has author or admin access to at least one Blogger blog</li>
                 <li>For custom OAuth clients, verify the Blogger API and localhost origins in Google Cloud Console</li>
                 <li>If access was denied before, log out and choose the account again</li>

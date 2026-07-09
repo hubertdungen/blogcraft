@@ -97,13 +97,6 @@ const translations = {
     },
     
     editor: {
-    imageFormat: {
-      title: "Image Format",
-      standard: "Standard Size",
-      fit: "Inside Fit (Contain)",
-      fill: "Fill Area (Cover)",
-      stretch: "Stretch to Fit"
-    },
       title: 'Post Editor',
       placeholders: {
         title: 'Post title',
@@ -164,6 +157,13 @@ const translations = {
       },
       draft: {
         restoreConfirm: 'An auto-saved draft from {time} was found. Do you want to restore it?'
+      },
+      imageFormat: {
+        title: 'Image Properties',
+        standard: 'Standard Size',
+        fit: 'Inside Fit (Contain)',
+        fill: 'Fill Area (Cover)',
+        stretch: 'Stretch'
       },
       stats: {
         words: '{count} words',

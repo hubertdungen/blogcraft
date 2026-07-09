@@ -97,13 +97,6 @@ const translations = {
     },
     
     editor: {
-    imageFormat: {
-      title: "Formato da Imagem",
-      standard: "Tamanho Padrão",
-      fit: "Ajustar (Conter)",
-      fill: "Preencher Área (Cobrir)",
-      stretch: "Esticar"
-    },
       title: 'Editor de Artigo',
       placeholders: {
         title: 'Título do artigo',
@@ -164,6 +157,13 @@ const translations = {
       },
       draft: {
         restoreConfirm: 'Foi encontrado um rascunho guardado automaticamente em {time}. Deseja restaurá-lo?'
+      },
+      imageFormat: {
+        title: 'Propriedades da Imagem',
+        standard: 'Tamanho Padrão',
+        fit: 'Ajustar Dentro (Conter)',
+        fill: 'Preencher Área (Cobrir)',
+        stretch: 'Esticar'
       },
       stats: {
         words: '{count} palavras',

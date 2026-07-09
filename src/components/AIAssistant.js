@@ -8,7 +8,7 @@ import { getStoredJson } from '../utils/storage';
  * AIAssistant - Chat panel docked next to the post editor.
  *
  * The user talks to the configured AI provider (GPT / Gemini / Claude).
- * The model can answer in chat and/or return actions that BlogCraft
+ * The model can answer in chat and/or return actions that BlogArtifex
  * applies directly to the article: rewrite the document, insert HTML,
  * replace the current selection, change the title, insert/resize images.
  */
