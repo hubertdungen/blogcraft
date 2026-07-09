@@ -1,4 +1,4 @@
-# BlogArtifex - Advanced Blogger Editor
+<div align="center"><img src="public/logo.svg" alt="BlogArtifex Logo" width="128"><h1>BlogArtifex - Advanced Blogger Editor</h1></div>
 
 ### Currently in Beta - functional portable release! ###
 
