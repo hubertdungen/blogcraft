@@ -5,12 +5,12 @@
 BlogArtifex is a modern web application designed to replace discontinued tools like Open Live Writer, offering a comprehensive solution for editing and publishing on Blogger with an advanced interface and powerful features.
 
 <p align="center">
-  <img src="docs/screenshots/dashboard.png" alt="BlogArtifex dashboard with sanitized demo account" width="900">
+  
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/editor.png" alt="BlogArtifex post editor" width="440">
-  <img src="docs/screenshots/templates.png" alt="BlogArtifex template manager" width="440">
+  
+  
 </p>
 
 ## Support BlogArtifex

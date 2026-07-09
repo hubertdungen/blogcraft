@@ -5,12 +5,12 @@ O BlogArtifex é uma aplicação web moderna concebida para substituir ferrament
 Estado: Beta/Preview - release portátil funcional. Fluxos principais (login com Google, listar blogs e posts, criar/atualizar/publicar, templates e definições) já implementados.
 
 <p align="center">
-  <img src="docs/screenshots/dashboard.png" alt="Dashboard do BlogArtifex com conta demo sanitizada" width="900">
+  
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/editor.png" alt="Editor de posts do BlogArtifex" width="440">
-  <img src="docs/screenshots/templates.png" alt="Gestor de templates do BlogArtifex" width="440">
+  
+  
 </p>
 
 ## Apoiar o BlogArtifex
