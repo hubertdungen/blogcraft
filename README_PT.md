@@ -1,4 +1,4 @@
-# BlogArtifex - Editor Avançado para Blogger
+<div align="center"><img src="public/logo.svg" alt="BlogArtifex Logo" width="128"><h1>BlogArtifex - Editor Avançado para o Blogger</h1></div>
 
 O BlogArtifex é uma aplicação web moderna concebida para substituir ferramentas descontinuadas como o Open Live Writer, oferecendo uma solução abrangente para edição e publicação no Blogger com uma interface avançada e recursos poderosos.
 
