@@ -1,9 +1,9 @@
 .image-formatter-panel {
   position: absolute;
-  right: 20px;
-  top: 140px; /* Below the header */
-  background: var(--bg-surface, #ffffff);
-  border: 1px solid var(--border-color, #e0e0e0);
+  right: 320px;
+  top: 140px;
+  background-color: var(--bg-light, #ffffff);
+  border: 1px solid var(--border-light, #e0e0e0);
   border-radius: 8px;
   padding: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
@@ -11,19 +11,21 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  color: var(--text-dark, #172033);
 }
 
-[data-theme='dark'] .image-formatter-panel {
-  background: var(--bg-surface, #2d2d2d);
-  border-color: var(--border-color, #444);
+.dark .image-formatter-panel {
+  background-color: var(--bg-dark, #1b1d21);
+  border-color: #444;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  color: var(--text-light, #f8fafc);
 }
 
 .image-formatter-panel h4 { 
   margin: 0 0 4px 0; 
   font-size: 14px; 
   font-weight: 600;
-  color: var(--text-primary);
+  color: inherit;
 }
 
 .formatter-buttons { 
@@ -34,23 +36,28 @@
 
 .formatter-buttons button {
   padding: 8px 12px;
-  background: var(--bg-element, #f5f5f5);
-  border: 1px solid var(--border-color, #ddd);
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
   border-radius: 4px;
   cursor: pointer;
   text-align: left;
   font-size: 13px;
-  color: var(--text-primary);
+  color: #0f172a;
   transition: all 0.2s ease;
 }
 
-[data-theme='dark'] .formatter-buttons button {
-  background: var(--bg-element, #3d3d3d);
-  border-color: var(--border-color, #555);
+.dark .formatter-buttons button {
+  background-color: #334155;
+  border-color: #475569;
+  color: #f8fafc;
 }
 
 .formatter-buttons button:hover { 
-  background: var(--accent-color, #4a90e2); 
+  background-color: var(--primary-color, #2563eb); 
   color: white; 
-  border-color: var(--accent-color, #4a90e2);
+  border-color: var(--primary-color, #2563eb);
+}
+
+.dark .formatter-buttons button:hover {
+  background-color: var(--primary-color, #2563eb);
 }

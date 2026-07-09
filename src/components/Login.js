@@ -68,7 +68,7 @@ function Login() {
     <div className="login-container">
       <div className="login-card">
         <h1>
-          <img src={logo} alt="BlogCraft logo" className="logo-icon" />
+          <img src={logo} alt="BlogArtifex logo" className="logo-icon" />
           {t('app.name')}
         </h1>
         <p>{t('app.slogan')}</p>

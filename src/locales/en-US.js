@@ -97,6 +97,13 @@ const translations = {
     },
     
     editor: {
+    imageFormat: {
+      title: "Image Format",
+      standard: "Standard Size",
+      fit: "Inside Fit (Contain)",
+      fill: "Fill Area (Cover)",
+      stretch: "Stretch to Fit"
+    },
       title: 'Post Editor',
       placeholders: {
         title: 'Post title',

@@ -43,7 +43,7 @@ function Sidebar({ theme, toggleTheme }) {
     <div className="sidebar">
       <div className="logo">
         <h2>
-          <img src={logo} alt="BlogCraft logo" className="logo-icon" />
+          <img src={logo} alt="BlogArtifex logo" className="logo-icon" />
           BlogCraft
         </h2>
       </div>

@@ -97,6 +97,13 @@ const translations = {
     },
     
     editor: {
+    imageFormat: {
+      title: "Formato da Imagem",
+      standard: "Tamanho Padrão",
+      fit: "Ajustar (Conter)",
+      fill: "Preencher Área (Cobrir)",
+      stretch: "Esticar"
+    },
       title: 'Editor de Artigo',
       placeholders: {
         title: 'Título do artigo',
